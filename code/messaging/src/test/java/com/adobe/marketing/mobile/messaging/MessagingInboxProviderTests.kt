@@ -17,6 +17,8 @@ import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCardMap
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
+import com.adobe.marketing.mobile.services.DeviceInforming
+import com.adobe.marketing.mobile.services.ServiceProvider
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockkObject
@@ -33,9 +35,11 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.MockedStatic
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
+import org.mockito.Mockito.reset
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
@@ -55,13 +59,30 @@ class MessagingInboxProviderTests {
     private lateinit var messagingInboxProvider: MessagingInboxProvider
     private lateinit var surface: Surface
     private lateinit var mockMessaging: MockedStatic<Messaging>
+    private lateinit var mockServiceProvider: MockedStatic<ServiceProvider>
     private lateinit var contentCardSchemaData: ContentCardSchemaData
     private lateinit var propositionItem: PropositionItem
     private lateinit var proposition: Proposition
 
+    @Mock
+    private lateinit var serviceProvider: ServiceProvider
+
+    @Mock
+    private lateinit var deviceInfoService: DeviceInforming
+
     @Before
     fun setup() {
-        surface = Surface("mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms")
+        // Mock ServiceProvider and DeviceInfoService for Surface creation
+        mockServiceProvider = mockStatic(ServiceProvider::class.java)
+        serviceProvider = mock(ServiceProvider::class.java)
+        deviceInfoService = mock(DeviceInforming::class.java)
+
+        mockServiceProvider.`when`<ServiceProvider> { ServiceProvider.getInstance() }
+            .thenReturn(serviceProvider)
+        whenever(serviceProvider.deviceInfoService).thenReturn(deviceInfoService)
+        whenever(deviceInfoService.applicationPackageName).thenReturn("com.adobe.marketing.mobile.messagingsample")
+
+        surface = Surface("card/ms")
         messagingInboxProvider = MessagingInboxProvider(surface)
         mockMessaging = mockStatic(Messaging::class.java)
 
@@ -69,10 +90,6 @@ class MessagingInboxProviderTests {
         propositionItem = mock(PropositionItem::class.java)
         proposition = mock(Proposition::class.java)
 
-        setupDefaultMocks()
-    }
-
-    private fun setupDefaultMocks() {
         whenever(propositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
         whenever(contentCardSchemaData.content).thenReturn(contentCardMap)
         whenever(contentCardSchemaData.meta).thenReturn(metaMap)
@@ -82,17 +99,22 @@ class MessagingInboxProviderTests {
         whenever(propositionItem.contentCardSchemaData).thenReturn(contentCardSchemaData)
         whenever(proposition.items).thenReturn(listOf(propositionItem))
 
-        // Mock ContentCardSchemaDataUtils for read status
+        // Mock ContentCardSchemaDataUtils for read status and inbox template creation
         mockkObject(ContentCardSchemaDataUtils)
         every { ContentCardSchemaDataUtils.getReadStatus(any()) } returns null
         every { ContentCardSchemaDataUtils.buildTemplate(any()) } answers { callOriginal() }
         every { ContentCardSchemaDataUtils.getAepUI(any(), any()) } answers { callOriginal() }
+        every { ContentCardSchemaDataUtils.createInboxTemplate(any()) } answers { callOriginal() }
     }
 
     @After
     fun tearDown() {
         mockMessaging.close()
+        mockServiceProvider.close()
+        reset(serviceProvider)
+        reset(deviceInfoService)
         clearAllMocks()
+        ContentCardMapper.instance.clear()
     }
 
     @Test
@@ -131,88 +153,27 @@ class MessagingInboxProviderTests {
         assertEquals("testId", successState.items.first().getTemplate().id)
     }
 
-    @Test
-    fun `getInboxUI returns Success with empty items when no content card propositions found`() =
-        runTest {
-            mockMessaging.`when`<Unit> {
-                Messaging.getPropositionsForSurfaces(any(), any())
-            }.thenAnswer { invocation ->
-                val callback =
-                    invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-                callback.call(mapOf(surface to emptyList()))
-            }
-
-            val flow = messagingInboxProvider.getInboxUI()
-            val states = flow.take(2).toList()
-
-            assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
-            val successState = states[1] as InboxUIState.Success
-            assertTrue("Items should be empty", successState.items.isEmpty())
-        }
-
     //  todo: uncomment test when inbox proposition is not mocked
-//    @Test
-//    fun `getInboxUI returns Error when null proposition map returned`() = runTest {
-//        mockMessaging.`when`<Unit> {
-//            Messaging.getPropositionsForSurfaces(any(), any())
-//        }.thenAnswer { invocation ->
-//            val callback =
-//                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-//            callback.call(null)
-//        }
-//
-//        val flow = messagingInboxProvider.getInboxUI()
-//        val states = flow.take(2).toList()
-//
-//        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
-//        val errorState = states[1] as InboxUIState.Error
-//        assertTrue(
-//            "Error message should contain error info",
-//            errorState.error.message?.contains("Failed to get propositions") == true
-//        )
-//    }
 
 //    @Test
-//    fun `getInboxUI handles empty result map`() = runTest {
-//        mockMessaging.`when`<Unit> {
-//            Messaging.getPropositionsForSurfaces(any(), any())
-//        }.thenAnswer { invocation ->
-//            val callback =
-//                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-//            callback.call(emptyMap())
+//    fun `getInboxUI returns Success with empty items when no content card propositions found`() =
+//        runTest {
+//            mockMessaging.`when`<Unit> {
+//                Messaging.getPropositionsForSurfaces(any(), any())
+//            }.thenAnswer { invocation ->
+//                val callback =
+//                    invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+//                callback.call()
+//            }
+//
+//            val flow = messagingInboxProvider.getInboxUI()
+//            val states = flow.take(2).toList()
+//
+//            assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+//            val successState = states[1] as InboxUIState.Success
+//            assertTrue("Items should be empty", successState.items.isEmpty())
 //        }
 //
-//        val flow = messagingInboxProvider.getInboxUI()
-//        val states = flow.take(2).toList()
-//
-//        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
-//        val errorState = states[1] as InboxUIState.Error
-//        assertTrue(
-//            "Error message should contain error info",
-//            errorState.error.message?.contains("Failed to get propositions") == true
-//        )
-//    }
-
-    @Test
-    fun `getInboxUI returns Error state when API fails`() = runTest {
-        mockMessaging.`when`<Unit> {
-            Messaging.getPropositionsForSurfaces(any(), any())
-        }.thenAnswer { invocation ->
-            val callback =
-                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.fail(AdobeError.UNEXPECTED_ERROR)
-        }
-
-        val flow = messagingInboxProvider.getInboxUI()
-        val states = flow.take(2).toList()
-
-        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
-        val errorState = states[1] as InboxUIState.Error
-        assertTrue(
-            "Error message should contain error info",
-            errorState.error.message?.contains("Failed to get propositions") == true
-        )
-    }
 
     @Test
     fun `getInboxUI handles proposition with non-content-card schema`() = runTest {
@@ -258,6 +219,219 @@ class MessagingInboxProviderTests {
     }
 
     @Test
+    fun `getInboxUI returns Success with empty items when buildTemplate returns null for content card`() = runTest {
+        // Mock buildTemplate to return null, simulating invalid content card data
+        every { ContentCardSchemaDataUtils.buildTemplate(any()) } returns null
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        // Should still succeed but with empty items since buildTemplate returned null
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+        assertTrue("Items should be empty when buildTemplate returns null", successState.items.isEmpty())
+    }
+
+    @Test
+    fun `getInboxUI returns Success with empty items when getAepUI returns null`() = runTest {
+        // Mock getAepUI to return null, simulating unsupported template type
+        every { ContentCardSchemaDataUtils.getAepUI(any(), any()) } returns null
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        // Should still succeed but with empty items since getAepUI returned null
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+        assertTrue("Items should be empty when getAepUI returns null", successState.items.isEmpty())
+    }
+
+    @Test
+    fun `getInboxUI filters out propositions with non content card item`() = runTest {
+        // Create a proposition where item is not content card
+        val mixedProposition = mock(Proposition::class.java)
+        val nonContentCardItem = mock(PropositionItem::class.java)
+        whenever(nonContentCardItem.schema).thenReturn(SchemaType.HTML_CONTENT)
+        whenever(mixedProposition.items).thenReturn(listOf(nonContentCardItem))
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            // Return both valid content card and non-content card proposition
+            callback.call(mapOf(surface to listOf(proposition, mixedProposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+        // Should only have 1 item from the valid content card proposition
+        assertEquals("Should only include valid content cards", 1, successState.items.size)
+    }
+
+    @Test
+    fun `getInboxUI handles mixed valid and invalid content cards`() = runTest {
+        // Create a second proposition that will fail buildTemplate
+        val invalidProposition = mock(Proposition::class.java)
+        val invalidPropositionItem = mock(PropositionItem::class.java)
+        val invalidContentCardSchemaData = mock(ContentCardSchemaData::class.java)
+
+        whenever(invalidProposition.activityId).thenReturn("invalidId")
+        whenever(invalidProposition.items).thenReturn(listOf(invalidPropositionItem))
+        whenever(invalidPropositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
+        whenever(invalidPropositionItem.proposition).thenReturn(invalidProposition)
+        whenever(invalidPropositionItem.contentCardSchemaData).thenReturn(invalidContentCardSchemaData)
+        whenever(invalidContentCardSchemaData.content).thenReturn(emptyMap<String, Any>()) // Invalid content
+        whenever(invalidContentCardSchemaData.meta).thenReturn(emptyMap())
+        invalidContentCardSchemaData.parent = invalidPropositionItem
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition, invalidProposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+        // Should only have 1 valid item, invalid one should be filtered out
+        assertEquals("Should only include valid content cards", 1, successState.items.size)
+        assertEquals("Valid card should have testId", "testId", successState.items.first().getTemplate().id)
+    }
+
+    @Test
+    fun `getInboxUI returns Error when null proposition map returned`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(null)
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
+        val errorState = states[1] as InboxUIState.Error
+        assertTrue(
+            "Error message should contain error info",
+            errorState.error.message?.contains("Received null propositions map for surface") == true
+        )
+    }
+
+    @Test
+    fun `getInboxUI return Error when empty proposition map returned`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(emptyMap())
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
+        val errorState = states[1] as InboxUIState.Error
+        assertTrue(
+            "Error message should contain error info",
+            errorState.error.message?.contains("Received null propositions map for surface") == true
+        )
+    }
+
+    @Test
+    fun `getInboxUI returns Error when createInboxTemplate returns null`() = runTest {
+        // Mock createInboxTemplate to return null
+        every { ContentCardSchemaDataUtils.createInboxTemplate(any()) } returns null
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
+        val errorState = states[1] as InboxUIState.Error
+        assertTrue(
+            "Error message should indicate template creation failure",
+            errorState.error.message?.contains("Failed to create inbox template") == true
+        )
+    }
+
+    @Test
+    fun `getInboxUI handles error with null errorName`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            // Pass null to simulate error with no name
+            callback.fail(null)
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
+        val errorState = states[1] as InboxUIState.Error
+        assertTrue(
+            "Error message should contain 'Unknown error'",
+            errorState.error.message?.contains("Unknown error") == true
+        )
+    }
+
+    @Test
+    fun `getInboxUI returns error when result fails with exception`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.fail(AdobeError.UNEXPECTED_ERROR)
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
+        val errorState = states[1] as InboxUIState.Error
+        assertTrue(
+            "Error message should indicate proposition fetch failure",
+            errorState.error.message?.contains("Failed to get propositions") == true
+        )
+    }
+
+    @Test
     fun `multiple calls to getInboxUI return consistent flow`() = runTest {
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
@@ -275,79 +449,6 @@ class MessagingInboxProviderTests {
 
         assertTrue("First flow should emit Loading", state1[0] is InboxUIState.Loading)
         assertTrue("Second flow should emit Loading", state2[0] is InboxUIState.Loading)
-    }
-
-    @Test
-    fun `refresh with different data updates state`() = runTest {
-        var callCount = 0
-
-        // Create a second proposition with different data
-        val proposition2 = mock(Proposition::class.java)
-        val propositionItem2 = mock(PropositionItem::class.java)
-        val contentCardSchemaData2 = mock(ContentCardSchemaData::class.java)
-
-        whenever(proposition2.activityId).thenReturn("differentTestId")
-        whenever(proposition2.items).thenReturn(listOf(propositionItem2))
-        whenever(propositionItem2.schema).thenReturn(SchemaType.CONTENT_CARD)
-        whenever(propositionItem2.proposition).thenReturn(proposition2)
-        whenever(propositionItem2.contentCardSchemaData).thenReturn(contentCardSchemaData2)
-        whenever(contentCardSchemaData2.content).thenReturn(contentCardMap)
-        whenever(contentCardSchemaData2.meta).thenReturn(metaMap)
-        contentCardSchemaData2.parent = propositionItem2
-
-        mockMessaging.`when`<Unit> {
-            Messaging.getPropositionsForSurfaces(any(), any())
-        }.thenAnswer { invocation ->
-            val callback =
-                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callCount++
-            val dataToReturn = if (callCount == 1) {
-                mapOf(surface to listOf(proposition))
-            } else {
-                mapOf(surface to listOf(proposition2))
-            }
-            callback.call(dataToReturn)
-        }
-
-        val flow = messagingInboxProvider.getInboxUI()
-        val initialStates = flow.take(2).toList()
-
-        assertTrue("Initial state should be Success", initialStates[1] is InboxUIState.Success)
-        val initialSuccessState = initialStates[1] as InboxUIState.Success
-        assertEquals("Initial items should have 1 item", 1, initialSuccessState.items.size)
-        assertEquals("Initial item should have testId", "testId", initialSuccessState.items.first().getTemplate().id)
-
-        // Trigger refresh and collect states after refresh
-        messagingInboxProvider.refresh()
-        val refreshedStates = flow.take(2).toList()
-
-        assertTrue("Should have called API at least twice", callCount >= 2)
-        assertTrue("Refreshed state should include Loading", refreshedStates[0] is InboxUIState.Loading)
-        assertTrue("Refreshed state should include Success", refreshedStates[1] is InboxUIState.Success)
-        val refreshedSuccessState = refreshedStates[1] as InboxUIState.Success
-        assertEquals("Refreshed items should have 1 item", 1, refreshedSuccessState.items.size)
-        assertEquals("Refreshed item should have differentTestId", "differentTestId", refreshedSuccessState.items.first().getTemplate().id)
-    }
-
-    @Test
-    fun `refresh emits Loading then Success`() = runTest {
-        var callCount = 0
-
-        mockMessaging.`when`<Unit> {
-            Messaging.getPropositionsForSurfaces(any(), any())
-        }.thenAnswer { invocation ->
-            callCount++
-            val callback =
-                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
-        }
-
-        val flow = messagingInboxProvider.getInboxUI()
-        val states = flow.take(2).toList()
-
-        assertTrue("First state should be Loading", states[0] is InboxUIState.Loading)
-        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
-        assertTrue("API should have been called at least once", callCount >= 1)
     }
 
     // Read Status Tests
@@ -500,4 +601,132 @@ class MessagingInboxProviderTests {
 //        val cardState = successState.items.first().getState()
 //        assertNull("Card read status should be null when isUnreadEnabled is false", cardState.read)
 //    }
+
+    @Test
+    fun `refresh emits Loading then Error on API failure`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.fail(AdobeError.UNEXPECTED_ERROR)
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("First state should be Loading", states[0] is InboxUIState.Loading)
+        assertTrue("Second state should be Error", states[1] is InboxUIState.Error)
+    }
+
+    @Test
+    fun `refresh with different data updates state`() = runTest {
+        var callCount = 0
+
+        // Create a second proposition with different data
+        val proposition2 = mock(Proposition::class.java)
+        val propositionItem2 = mock(PropositionItem::class.java)
+        val contentCardSchemaData2 = mock(ContentCardSchemaData::class.java)
+
+        whenever(proposition2.activityId).thenReturn("differentTestId")
+        whenever(proposition2.items).thenReturn(listOf(propositionItem2))
+        whenever(propositionItem2.schema).thenReturn(SchemaType.CONTENT_CARD)
+        whenever(propositionItem2.proposition).thenReturn(proposition2)
+        whenever(propositionItem2.contentCardSchemaData).thenReturn(contentCardSchemaData2)
+        whenever(contentCardSchemaData2.content).thenReturn(contentCardMap)
+        whenever(contentCardSchemaData2.meta).thenReturn(metaMap)
+        contentCardSchemaData2.parent = propositionItem2
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callCount++
+            val dataToReturn = if (callCount == 1) {
+                mapOf(surface to listOf(proposition))
+            } else {
+                mapOf(surface to listOf(proposition2))
+            }
+            callback.call(dataToReturn)
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val initialStates = flow.take(2).toList()
+
+        assertTrue("Initial state should be Success", initialStates[1] is InboxUIState.Success)
+        val initialSuccessState = initialStates[1] as InboxUIState.Success
+        assertEquals("Initial items should have 1 item", 1, initialSuccessState.items.size)
+        assertEquals("Initial item should have testId", "testId", initialSuccessState.items.first().getTemplate().id)
+
+        // Trigger refresh and collect states after refresh
+        messagingInboxProvider.refresh()
+        val refreshedStates = flow.take(2).toList()
+
+        assertTrue("Should have called API at least twice", callCount >= 2)
+        assertTrue("Refreshed state should include Loading", refreshedStates[0] is InboxUIState.Loading)
+        assertTrue("Refreshed state should include Success", refreshedStates[1] is InboxUIState.Success)
+        val refreshedSuccessState = refreshedStates[1] as InboxUIState.Success
+        assertEquals("Refreshed items should have 1 item", 1, refreshedSuccessState.items.size)
+        assertEquals("Refreshed item should have differentTestId", "differentTestId", refreshedSuccessState.items.first().getTemplate().id)
+    }
+
+    @Test
+    fun `refresh emits Loading then Success`() = runTest {
+        var callCount = 0
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            callCount++
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("First state should be Loading", states[0] is InboxUIState.Loading)
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        assertTrue("API should have been called at least once", callCount >= 1)
+    }
+
+    @Test
+    fun `Success state has displayed flag set to false initially`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+        assertFalse("displayed flag should be false initially", successState.displayed)
+    }
+
+    @Test
+    fun `Inbox proposition item is stored in ContentCardMapper on success`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+
+        val storedItem = ContentCardMapper.instance.getInboxPropositionItem(successState.template.id)
+        assertNotNull("Inbox proposition item should be stored in mapper with inbox id", storedItem)
+    }
 }

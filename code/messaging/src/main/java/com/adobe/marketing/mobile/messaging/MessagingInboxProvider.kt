@@ -11,19 +11,11 @@
 
 package com.adobe.marketing.mobile.messaging
 
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.core.graphics.toColorInt
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepInboxContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxTemplate
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +48,10 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
     private fun toInboxUIState(result: Result<InboxProposition>): InboxUIState {
         val inboxProposition = result.getOrNull()
         if (inboxProposition != null) {
-            val inboxTemplate = createInboxTemplate(inboxProposition.inbox)
+            val inboxTemplate = ContentCardSchemaDataUtils.createInboxTemplate(inboxProposition.inbox)
+            if (inboxTemplate == null) {
+                return InboxUIState.Error(Throwable("Failed to create inbox template, invalid inbox proposition content"))
+            }
             val aepUIList = inboxProposition.contentCards.mapNotNull { cardProposition ->
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
@@ -67,14 +62,15 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
                     )
                 }
             }
-            return InboxUIState.Success(
-                inboxTemplate,
-                items = aepUIList
-            )
+            // Store the inbox proposition item in the mapper for display tracking, keyed by inbox ID
+            inboxProposition.inbox.items.getOrNull(0)?.let {
+                ContentCardMapper.instance.storeInboxPropositionItem(inboxTemplate.id, it)
+            }
+            return InboxUIState.Success(inboxTemplate, items = aepUIList)
         } else {
             return InboxUIState.Error(
                 result.exceptionOrNull()
-                    ?: Throwable("Failed to create inbox: Unknown Error")
+                    ?: Throwable("Failed to create inbox, unknown error")
             )
         }
     }
@@ -101,7 +97,7 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
      */
     override suspend fun refresh() {
         _inboxStateFlow.value = InboxUIState.Loading
-        _inboxStateFlow.value = toInboxUIState(fetchContent())
+        _inboxStateFlow.value = toInboxUIState(fetchInbox())
     }
 
     /**
@@ -109,11 +105,9 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
      *
      * @return A [Result] containing the [InboxProposition] on success, or a failure with the error.
      */
-    private suspend fun fetchContent(): Result<InboxProposition> {
-        // Call Messaging API to get propositions for this surface
+    private suspend fun fetchInbox(): Result<InboxProposition> {
         val propositionsResult = getPropositionsForSurface()
 
-        // Check if the API call failed
         if (propositionsResult.isFailure) {
             return Result.failure(
                 propositionsResult.exceptionOrNull()
@@ -123,29 +117,19 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
 
         val propositionsMap = propositionsResult.getOrNull() ?: emptyMap()
 
-        // Get propositions for our surface
         // todo replace mock inbox proposition when Messaging SDK supports inbox propositions
         val inboxProposition = getMockInboxProposition()
-//        if (inboxProposition == null) {
-//            Log.debug(
-//                MessagingConstants.LOG_TAG,
-//                SELF_TAG,
-//                "No inbox proposition found for surface: ${surface.uri}"
-//            )
-//            return Result.error(InboxProposition(getMockInboxProposition(), emptyList()))
-//        }
-        val contentCardPropositions =
-            propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD }
-        if (contentCardPropositions.isNullOrEmpty()) {
+        if (inboxProposition == null) {
             Log.debug(
                 MessagingConstants.LOG_TAG,
                 SELF_TAG,
-                "No card propositions found for surface: ${surface.uri}"
+                "No inbox proposition found for surface: ${surface.uri}"
             )
-            return Result.success(InboxProposition(getMockInboxProposition(), emptyList()))
+            return Result.failure(Throwable("No inbox proposition found for surface: ${surface.uri}"))
         }
-
-        return Result.success(InboxProposition(getMockInboxProposition(), contentCardPropositions))
+        val contentCardPropositions =
+            propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD } ?: emptyList()
+        return Result.success(InboxProposition(inboxProposition, contentCardPropositions))
     }
 
     /**
@@ -157,19 +141,18 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
         suspendCancellableCoroutine { continuation ->
             val callback = object : AdobeCallbackWithError<Map<Surface, List<Proposition>>> {
                 override fun call(resultMap: Map<Surface, List<Proposition>>?) {
-                    if (resultMap == null) {
-                        continuation.resume(Result.success(emptyMap()))
+                    if (resultMap.isNullOrEmpty()) {
+                        continuation.resume(
+                            Result.failure(
+                                Throwable("Received null propositions map for surface: ${surface.uri}")
+                            )
+                        )
                     } else {
                         continuation.resume(Result.success(resultMap))
                     }
                 }
 
                 override fun fail(error: AdobeError?) {
-                    Log.warning(
-                        MessagingConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Failed to get propositions for surface ${surface.uri}: ${error?.errorName}"
-                    )
                     continuation.resume(
                         Result.failure(
                             Throwable("Failed to get propositions: ${error?.errorName ?: "Unknown error"}")
@@ -188,95 +171,46 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
             }
         }
 
-    /**
-     * Creates the appropriate inbox template based on inbox proposition.
-     */
-    // todo: replace with constants once JSON is finalized
-    private fun createInboxTemplate(inboxProposition: Proposition): InboxTemplate {
-        val data = inboxProposition.items[0].itemData
-        val heading = (data["heading"] as? Map<*, *>)?.get("content") as? String
-        val layout = (data["layout"] as? Map<*, *>)?.get("orientation") as? String
-        val capacity = when (val capacityObj = data["capacity"]) {
-            is Number -> capacityObj.toInt()
-            else -> 10 // Default capacity
-        }
-        val emptyStateMessage = (data["emptyStateSettings"] as? Map<*, *>)
-            ?.let { it["message"] as? Map<*, *> }
-            ?.get("content") as? String
-        val emptyImage = (data["emptyStateSettings"] as? Map<*, *>)
-            ?.let { it["image"] as? Map<*, *> }
-        val isUnreadEnabled = data["isUnreadEnabled"] as? Boolean ?: false
-        val unreadIcon = (data["unread_indicator"] as? Map<*, *>)
-            ?.let { it["unread_icon"] as? Map<*, *> }
-            ?.let { it["image"] as? Map<*, *> }
-        val unreadBg = (data["unread_indicator"] as? Map<*, *>)
-            ?.let { it["unread_bg"] as? Map<*, *> }
-
-        return InboxTemplate(
-            heading = heading?.let { AepText(it) } ?: AepText("Message Inbox"),
-            layout = AepInboxLayout.from(layout) ?: AepInboxLayout.VERTICAL,
-            capacity = capacity,
-            emptyMessage = emptyStateMessage?.let { AepText(it) },
-            emptyImage = AepImage(
-                url = emptyImage?.get("url") as? String,
-                darkUrl = emptyImage?.get("darkUrl") as? String
-            ),
-            isUnreadEnabled = isUnreadEnabled,
-            unreadIcon = AepImage(
-                url = unreadIcon?.get("url") as? String,
-                darkUrl = unreadIcon?.get("darkUrl") as? String
-            ),
-            unreadBgColor = AepColor(
-                light = (unreadBg?.get("light") as? String)?.let { Color(it.toColorInt()) },
-                dark = (unreadBg?.get("dark") as? String)?.let { Color(it.toColorInt()) }
-            ),
-            unreadIconAlignment = (unreadIcon?.get("placeholder") as? String)?.let { placeholder ->
-                when (placeholder.lowercase()) {
-                    "topleft" -> Alignment.TopStart
-                    "topright" -> Alignment.TopEnd
-                    "bottomleft" -> Alignment.BottomStart
-                    "bottomright" -> Alignment.BottomEnd
-                    else -> Alignment.TopStart
-                }
-            }
-        )
-    }
-
     // todo: remove this mock function when Messaging SDK supports inbox propositions
     private fun getMockInboxProposition(): Proposition {
         return Proposition(
             "inbox_container",
             surface.uri,
-            mapOf("key" to "value"),
+            mapOf("activity" to mapOf("id" to "inbox_container")),
             listOf(
                 PropositionItem(
                     "inbox_template",
                     SchemaType.INBOX,
                     mapOf(
-                        "heading" to mapOf("content" to "My Inbox"),
-                        "layout" to mapOf("orientation" to "vertical"),
-                        "capacity" to 10,
-                        "emptyStateSettings" to mapOf(
-                            "message" to mapOf("content" to "Your inbox is empty!"),
-                            "image" to mapOf(
-                                "url" to "https://icons.veryicon.com/png/256/commerce-shopping/basic-icon-of-e-commerce/empty-21.png",
-                                "darkUrl" to "https://icons.veryicon.com/png/256/commerce-shopping/basic-icon-of-e-commerce/empty-21.png"
-                            )
-                        ),
-                        "isUnreadEnabled" to true,
-                        "unread_indicator" to mapOf(
-                            "unread_icon" to mapOf(
-                                "placeholder" to "topleft",
+                        "content" to mapOf(
+                            "heading" to mapOf("content" to "My Inbox"),
+                            "layout" to mapOf("orientation" to "vertical"),
+                            "capacity" to 10,
+                            "emptyStateSettings" to mapOf(
+                                "message" to mapOf("content" to "Your inbox is empty!"),
                                 "image" to mapOf(
-                                    "url" to "https://icons.veryicon.com/png/o/leisure/crisp-app-icon-library-v3/notification-5.png",
-                                    "darkUrl" to "https://icons.veryicon.com/png/o/leisure/crisp-app-icon-library-v3/notification-5.png"
+                                    "url" to "https://icons.veryicon.com/png/256/commerce-shopping/basic-icon-of-e-commerce/empty-21.png",
+                                    "darkUrl" to "https://icons.veryicon.com/png/256/commerce-shopping/basic-icon-of-e-commerce/empty-21.png"
                                 )
                             ),
-                            "unread_bg" to mapOf(
-                                "bgColor" to "#A9A9A9",
-                                "darkBgColor" to "#D3D3D3"
+                            "isUnreadEnabled" to true,
+                            "unreadIndicator" to mapOf(
+                                "unreadIcon" to mapOf(
+                                    "placement" to "topleft",
+                                    "image" to mapOf(
+                                        "url" to "https://icons.veryicon.com/png/o/leisure/crisp-app-icon-library-v3/notification-5.png",
+                                        "darkUrl" to "https://icons.veryicon.com/png/o/leisure/crisp-app-icon-library-v3/notification-5.png"
+                                    )
+                                ),
+                                "unreadBg" to mapOf(
+                                    "clr" to mapOf(
+                                        "light" to "#A9A9A9",
+                                        "dark" to "#D3D3D3"
+                                    )
+                                )
                             )
-                        )
+                        ),
+                        "meta" to emptyMap()
                     )
                 )
             )

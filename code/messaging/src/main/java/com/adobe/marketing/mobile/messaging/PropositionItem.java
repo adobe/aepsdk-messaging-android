@@ -305,6 +305,19 @@ public class PropositionItem implements Serializable {
     }
 
     /**
+     * Returns this {@link PropositionItem}'s content as a {@code InboxContentSchemaData} object.
+     *
+     * @return {@link InboxContentSchemaData} object containing the {@link PropositionItem}'s
+     *     content.
+     */
+    @Nullable public InboxContentSchemaData getInboxSchemaData() {
+        if (!schema.equals(SchemaType.INBOX)) {
+            return null;
+        }
+        return (InboxContentSchemaData) createSchemaData(SchemaType.INBOX);
+    }
+
+    /**
      * Returns this {@link PropositionItem}'s content as a {@code EventHistoryOperationSchemaData}
      * object.
      *
@@ -349,6 +362,8 @@ public class PropositionItem implements Serializable {
                 return new ContentCardSchemaData(ruleJson);
             case EVENT_HISTORY_OPERATION:
                 return new EventHistoryOperationSchemaData(ruleJson);
+            case INBOX:
+                return new InboxContentSchemaData(ruleJson);
             default:
                 break;
         }

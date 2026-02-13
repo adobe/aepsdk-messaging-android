@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
 import androidx.compose.ui.Alignment
 
 data class InboxTemplate(
+    val id: String,
     val heading: AepText,
     val layout: AepInboxLayout,
     val capacity: Int,

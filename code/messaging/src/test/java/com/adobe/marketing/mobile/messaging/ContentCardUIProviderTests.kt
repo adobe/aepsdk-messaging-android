@@ -16,6 +16,8 @@ import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCardMap
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
+import com.adobe.marketing.mobile.services.DeviceInforming
+import com.adobe.marketing.mobile.services.ServiceProvider
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -25,9 +27,11 @@ import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.MockedStatic
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
+import org.mockito.Mockito.reset
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
@@ -46,13 +50,30 @@ class ContentCardUIProviderTests {
     private lateinit var contentCardUIProvider: ContentCardUIProvider
     private lateinit var surface: Surface
     private lateinit var mockMessaging: MockedStatic<Messaging>
+    private lateinit var mockServiceProvider: MockedStatic<ServiceProvider>
     private lateinit var contentCardSchemaData: ContentCardSchemaData
     private lateinit var propositionItem: PropositionItem
     private lateinit var proposition: Proposition
 
+    @Mock
+    private lateinit var serviceProvider: ServiceProvider
+
+    @Mock
+    private lateinit var deviceInfoService: DeviceInforming
+
     @Before
     fun setup() {
-        surface = Surface("mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms")
+        // Mock ServiceProvider and DeviceInfoService for Surface creation
+        mockServiceProvider = mockStatic(ServiceProvider::class.java)
+        serviceProvider = mock(ServiceProvider::class.java)
+        deviceInfoService = mock(DeviceInforming::class.java)
+        
+        mockServiceProvider.`when`<ServiceProvider> { ServiceProvider.getInstance() }
+            .thenReturn(serviceProvider)
+        whenever(serviceProvider.deviceInfoService).thenReturn(deviceInfoService)
+        whenever(deviceInfoService.applicationPackageName).thenReturn("com.adobe.marketing.mobile.messagingsample")
+
+        surface = Surface("card/ms")
         contentCardUIProvider = ContentCardUIProvider(surface)
         mockMessaging = mockStatic(Messaging::class.java)
 
@@ -238,6 +259,9 @@ class ContentCardUIProviderTests {
     @After
     fun tearDown() {
         mockMessaging.close()
+        mockServiceProvider.close()
+        reset(serviceProvider)
+        reset(deviceInfoService)
     }
 
     @Test

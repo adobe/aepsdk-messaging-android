@@ -177,6 +177,7 @@ class VerticalInboxTests(
         emptyMessage: AepText? = AepText("No messages"),
         emptyImage: AepImage? = null
     ) = InboxTemplate(
+        id = "vertical-inbox-template",
         heading = AepText("Inbox"),
         layout = AepInboxLayout.VERTICAL,
         capacity = 10,
@@ -262,6 +263,7 @@ class VerticalInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             // Template with capacity of 2
             val template = InboxTemplate(
+                id = "limited-vertical-inbox-template",
                 heading = AepText("Inbox"),
                 layout = AepInboxLayout.VERTICAL,
                 capacity = 2,

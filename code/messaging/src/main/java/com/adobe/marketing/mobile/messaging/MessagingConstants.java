@@ -470,4 +470,29 @@ public final class MessagingConstants {
             public static final String BOTTOM_RIGHT = "bottomright";
         }
     }
+
+    public static final class Inbox {
+        public static class UIKeys {
+            public static final String CONTENT = "content";
+            public static final String HEADING = "heading";
+            public static final String LAYOUT = "layout";
+            public static final String ORIENTATION = "orientation";
+            public static final String CAPACITY = "capacity";
+            public static final String EMPTY_STATE_SETTINGS = "emptyStateSettings";
+            public static final String MESSAGE = "message";
+            public static final String IMAGE = "image";
+            public static final String IS_UNREAD_ENABLED = "isUnreadEnabled";
+            public static final String UNREAD_INDICATOR = "unreadIndicator";
+            public static final String UNREAD_ICON = "unreadIcon";
+            public static final String UNREAD_BG = "unreadBg";
+            public static final String CLR = "clr";
+            public static final String LIGHT = "light";
+            public static final String DARK = "dark";
+            public static final String PLACEMENT = "placement";
+            public static final String TOP_LEFT = "topleft";
+            public static final String TOP_RIGHT = "topright";
+            public static final String BOTTOM_LEFT = "bottomleft";
+            public static final String BOTTOM_RIGHT = "bottomright";
+        }
+    }
 }

@@ -138,6 +138,7 @@ public class ParsedPropositions {
                         break;
                     case JSON_CONTENT:
                     case HTML_CONTENT:
+                    case INBOX:
                     case DEFAULT_CONTENT:
                         propositionsToCache =
                                 MessagingUtils.updatePropositionMapForSurface(

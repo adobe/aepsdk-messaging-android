@@ -19,12 +19,11 @@ class AepColorTests {
 
     /**
      * Parameterized test data for AepColor creation tests.
+     * Note: light color is required (non-nullable), dark color is optional (nullable).
      */
-    private val creationTestCases: Map<Pair<Color?, Color?>, String> = mapOf(
+    private val creationTestCases: Map<Pair<Color, Color?>, String> = mapOf(
         Pair(Color.White, Color.Black) to "both light and dark colors",
         Pair(Color.Red, null) to "only light color",
-        Pair(null, Color.Blue) to "only dark color",
-        Pair(null, null) to "both colors null",
         Pair(Color(0xFFFF5733), Color(0xFF1A1A2E)) to "custom ARGB colors",
         Pair(Color(0x80FF0000), Color(0x800000FF)) to "semi-transparent colors"
     )

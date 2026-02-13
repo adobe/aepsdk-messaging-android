@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
@@ -34,14 +36,14 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout
  * @param uiState The [InboxUIState] model to be rendered.
  * @param inboxStyle The style to be applied to the inbox.
  * @param itemsStyle The style to be applied to the cards within the inbox.
- * @param observer An optional event listener for content card UI events.
+ * @param observer The [AepInboxEventObserver] for handling inbox and item-level UI events.
  */
 @Composable
 fun AepInbox(
     uiState: InboxUIState,
     inboxStyle: InboxUIStyle = InboxUIStyle.Builder().build(),
     itemsStyle: AepUIStyle = AepUIStyle(),
-    observer: AepUIEventObserver?
+    observer: AepInboxEventObserver
 ) {
     when (uiState) {
         is InboxUIState.Loading -> {
@@ -53,6 +55,9 @@ fun AepInbox(
         }
 
         is InboxUIState.Success -> {
+            LaunchedEffect(Unit) {
+                observer.onInboxEvent(InboxEvent.Display(uiState))
+            }
             Column {
 
                 // Wrap AepText in an invisible Surface to provide Material Theme context

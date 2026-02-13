@@ -18,6 +18,7 @@ import androidx.annotation.VisibleForTesting
  */
 class ContentCardMapper private constructor() {
     private val contentCardSchemaDataMap: MutableMap<String, ContentCardSchemaData> = HashMap()
+    private val inboxPropositionItemMap: MutableMap<String, PropositionItem> = HashMap()
 
     companion object {
         @JvmStatic
@@ -61,8 +62,36 @@ class ContentCardMapper private constructor() {
         contentCardSchemaDataMap.remove(activityId)
     }
 
+    /**
+     * Stores the inbox [PropositionItem] for later display tracking, keyed by the inbox activity ID.
+     *
+     * @param inboxId the inbox activity ID (from InboxTemplate.id)
+     * @param propositionItem the inbox [PropositionItem] to store
+     */
+    @JvmName("storeInboxPropositionItem")
+    internal fun storeInboxPropositionItem(inboxId: String, propositionItem: PropositionItem) {
+        if (inboxId.isEmpty()) {
+            return
+        }
+        inboxPropositionItemMap[inboxId] = propositionItem
+    }
+
+    /**
+     * Returns the stored inbox [PropositionItem] for the given inbox ID, if available.
+     *
+     * @param inboxId the inbox activity ID (from InboxTemplate.id)
+     * @return the inbox [PropositionItem], or null if not stored
+     */
+    fun getInboxPropositionItem(inboxId: String): PropositionItem? {
+        if (inboxId.isEmpty()) {
+            return null
+        }
+        return inboxPropositionItemMap[inboxId]
+    }
+
     @VisibleForTesting
     internal fun clear() {
         contentCardSchemaDataMap.clear()
+        inboxPropositionItemMap.clear()
     }
 }
