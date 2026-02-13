@@ -1169,7 +1169,7 @@ class ContentCardSchemaDataUtilsTest {
         val inboxSchemaData = mock(InboxContentSchemaData::class.java)
         val propositionItem = mock(PropositionItem::class.java)
         val proposition = mock(Proposition::class.java)
-        
+
         Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
         Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
         Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
@@ -1185,10 +1185,10 @@ class ContentCardSchemaDataUtilsTest {
     fun `test createInboxTemplate with non-inbox schema`() {
         val propositionItem = mock(PropositionItem::class.java)
         val proposition = mock(Proposition::class.java)
-        
+
         Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
         Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
-        
+
         val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
         assertNull(result)
     }
@@ -1197,12 +1197,12 @@ class ContentCardSchemaDataUtilsTest {
     fun `test createInboxTemplate with null inboxSchemaData`() {
         val propositionItem = mock(PropositionItem::class.java)
         val proposition = mock(Proposition::class.java)
-        
+
         Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
         Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(null)
         Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
         Mockito.`when`(proposition.activityId).thenReturn("inboxId")
-        
+
         val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
         assertNull(result)
     }
@@ -1212,10 +1212,10 @@ class ContentCardSchemaDataUtilsTest {
     fun `test isInbox with valid inbox proposition`() {
         val propositionItem = mock(PropositionItem::class.java)
         val proposition = mock(Proposition::class.java)
-        
+
         Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
         Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
-        
+
         val result = ContentCardSchemaDataUtils.isInbox(proposition)
         assertTrue(result)
     }
@@ -1224,10 +1224,10 @@ class ContentCardSchemaDataUtilsTest {
     fun `test isInbox with non-inbox schema`() {
         val propositionItem = mock(PropositionItem::class.java)
         val proposition = mock(Proposition::class.java)
-        
+
         Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
         Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
-        
+
         val result = ContentCardSchemaDataUtils.isInbox(proposition)
         assertFalse(result)
     }
@@ -1236,7 +1236,7 @@ class ContentCardSchemaDataUtilsTest {
     fun `test isInbox with empty items`() {
         val proposition = mock(Proposition::class.java)
         Mockito.`when`(proposition.items).thenReturn(emptyList())
-        
+
         val result = ContentCardSchemaDataUtils.isInbox(proposition)
         assertFalse(result)
     }

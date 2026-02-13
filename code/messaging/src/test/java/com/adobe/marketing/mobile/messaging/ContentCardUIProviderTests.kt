@@ -67,7 +67,7 @@ class ContentCardUIProviderTests {
         mockServiceProvider = mockStatic(ServiceProvider::class.java)
         serviceProvider = mock(ServiceProvider::class.java)
         deviceInfoService = mock(DeviceInforming::class.java)
-        
+
         mockServiceProvider.`when`<ServiceProvider> { ServiceProvider.getInstance() }
             .thenReturn(serviceProvider)
         whenever(serviceProvider.deviceInfoService).thenReturn(deviceInfoService)
