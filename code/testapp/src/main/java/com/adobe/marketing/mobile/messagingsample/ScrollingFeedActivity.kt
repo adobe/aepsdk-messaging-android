@@ -56,6 +56,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.messaging.MessagingInboxProvider
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
+import com.adobe.marketing.mobile.messaging.InboxEventObserver
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 import kotlinx.coroutines.flow.SharingStarted
@@ -160,7 +161,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         uiState = inboxUi,
                         inboxStyle = inboxContainerStyle,
                         itemsStyle = cardUIStyle,
-                        observer = ContentCardEventObserver(ContentCardCallback())
+                        observer = InboxEventObserver(ContentCardEventObserver(ContentCardCallback()))
                     )
                 }
             }
@@ -189,9 +190,9 @@ class ContentCardCallback: ContentCardUIEventListener {
 }
 // create new view model or reuse existing one to hold the aepUIList
 class ExistingViewModel: ViewModel() {
-    private val containerUIProvider = MessagingInboxProvider(Surface("card/ms"))
+    private val inboxContentProvider = MessagingInboxProvider(Surface("card/ms"))
 
-    val inboxUIStateFlow = containerUIProvider.getInboxUI()
+    val inboxUIStateFlow = inboxContentProvider.getInboxUI()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -200,7 +201,7 @@ class ExistingViewModel: ViewModel() {
 
     fun refresh() {
         viewModelScope.launch {
-            containerUIProvider.refresh()
+            inboxContentProvider.refresh()
         }
     }
 }

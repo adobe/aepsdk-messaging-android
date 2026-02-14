@@ -499,6 +499,12 @@ internal object ContentCardSchemaDataUtils {
             MessagingConstants.Inbox.UIKeys.UNREAD_INDICATOR,
             emptyMap()
         )
+        val unreadBg = DataReader.optTypedMap(
+            Any::class.java,
+            unreadIndicator,
+            MessagingConstants.Inbox.UIKeys.UNREAD_BG,
+            emptyMap()
+        )
         return InboxTemplate(
             id = inboxId,
             heading = heading,
@@ -516,15 +522,22 @@ internal object ContentCardSchemaDataUtils {
                 false
             ),
             unreadBgColor = createAepColor(
-                DataReader.optTypedMap(
-                    Any::class.java,
-                    unreadIndicator,
-                    MessagingConstants.Inbox.UIKeys.UNREAD_BG,
+                DataReader.optStringMap(
+                    unreadBg,
+                    MessagingConstants.Inbox.UIKeys.CLR,
                     emptyMap()
                 ),
                 inboxId
             ),
-            unreadIcon = createAepImage(unreadIndicator, inboxId),
+            unreadIcon = createAepImage(
+                DataReader.optTypedMap(
+                    Any::class.java,
+                    unreadIndicator,
+                    MessagingConstants.Inbox.UIKeys.UNREAD_ICON,
+                    emptyMap()
+                ),
+                inboxId
+            ),
             unreadIconAlignment = createAlignment(
                 DataReader.optString(
                     unreadIndicator,
