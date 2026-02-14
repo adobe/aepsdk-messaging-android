@@ -27,17 +27,27 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
  *
  * @param itemEventObservers Zero or more [AepUIEventObserver] instances that handle
  *   item-level events (e.g., [ContentCardEventObserver]). Each observer's [onEvent] is
- *   called for every item-level [UIEvent].
+ *   called for every item-level [UIEvent]. If no observers are provided, a default
+ *   [ContentCardEventObserver] with null callback will be used.
  */
 class InboxEventObserver(
     private vararg val itemEventObservers: AepUIEventObserver
 ) : AepInboxEventObserver {
 
+    private val observers: List<AepUIEventObserver> by lazy {
+        if (itemEventObservers.isEmpty()) {
+            listOf(ContentCardEventObserver(null))
+        } else {
+            itemEventObservers.toList()
+        }
+    }
+
     /**
      * Delegates item-level events to all provided [AepUIEventObserver] instances.
+     * If no observers were provided, delegates to a default [ContentCardEventObserver].
      */
     override fun onEvent(event: UIEvent<*, *>) {
-        itemEventObservers.forEach { it.onEvent(event) }
+        observers.forEach { it.onEvent(event) }
     }
 
     /**

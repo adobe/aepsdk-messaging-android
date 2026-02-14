@@ -172,8 +172,12 @@ class InboxEventObserverTests {
         // Verify inbox display tracking still happens
         verify(mockPropositionItem, times(1)).track(MessagingEdgeEventType.DISPLAY)
 
-        // onEvent with no item observers is a no-op (no crash)
+        // onEvent with no item observers should delegate to default ContentCardEventObserver
         val itemEvent = UIEvent.Display(mockAepUI)
         observer.onEvent(itemEvent)
+
+        // Verify the default ContentCardEventObserver was invoked
+        val expectedEvent = UIEvent.Display(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
     }
 }
