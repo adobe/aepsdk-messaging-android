@@ -932,13 +932,16 @@ class ContentCardSchemaDataUtilsTest {
             MessagingConstants.Inbox.UIKeys.ORIENTATION to "horizontal"
         )
         val unreadIconMap = mapOf(
-            MessagingConstants.ContentCard.UIKeys.URL to "https://example.com/unread.png"
+            MessagingConstants.ContentCard.UIKeys.IMAGE to mapOf(MessagingConstants.ContentCard.UIKeys.URL to "https://example.com/unread.png")
         )
-        val unreadBgMap = mapOf(
+        val unreadBgColorMap = mapOf(
             MessagingConstants.Inbox.UIKeys.LIGHT to "#FFFF0000"
         )
+        val unreadBgMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.CLR to unreadBgColorMap
+        )
         val unreadIndicator = mapOf(
-            MessagingConstants.ContentCard.UIKeys.IMAGE to unreadIconMap,
+            MessagingConstants.Inbox.UIKeys.UNREAD_ICON to unreadIconMap,
             MessagingConstants.Inbox.UIKeys.UNREAD_BG to unreadBgMap,
             MessagingConstants.Inbox.UIKeys.PLACEMENT to "topleft"
         )
