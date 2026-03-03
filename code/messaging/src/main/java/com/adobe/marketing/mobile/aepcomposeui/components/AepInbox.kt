@@ -55,8 +55,10 @@ fun AepInbox(
         }
 
         is InboxUIState.Success -> {
-            LaunchedEffect(Unit) {
-                observer.onInboxEvent(InboxEvent.Display(uiState))
+            LaunchedEffect(uiState.template.id, uiState.displayed) {
+                if (!uiState.displayed) {
+                    observer.onInboxEvent(InboxEvent.Display(uiState))
+                }
             }
             Column {
 

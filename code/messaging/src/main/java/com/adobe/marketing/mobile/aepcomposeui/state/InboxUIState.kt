@@ -11,9 +11,6 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.state
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxTemplate
 
@@ -32,17 +29,13 @@ sealed interface InboxUIState {
      *
      * @param template The properties to be used for rendering the inbox
      * @param items List of AEP UI elements to display in the inbox
+     * @param displayed Whether the inbox display event has been tracked
      */
     data class Success(
         val template: InboxTemplate,
-        val items: List<AepUI<*, *>>
-    ) : InboxUIState {
-        /**
-         * Tracks whether the inbox display event has already been fired for this state instance.
-         * Backed by Compose [mutableStateOf] so that reads during composition are observable.
-         */
-        internal var displayed by mutableStateOf(false)
-    }
+        val items: List<AepUI<*, *>>,
+        val displayed: Boolean = false
+    ) : InboxUIState
 
     /**
      * Error state for the inbox.

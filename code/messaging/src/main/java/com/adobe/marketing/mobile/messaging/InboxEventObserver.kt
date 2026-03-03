@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 
 /**
  * Implementation of [AepInboxEventObserver] for handling inbox-level events.
@@ -33,6 +34,26 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 class InboxEventObserver(
     private vararg val itemEventObservers: AepUIEventObserver
 ) : AepInboxEventObserver {
+
+    private var updateInboxState: ((InboxUIState) -> Unit)? = null
+
+    /**
+     * Sets the callback to update the inbox state. This should be called by the content provider
+     * that owns this observer to establish the connection between the observer and the state flow.
+     *
+     * Note: Each InboxEventObserver should be used with only one MessagingInboxProvider.
+     * Sharing an observer instance across multiple providers is not supported and will result
+     * in an IllegalStateException.
+     *
+     * @param callback The callback to invoke when the inbox state needs to be updated.
+     * @throws IllegalStateException if a callback has already been set (observer is being reused).
+     */
+    internal fun setInboxStateUpdateCallback(callback: (InboxUIState) -> Unit) {
+        require(updateInboxState == null) {
+            "InboxEventObserver callback already set. Each observer instance should only be used with one MessagingInboxProvider."
+        }
+        updateInboxState = callback
+    }
 
     private val observers: List<AepUIEventObserver> by lazy {
         if (itemEventObservers.isEmpty()) {
@@ -59,12 +80,9 @@ class InboxEventObserver(
     override fun onInboxEvent(event: InboxEvent) {
         when (event) {
             is InboxEvent.Display -> {
-                val uiState = event.inboxUIState
-                if (!uiState.displayed) {
-                    ContentCardMapper.instance.getInboxPropositionItem(event.inboxUIState.template.id)
-                        ?.track(MessagingEdgeEventType.DISPLAY)
-                    uiState.displayed = true
-                }
+                ContentCardMapper.instance.getInboxPropositionItem(event.inboxUIState.template.id)
+                    ?.track(MessagingEdgeEventType.DISPLAY)
+                updateInboxState?.invoke(event.inboxUIState.copy(displayed = true))
             }
         }
     }

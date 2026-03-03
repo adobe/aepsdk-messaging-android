@@ -693,24 +693,6 @@ class MessagingInboxProviderTests {
     }
 
     @Test
-    fun `Success state has displayed flag set to false initially`() = runTest {
-        mockMessaging.`when`<Unit> {
-            Messaging.getPropositionsForSurfaces(any(), any())
-        }.thenAnswer { invocation ->
-            val callback =
-                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
-        }
-
-        val flow = messagingInboxProvider.getInboxUI()
-        val states = flow.take(2).toList()
-
-        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
-        val successState = states[1] as InboxUIState.Success
-        assertFalse("displayed flag should be false initially", successState.displayed)
-    }
-
-    @Test
     fun `Inbox proposition item is stored in ContentCardMapper on success`() = runTest {
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
@@ -728,5 +710,23 @@ class MessagingInboxProviderTests {
 
         val storedItem = ContentCardMapper.instance.getInboxPropositionItem(successState.template.id)
         assertNotNull("Inbox proposition item should be stored in mapper with inbox id", storedItem)
+    }
+
+    @Test
+    fun `Success state has displayed flag set to false initially`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+        assertFalse("displayed flag should be false initially", successState.displayed)
     }
 }

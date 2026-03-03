@@ -1326,4 +1326,135 @@ class AepInboxBehaviorTests {
         composeTestRule.waitForIdle()
         assertTrue(capturedInboxIds.isEmpty(), "onInboxEvent Display should not be called for Error state")
     }
+
+    @Test
+    fun `Test AepInbox does not call onInboxEvent Display on configuration change`() {
+        // setup
+        setupImageMocking()
+
+        // test
+        composeTestRule.setContent {
+            val template = InboxTemplate(
+                id = "test-inbox-config-change",
+                heading = AepText("Test Inbox"),
+                layout = AepInboxLayout.VERTICAL,
+                capacity = 10,
+                emptyMessage = AepText("No messages")
+            )
+            val items = listOf(mockSmallImageUI("item1"))
+            val uiState = InboxUIState.Success(template = template, items = items)
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+
+        composeTestRule.waitForIdle()
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called once initially")
+
+        // Simulate configuration change (e.g., screen rotation)
+        composeTestRule.activity.recreate()
+        composeTestRule.waitForIdle()
+
+        // verify - should still be called only once due to rememberSaveable
+        assertEquals(
+            1, capturedInboxIds.size,
+            "onInboxEvent Display should not be called again after configuration change"
+        )
+        assertEquals("test-inbox-config-change", capturedInboxIds[0])
+    }
+
+    @Test
+    fun `Test AepInbox does not call onInboxEvent Display when same template ID is refreshed`() {
+        // setup
+        setupImageMocking()
+
+        val template = InboxTemplate(
+            id = "test-inbox-refresh",
+            heading = AepText("Test Inbox"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages")
+        )
+
+        val itemCount = androidx.compose.runtime.mutableStateOf(1)
+
+        // test - set content with reactive state
+        composeTestRule.setContent {
+            val items = List(itemCount.value) { index -> mockSmallImageUI("item${index + 1}") }
+            val uiState = InboxUIState.Success(template = template, items = items)
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called once initially")
+
+        // Simulate refresh - change item count to trigger recomposition with same template ID
+        itemCount.value = 2
+        composeTestRule.waitForIdle()
+
+        // verify - should still be called only once because template.id is the same
+        assertEquals(
+            1, capturedInboxIds.size,
+            "onInboxEvent Display should not be called again when same template ID is refreshed"
+        )
+        assertEquals("test-inbox-refresh", capturedInboxIds[0])
+    }
+
+    @Test
+    fun `Test AepInbox calls onInboxEvent Display when template ID changes`() {
+        // setup
+        setupImageMocking()
+
+        val template1 = InboxTemplate(
+            id = "test-inbox-template-1",
+            heading = AepText("Test Inbox 1"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages")
+        )
+
+        val template2 = InboxTemplate(
+            id = "test-inbox-template-2",
+            heading = AepText("Test Inbox 2"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages")
+        )
+
+        val useFirstTemplate = androidx.compose.runtime.mutableStateOf(true)
+
+        // test - set content with reactive template selection
+        composeTestRule.setContent {
+            val template = if (useFirstTemplate.value) template1 else template2
+            val items = listOf(mockSmallImageUI("item1"))
+            val uiState = InboxUIState.Success(template = template, items = items)
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called once for first template")
+        assertEquals("test-inbox-template-1", capturedInboxIds[0])
+
+        // Change to different template ID
+        useFirstTemplate.value = false
+        composeTestRule.waitForIdle()
+
+        // verify - should be called again because template.id changed
+        assertEquals(
+            2, capturedInboxIds.size,
+            "onInboxEvent Display should be called again when template ID changes"
+        )
+        assertEquals("test-inbox-template-1", capturedInboxIds[0])
+        assertEquals("test-inbox-template-2", capturedInboxIds[1])
+    }
 }

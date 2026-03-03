@@ -30,8 +30,12 @@ import kotlin.coroutines.resume
  * manage the Inbox state through reactive updates when the content needs to be refreshed.
  *
  * @param surface The surface to fetch content cards for.
+ * @param observer The [InboxEventObserver] to handle inbox and item-level events. Defaults to a new instance.
  */
-class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
+class MessagingInboxProvider(
+    val surface: Surface,
+    val observer: InboxEventObserver = InboxEventObserver()
+) : AepInboxContentProvider {
     data class InboxProposition(
         val inbox: Proposition,
         val contentCards: List<Proposition>
@@ -39,6 +43,10 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
 
     companion object {
         private const val SELF_TAG: String = "MessagingInboxProvider"
+    }
+
+    init {
+        observer.setInboxStateUpdateCallback(::updateInboxState)
     }
 
     // Internal state flow for refresh() to update
@@ -66,13 +74,25 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
             inboxProposition.inbox.items.getOrNull(0)?.let {
                 ContentCardMapper.instance.storeInboxPropositionItem(inboxTemplate.id, it)
             }
-            return InboxUIState.Success(inboxTemplate, items = aepUIList)
+            return InboxUIState.Success(
+                template = inboxTemplate,
+                items = aepUIList,
+                displayed = false
+            )
         } else {
             return InboxUIState.Error(
                 result.exceptionOrNull()
                     ?: Throwable("Failed to create inbox, unknown error")
             )
         }
+    }
+
+    /**
+     * Updates the inbox state. This is passed to InboxUIState as a callback
+     * to allow the observer to update the state after tracking events.
+     */
+    private fun updateInboxState(newState: InboxUIState) {
+        _inboxStateFlow.value = newState
     }
 
     /**
