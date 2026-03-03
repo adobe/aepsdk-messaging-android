@@ -173,16 +173,18 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         }
 
         // url decode the query parameters if present
-        final String queryParams;
-        try {
-            queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
-        } catch (final UnsupportedEncodingException | NullPointerException exception) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "UnsupportedEncodingException occurred when decoding query parameters %s.",
-                    uri.getQuery());
-            return false;
+        String queryParams = null;
+        if (uri.getQuery() != null) {
+            try {
+                queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
+            } catch (final UnsupportedEncodingException | NullPointerException exception) {
+                Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "UnsupportedEncodingException occurred when decoding query parameters %s.",
+                        uri.getQuery());
+                return false;
+            }
         }
 
         // Populate message data

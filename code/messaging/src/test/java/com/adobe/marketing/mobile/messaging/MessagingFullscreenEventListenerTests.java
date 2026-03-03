@@ -453,9 +453,9 @@ public class MessagingFullscreenEventListenerTests {
                             eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss");
 
                     // verify no message tracking call and message settings weren't created
-                    Assert.assertFalse(result);
+                    Assert.assertTrue(result);
                     verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-                    verify(mockPresentableMessageMapper, times(0))
+                    verify(mockPresentableMessageMapper, times(1))
                             .getMessageFromPresentableId(anyString());
                 });
     }
