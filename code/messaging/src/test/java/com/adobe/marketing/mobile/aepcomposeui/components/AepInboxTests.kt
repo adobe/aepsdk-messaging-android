@@ -1366,26 +1366,29 @@ class AepInboxBehaviorTests {
     }
 
     @Test
-    fun `Test AepInbox does not call onInboxEvent Display when same template ID is refreshed`() {
+    fun `Test AepInbox calls onInboxEvent Display again when refreshed`() {
         // setup
         setupImageMocking()
 
-        val template = InboxTemplate(
-            id = "test-inbox-refresh",
-            heading = AepText("Test Inbox"),
-            layout = AepInboxLayout.VERTICAL,
-            capacity = 10,
-            emptyMessage = AepText("No messages")
-        )
-
-        val itemCount = androidx.compose.runtime.mutableStateOf(1)
+        val displayedFlag = androidx.compose.runtime.mutableStateOf(false)
 
         // test - set content with reactive state
         composeTestRule.setContent {
-            val items = List(itemCount.value) { index -> mockSmallImageUI("item${index + 1}") }
-            val uiState = InboxUIState.Success(template = template, items = items)
+            val template = InboxTemplate(
+                id = "test-inbox-refresh",
+                heading = AepText("Test Inbox"),
+                layout = AepInboxLayout.VERTICAL,
+                capacity = 10,
+                emptyMessage = AepText("No messages")
+            )
+            val items = listOf(mockSmallImageUI("item1"))
+            val currentState = InboxUIState.Success(
+                template = template,
+                items = items,
+                displayed = displayedFlag.value
+            )
             AepInbox(
-                uiState = uiState,
+                uiState = currentState,
                 inboxStyle = InboxUIStyle.Builder().build(),
                 observer = mockAepInboxEventObserver
             )
@@ -1394,16 +1397,21 @@ class AepInboxBehaviorTests {
 
         assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called once initially")
 
-        // Simulate refresh - change item count to trigger recomposition with same template ID
-        itemCount.value = 2
+        // Simulate the observer updating displayed to true (as would happen in real usage)
+        displayedFlag.value = true
         composeTestRule.waitForIdle()
 
-        // verify - should still be called only once because template.id is the same
+        // Simulate refresh - reset displayed back to false (as provider would do)
+        displayedFlag.value = false
+        composeTestRule.waitForIdle()
+
+        // verify - should be called again because displayed changed from true back to false
         assertEquals(
-            1, capturedInboxIds.size,
-            "onInboxEvent Display should not be called again when same template ID is refreshed"
+            2, capturedInboxIds.size,
+            "onInboxEvent Display should be called again when refreshed (displayed flag resets to false)"
         )
         assertEquals("test-inbox-refresh", capturedInboxIds[0])
+        assertEquals("test-inbox-refresh", capturedInboxIds[1])
     }
 
     @Test
