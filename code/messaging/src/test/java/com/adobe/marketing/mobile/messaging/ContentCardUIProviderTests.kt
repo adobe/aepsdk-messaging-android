@@ -14,13 +14,18 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCardMap
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
 import com.adobe.marketing.mobile.services.DeviceInforming
 import com.adobe.marketing.mobile.services.ServiceProvider
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertNotNull
@@ -555,6 +560,47 @@ class ContentCardUIProviderTests {
     }
 
     @Test
+    fun `refreshContent updates getContentCardUI collectors`() = runTest {
+        var callCount = 0
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callCount++
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        // Start collecting from getContentCardUI
+        val results = mutableListOf<Result<List<AepUI<*, *>>>>()
+        val job = launch {
+            contentCardUIProvider.getContentCardUI().collect { result ->
+                results.add(result)
+            }
+        }
+
+        // Wait for initial load
+        advanceUntilIdle()
+
+        assertTrue("Should have initial result", results.isNotEmpty())
+        val initialCount = results.size
+
+        // Call refreshContent - should trigger new emission to collector
+        contentCardUIProvider.refreshContent()
+
+        // Wait for update to propagate
+        advanceUntilIdle()
+
+        // Collector should have received the refresh update
+        assertTrue(
+            "Should have received refresh update, had $initialCount before refresh, ${results.size} after",
+            results.size > initialCount
+        )
+        assertTrue("Latest result should be successful", results.last().isSuccess)
+
+        job.cancel()
+    }
+
+    @Test
     fun `multiple collectors share the same StateFlow behavior`() = runTest {
         var callCount = 0
         mockMessaging.`when`<Unit> {
@@ -586,5 +632,63 @@ class ContentCardUIProviderTests {
 
         // Verify that API was called multiple times
         assertTrue("Should have called API multiple times", callCount >= 2)
+    }
+
+    @Test
+    fun `updateContentCardState updates the content card state flow`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        // Start collecting in the background (must keep collector active so we receive
+        // updateContentCardState emissions without triggering refreshContent again)
+        val results = mutableListOf<Result<List<AepUI<*, *>>>>()
+        val job = launch {
+            contentCardUIProvider.getContentCardUI().collect { result ->
+                results.add(result)
+            }
+        }
+
+        // Wait for initial load
+        advanceUntilIdle()
+
+        assertTrue("Should have initial result", results.isNotEmpty())
+        val initialResult = results.first()
+        assertTrue("Initial result should be successful", initialResult.isSuccess)
+        val initialCards = initialResult.getOrNull()
+        assertNotNull("Initial cards should not be null", initialCards)
+        assertTrue("Should have at least one card", initialCards!!.isNotEmpty())
+
+        val firstCard = initialCards.first() as SmallImageUI
+        assertFalse("Initial displayed flag should be false", firstCard.getState().displayed)
+
+        // Create a new card instance with displayed = true so StateFlow emits (different object reference).
+        // Mutating firstCard in place would produce an "equal" list and suppress StateFlow emission.
+        val updatedCard = SmallImageUI(
+            firstCard.getTemplate(),
+            firstCard.getState().copy(displayed = true)
+        )
+        contentCardUIProvider.updateContentCardState(updatedCard)
+
+        // Wait for the update to propagate
+        advanceUntilIdle()
+
+        // Collector should have received the update
+        assertTrue(
+            "Should have received updateContentCardState emission, had ${results.size} before update",
+            results.size >= 2
+        )
+        val updatedResult = results.last()
+        assertTrue("Updated result should be successful", updatedResult.isSuccess)
+        val updatedCards = updatedResult.getOrNull()
+        assertNotNull("Updated cards should not be null", updatedCards)
+        assertTrue("Should have at least one card in updated result", updatedCards!!.isNotEmpty())
+        val updatedFirstCard = updatedCards.first() as SmallImageUI
+        assertTrue("displayed flag should be true after update", updatedFirstCard.getState().displayed)
+
+        job.cancel()
     }
 }

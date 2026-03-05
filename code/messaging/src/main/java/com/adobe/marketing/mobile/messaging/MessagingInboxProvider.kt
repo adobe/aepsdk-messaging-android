@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -30,11 +30,9 @@ import kotlin.coroutines.resume
  * manage the Inbox state through reactive updates when the content needs to be refreshed.
  *
  * @param surface The surface to fetch content cards for.
- * @param observer The [InboxEventObserver] to handle inbox and item-level events. Defaults to a new instance.
  */
 class MessagingInboxProvider(
-    val surface: Surface,
-    val observer: InboxEventObserver = InboxEventObserver()
+    val surface: Surface
 ) : AepInboxContentProvider {
     data class InboxProposition(
         val inbox: Proposition,
@@ -43,10 +41,6 @@ class MessagingInboxProvider(
 
     companion object {
         private const val SELF_TAG: String = "MessagingInboxProvider"
-    }
-
-    init {
-        observer.setInboxStateUpdateCallback(::updateInboxState)
     }
 
     // Internal state flow for refresh() to update
@@ -88,10 +82,12 @@ class MessagingInboxProvider(
     }
 
     /**
-     * Updates the inbox state. This is passed to InboxUIState as a callback
-     * to allow the observer to update the state after tracking events.
+     * Updates the inbox state. This is called by [InboxEventObserver] to update
+     * the state after handling events (e.g., marking inbox as displayed).
+     *
+     * @param newState The new [InboxUIState] to emit.
      */
-    private fun updateInboxState(newState: InboxUIState) {
+    internal fun updateInboxState(newState: InboxUIState) {
         _inboxStateFlow.value = newState
     }
 

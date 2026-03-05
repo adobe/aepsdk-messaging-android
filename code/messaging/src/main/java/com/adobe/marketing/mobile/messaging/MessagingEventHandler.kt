@@ -25,9 +25,11 @@ import com.adobe.marketing.mobile.services.ServiceProvider
  *
  * @param T The type of the template associated with the UI component.
  * @param S The type of the state associated with the UI component.
+ * @property provider An optional [ContentCardUIProvider] to update card state in the flow.
  * @property callback An optional callback to invoke when a content card event occurs.
  */
 internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUIState>(
+    private val provider: ContentCardUIProvider?,
     private val callback: ContentCardUIEventListener?
 ) {
     companion object {
@@ -70,6 +72,7 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
                 )
 
                 ui.updateState(getNewState(event))
+                provider?.updateContentCardState(ui)
 
                 track(activityId, null, MessagingEdgeEventType.DISPLAY)
                 callback?.onDisplay(event.aepUi)
@@ -98,6 +101,7 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
                 )
 
                 ui.updateState(getNewState(event))
+                provider?.updateContentCardState(ui)
 
                 track(activityId, null, MessagingEdgeEventType.DISMISS)
                 callback?.onDismiss(event.aepUi)
@@ -138,6 +142,7 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
             is UIAction.Click -> {
                 val ui = event.aepUi
                 ui.updateState(getNewState(event))
+                provider?.updateContentCardState(ui)
                 val urlHandled =
                     callback?.onInteract(ui, event.action.id, event.action.actionUrl)
 

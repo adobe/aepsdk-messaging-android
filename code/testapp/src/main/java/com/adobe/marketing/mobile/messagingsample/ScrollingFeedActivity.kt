@@ -161,7 +161,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         uiState = inboxUi,
                         inboxStyle = inboxContainerStyle,
                         itemsStyle = cardUIStyle,
-                        observer = viewModel.inboxContentProvider.observer
+                        observer = viewModel.observer
                     )
                 }
             }
@@ -191,11 +191,12 @@ class ContentCardCallback: ContentCardUIEventListener {
 // create new view model or reuse existing one to hold the aepUIList
 class ExistingViewModel: ViewModel() {
     private val contentCardCallback = ContentCardCallback()
-    private val observer = InboxEventObserver(ContentCardEventObserver(contentCardCallback))
     
-    val inboxContentProvider = MessagingInboxProvider(
-        surface = Surface("card/ms"),
-        observer = observer
+    val inboxContentProvider = MessagingInboxProvider(Surface("card/ms"))
+    
+    val observer = InboxEventObserver(
+        inboxContentProvider,
+        ContentCardEventObserver(contentCardCallback)
     )
 
     val inboxUIStateFlow = inboxContentProvider.getInboxUI()

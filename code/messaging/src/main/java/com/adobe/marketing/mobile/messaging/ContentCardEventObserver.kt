@@ -24,12 +24,19 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 /**
  * Implementation of [AepUIEventObserver] for handling content card events.
  *
+ * @param provider An optional [ContentCardUIProvider] that owns the content card state.
+ *   When provided, the observer will call [ContentCardUIProvider.updateContentCardState]
+ *   to update card state after handling events (e.g., marking as displayed).
  * @param callback An optional callback to invoke when a content card event occurs.
  **/
-class ContentCardEventObserver(private val callback: ContentCardUIEventListener?) : AepUIEventObserver {
-    private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
-    private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(callback) }
-    private val imageOnlyEventHandler by lazy { ImageOnlyTemplateEventHandler(callback) }
+class ContentCardEventObserver @JvmOverloads constructor(
+    private val callback: ContentCardUIEventListener? = null,
+    private val provider: ContentCardUIProvider? = null,
+) : AepUIEventObserver {
+
+    private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(provider, callback) }
+    private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(provider, callback) }
+    private val imageOnlyEventHandler by lazy { ImageOnlyTemplateEventHandler(provider, callback) }
 
     @Suppress("UNCHECKED_CAST")
     override fun onEvent(event: UIEvent<*, *>) {

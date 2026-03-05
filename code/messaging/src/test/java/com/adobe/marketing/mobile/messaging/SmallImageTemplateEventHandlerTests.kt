@@ -98,7 +98,7 @@ class SmallImageTemplateEventHandlerTests {
     fun `Small Image Template event handler receives a display event`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val event = UIEvent.Display(mockSmallImageUI)
 
             handler.onEvent(event, "propositionId")
@@ -114,7 +114,7 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             `when`(mockSmallImageCardUIState.displayed).thenReturn(true)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val event = UIEvent.Display(mockSmallImageUI)
 
             handler.onEvent(event, "propositionId")
@@ -129,7 +129,7 @@ class SmallImageTemplateEventHandlerTests {
     fun `Small Image Template event handler receives a dismiss event`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val event = UIEvent.Dismiss(mockSmallImageUI)
 
             handler.onEvent(event, "propositionId")
@@ -145,7 +145,7 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             `when`(mockSmallImageCardUIState.dismissed).thenReturn(true)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val event = UIEvent.Dismiss(mockSmallImageUI)
 
             handler.onEvent(event, "propositionId")
@@ -160,7 +160,7 @@ class SmallImageTemplateEventHandlerTests {
     fun `Small Image Template event handler receives a click event`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockSmallImageUI, action)
 
@@ -177,7 +177,7 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
             `when`(callback.onInteract(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(true)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockSmallImageUI, action)
 
@@ -193,7 +193,7 @@ class SmallImageTemplateEventHandlerTests {
     fun `Small Image Template event handler receives a click event with no action url`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val action = UIAction.Click(id = "button1", actionUrl = null)
             val event = UIEvent.Interact(mockSmallImageUI, action)
 
@@ -208,7 +208,7 @@ class SmallImageTemplateEventHandlerTests {
     @Test
     fun `Small Image Template event handler receives a click event with no callback provided`() {
         runTest {
-            val handler = SmallImageTemplateEventHandler(null)
+            val handler = SmallImageTemplateEventHandler(null, null)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockSmallImageUI, action)
 
@@ -225,7 +225,7 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             `when`(mockSmallImageCardUIState.read).thenReturn(false)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockSmallImageUI, action)
 
@@ -243,7 +243,7 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             `when`(mockSmallImageCardUIState.read).thenReturn(null)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = SmallImageTemplateEventHandler(callback)
+            val handler = SmallImageTemplateEventHandler(null, callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockSmallImageUI, action)
 

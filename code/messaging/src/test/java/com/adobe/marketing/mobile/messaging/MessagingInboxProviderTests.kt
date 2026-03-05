@@ -30,6 +30,8 @@ import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -728,5 +730,50 @@ class MessagingInboxProviderTests {
         assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
         val successState = states[1] as InboxUIState.Success
         assertFalse("displayed flag should be false initially", successState.displayed)
+    }
+
+    @Test
+    fun `updateInboxState updates the inbox state flow`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        // Start collecting all states in the background
+        val states = mutableListOf<InboxUIState>()
+        val job = launch {
+            messagingInboxProvider.getInboxUI().collect { state ->
+                states.add(state)
+            }
+        }
+
+        // Wait for initial load to complete (Loading + Success)
+        advanceUntilIdle()
+
+        // Verify we have at least 2 states (Loading and Success)
+        assertTrue("Should have at least 2 states", states.size >= 2)
+        assertTrue("First state should be Loading", states[0] is InboxUIState.Loading)
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+
+        val initialSuccess = states[1] as InboxUIState.Success
+        assertFalse("Initial displayed flag should be false", initialSuccess.displayed)
+
+        // Update the state with displayed = true
+        val updatedState = initialSuccess.copy(displayed = true)
+        messagingInboxProvider.updateInboxState(updatedState)
+
+        // Wait for the update to propagate
+        advanceUntilIdle()
+
+        // Verify the updated state was collected
+        assertTrue("Should have at least 3 states", states.size >= 3)
+        val finalState = states.last()
+        assertTrue("Final state should be Success", finalState is InboxUIState.Success)
+        assertTrue("displayed flag should be true after update", (finalState as InboxUIState.Success).displayed)
+
+        job.cancel()
     }
 }

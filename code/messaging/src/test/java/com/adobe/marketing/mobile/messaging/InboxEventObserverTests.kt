@@ -44,11 +44,14 @@ class InboxEventObserverTests {
     private lateinit var mockSmallImageTemplate: SmallImageTemplate
     @Mock
     private lateinit var mockSmallImageTemplateEventHandler: MockedConstruction<SmallImageTemplateEventHandler>
+    @Mock
+    private lateinit var mockProvider: MessagingInboxProvider
 
     @BeforeTest
     fun setup() {
         mockAepUI = mock(AepUI::class.java)
         mockSmallImageTemplate = mock(SmallImageTemplate::class.java)
+        mockProvider = mock(MessagingInboxProvider::class.java)
 
         `when`(mockSmallImageTemplate.id).thenReturn("mockId")
         `when`(mockSmallImageTemplate.getType()).thenReturn(AepUITemplateType.SMALL_IMAGE)
@@ -59,7 +62,7 @@ class InboxEventObserverTests {
 
     @AfterTest
     fun tearDown() {
-        reset(mockAepUI, mockSmallImageTemplate)
+        reset(mockAepUI, mockSmallImageTemplate, mockProvider)
         mockSmallImageTemplateEventHandler.close()
         ContentCardMapper.instance.clear()
     }
@@ -77,7 +80,7 @@ class InboxEventObserverTests {
 
     @Test
     fun `onInboxEvent Display tracks inbox proposition item from mapper`() {
-        val observer = InboxEventObserver()
+        val observer = InboxEventObserver(mockProvider)
 
         val mockPropositionItem = mock(PropositionItem::class.java)
         val mockProposition = mock(Proposition::class.java)
@@ -85,22 +88,28 @@ class InboxEventObserverTests {
 
         ContentCardMapper.instance.storeInboxPropositionItem("testInboxId", mockPropositionItem)
 
-        observer.onInboxEvent(InboxEvent.Display(createSuccessState("testInboxId")))
+        val successState = createSuccessState("testInboxId")
+        observer.onInboxEvent(InboxEvent.Display(successState))
 
         verify(mockPropositionItem, times(1)).track(MessagingEdgeEventType.DISPLAY)
+        verify(mockProvider, times(1)).updateInboxState(successState.copy(displayed = true))
     }
 
     @Test
     fun `onInboxEvent Display does nothing when no inbox proposition item is stored for given id`() {
-        val observer = InboxEventObserver()
+        val observer = InboxEventObserver(mockProvider)
 
+        val successState = createSuccessState("nonExistentInboxId")
         // No exception should be thrown when mapper has no inbox proposition item for this ID
-        observer.onInboxEvent(InboxEvent.Display(createSuccessState("nonExistentInboxId")))
+        observer.onInboxEvent(InboxEvent.Display(successState))
+
+        // Should still update state even if tracking fails
+        verify(mockProvider, times(1)).updateInboxState(successState.copy(displayed = true))
     }
 
     @Test
     fun `onInboxEvent Display tracks correct inbox proposition for multiple inboxes`() {
-        val observer = InboxEventObserver()
+        val observer = InboxEventObserver(mockProvider)
 
         val mockPropositionItem1 = mock(PropositionItem::class.java)
         val mockProposition1 = mock(Proposition::class.java)
@@ -113,16 +122,18 @@ class InboxEventObserverTests {
         ContentCardMapper.instance.storeInboxPropositionItem("inbox1", mockPropositionItem1)
         ContentCardMapper.instance.storeInboxPropositionItem("inbox2", mockPropositionItem2)
 
-        observer.onInboxEvent(InboxEvent.Display(createSuccessState("inbox2")))
+        val successState = createSuccessState("inbox2")
+        observer.onInboxEvent(InboxEvent.Display(successState))
 
         verify(mockPropositionItem1, times(0)).track(MessagingEdgeEventType.DISPLAY)
         verify(mockPropositionItem2, times(1)).track(MessagingEdgeEventType.DISPLAY)
+        verify(mockProvider, times(1)).updateInboxState(successState.copy(displayed = true))
     }
 
     @Test
     fun `onEvent delegates content card display event to ContentCardEventObserver`() {
         val callback = mock(ContentCardUIEventListener::class.java)
-        val observer = InboxEventObserver(ContentCardEventObserver(callback))
+        val observer = InboxEventObserver(mockProvider, ContentCardEventObserver(callback))
         val event = UIEvent.Display(mockAepUI)
 
         observer.onEvent(event)
@@ -134,7 +145,7 @@ class InboxEventObserverTests {
     @Test
     fun `onEvent delegates content card dismiss event to ContentCardEventObserver`() {
         val callback = mock(ContentCardUIEventListener::class.java)
-        val observer = InboxEventObserver(ContentCardEventObserver(callback))
+        val observer = InboxEventObserver(mockProvider, ContentCardEventObserver(callback))
         val event = UIEvent.Dismiss(mockAepUI)
 
         observer.onEvent(event)
@@ -146,7 +157,7 @@ class InboxEventObserverTests {
     @Test
     fun `onEvent delegates content card interact event to ContentCardEventObserver`() {
         val callback = mock(ContentCardUIEventListener::class.java)
-        val observer = InboxEventObserver(ContentCardEventObserver(callback))
+        val observer = InboxEventObserver(mockProvider, ContentCardEventObserver(callback))
         val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
         val event = UIEvent.Interact(mockAepUI, action)
 
@@ -158,7 +169,7 @@ class InboxEventObserverTests {
 
     @Test
     fun `InboxEventObserver without observers still handles inbox events`() {
-        val observer = InboxEventObserver()
+        val observer = InboxEventObserver(mockProvider)
 
         val mockPropositionItem = mock(PropositionItem::class.java)
         val mockProposition = mock(Proposition::class.java)
@@ -166,11 +177,13 @@ class InboxEventObserverTests {
 
         ContentCardMapper.instance.storeInboxPropositionItem("testInboxId", mockPropositionItem)
 
+        val successState = createSuccessState("testInboxId")
         // onInboxEvent should work even without item observers
-        observer.onInboxEvent(InboxEvent.Display(createSuccessState("testInboxId")))
+        observer.onInboxEvent(InboxEvent.Display(successState))
 
         // Verify inbox display tracking still happens
         verify(mockPropositionItem, times(1)).track(MessagingEdgeEventType.DISPLAY)
+        verify(mockProvider, times(1)).updateInboxState(successState.copy(displayed = true))
 
         // onEvent with no item observers should delegate to default ContentCardEventObserver
         val itemEvent = UIEvent.Display(mockAepUI)

@@ -16,7 +16,6 @@ import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
-import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 
 /**
  * Implementation of [AepInboxEventObserver] for handling inbox-level events.
@@ -26,34 +25,17 @@ import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
  * inbox to support additional message types (e.g., JSON, HTML) in the future by simply
  * adding new observers — without modifying this class.
  *
+ * @param provider The [MessagingInboxProvider] that owns the inbox state. The observer
+ *   will call [MessagingInboxProvider.updateInboxState] to update the inbox state after handling events.
  * @param itemEventObservers Zero or more [AepUIEventObserver] instances that handle
  *   item-level events (e.g., [ContentCardEventObserver]). Each observer's [onEvent] is
  *   called for every item-level [UIEvent]. If no observers are provided, a default
  *   [ContentCardEventObserver] with null callback will be used.
  */
 class InboxEventObserver(
+    private val provider: MessagingInboxProvider,
     private vararg val itemEventObservers: AepUIEventObserver
 ) : AepInboxEventObserver {
-
-    private var updateInboxState: ((InboxUIState) -> Unit)? = null
-
-    /**
-     * Sets the callback to update the inbox state. This should be called by the content provider
-     * that owns this observer to establish the connection between the observer and the state flow.
-     *
-     * Note: Each InboxEventObserver should be used with only one MessagingInboxProvider.
-     * Sharing an observer instance across multiple providers is not supported and will result
-     * in an IllegalStateException.
-     *
-     * @param callback The callback to invoke when the inbox state needs to be updated.
-     * @throws IllegalStateException if a callback has already been set (observer is being reused).
-     */
-    internal fun setInboxStateUpdateCallback(callback: (InboxUIState) -> Unit) {
-        require(updateInboxState == null) {
-            "InboxEventObserver callback already set. Each observer instance should only be used with one MessagingInboxProvider."
-        }
-        updateInboxState = callback
-    }
 
     private val observers: List<AepUIEventObserver> by lazy {
         if (itemEventObservers.isEmpty()) {
@@ -73,7 +55,8 @@ class InboxEventObserver(
 
     /**
      * Handles inbox-level events.
-     * Currently handles [InboxEvent.Display] by tracking the inbox proposition.
+     * Currently handles [InboxEvent.Display] by tracking the inbox proposition
+     * and updating the inbox state via the provider.
      *
      * @param event The [InboxEvent] to handle.
      */
@@ -82,7 +65,7 @@ class InboxEventObserver(
             is InboxEvent.Display -> {
                 ContentCardMapper.instance.getInboxPropositionItem(event.inboxUIState.template.id)
                     ?.track(MessagingEdgeEventType.DISPLAY)
-                updateInboxState?.invoke(event.inboxUIState.copy(displayed = true))
+                provider.updateInboxState(event.inboxUIState.copy(displayed = true))
             }
         }
     }
