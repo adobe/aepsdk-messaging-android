@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepInboxContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.services.Log
@@ -82,13 +83,14 @@ class MessagingInboxProvider(
     }
 
     /**
-     * Updates the inbox state. This is called by [InboxEventObserver] to update
-     * the state after handling events (e.g., marking inbox as displayed).
-     *
-     * @param newState The new [InboxUIState] to emit.
+     * Handles state updates needed for inbox events.
      */
-    internal fun updateInboxState(newState: InboxUIState) {
-        _inboxStateFlow.value = newState
+    internal fun onInboxEvent(event: InboxEvent) {
+        when (event) {
+            is InboxEvent.Display -> {
+                _inboxStateFlow.value = event.inboxUIState.copy(displayed = true)
+            }
+        }
     }
 
     /**

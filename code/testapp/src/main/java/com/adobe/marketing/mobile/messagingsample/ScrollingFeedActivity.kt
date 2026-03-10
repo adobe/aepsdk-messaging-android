@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +55,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.messaging.MessagingInboxProvider
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
-import com.adobe.marketing.mobile.messaging.InboxEventObserver
+import com.adobe.marketing.mobile.messaging.MessagingInboxEventObserver
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 import kotlinx.coroutines.flow.SharingStarted
@@ -194,7 +193,7 @@ class ExistingViewModel: ViewModel() {
     
     val inboxContentProvider = MessagingInboxProvider(Surface("card/ms"))
     
-    val observer = InboxEventObserver(
+    val observer = MessagingInboxEventObserver(
         inboxContentProvider,
         ContentCardEventObserver(contentCardCallback)
     )

@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCardMap
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
@@ -733,7 +734,7 @@ class MessagingInboxProviderTests {
     }
 
     @Test
-    fun `updateInboxState updates the inbox state flow`() = runTest {
+    fun `onInboxEvent Display updates the inbox state flow`() = runTest {
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
         }.thenAnswer { invocation ->
@@ -761,9 +762,8 @@ class MessagingInboxProviderTests {
         val initialSuccess = states[1] as InboxUIState.Success
         assertFalse("Initial displayed flag should be false", initialSuccess.displayed)
 
-        // Update the state with displayed = true
-        val updatedState = initialSuccess.copy(displayed = true)
-        messagingInboxProvider.updateInboxState(updatedState)
+        // Update the state by notifying the provider of display event
+        messagingInboxProvider.onInboxEvent(InboxEvent.Display(initialSuccess))
 
         // Wait for the update to propagate
         advanceUntilIdle()

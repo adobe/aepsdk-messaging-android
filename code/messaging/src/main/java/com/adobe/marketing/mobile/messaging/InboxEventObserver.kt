@@ -13,59 +13,20 @@ package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType
 import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
-import com.adobe.marketing.mobile.aepcomposeui.UIEvent
-import com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
-import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 
 /**
- * Implementation of [AepInboxEventObserver] for handling inbox-level events.
- *
- * This observer handles inbox events (such as display tracking) and delegates individual
- * item-level events to the provided [AepUIEventObserver] instances. This design allows the
- * inbox to support additional message types (e.g., JSON, HTML) in the future by simply
- * adding new observers — without modifying this class.
- *
- * @param provider The [MessagingInboxProvider] that owns the inbox state. The observer
- *   will call [MessagingInboxProvider.updateInboxState] to update the inbox state after handling events.
- * @param itemEventObservers Zero or more [AepUIEventObserver] instances that handle
- *   item-level events (e.g., [ContentCardEventObserver]). Each observer's [onEvent] is
- *   called for every item-level [UIEvent]. If no observers are provided, a default
- *   [ContentCardEventObserver] with null callback will be used.
+ * Handles tracking for inbox-level events. Used internally by [MessagingInboxEventObserver].
  */
-class InboxEventObserver(
-    private val provider: MessagingInboxProvider,
-    private vararg val itemEventObservers: AepUIEventObserver
-) : AepInboxEventObserver {
-
-    private val observers: List<AepUIEventObserver> by lazy {
-        if (itemEventObservers.isEmpty()) {
-            listOf(ContentCardEventObserver(null))
-        } else {
-            itemEventObservers.toList()
-        }
-    }
+internal class InboxEventObserver {
 
     /**
-     * Delegates item-level events to all provided [AepUIEventObserver] instances.
-     * If no observers were provided, delegates to a default [ContentCardEventObserver].
+     * Performs tracking for inbox events.
      */
-    override fun onEvent(event: UIEvent<*, *>) {
-        observers.forEach { it.onEvent(event) }
-    }
-
-    /**
-     * Handles inbox-level events.
-     * Currently handles [InboxEvent.Display] by tracking the inbox proposition
-     * and updating the inbox state via the provider.
-     *
-     * @param event The [InboxEvent] to handle.
-     */
-    override fun onInboxEvent(event: InboxEvent) {
+    internal fun onInboxEvent(event: InboxEvent) {
         when (event) {
             is InboxEvent.Display -> {
                 ContentCardMapper.instance.getInboxPropositionItem(event.inboxUIState.template.id)
                     ?.track(MessagingEdgeEventType.DISPLAY)
-                provider.updateInboxState(event.inboxUIState.copy(displayed = true))
             }
         }
     }
