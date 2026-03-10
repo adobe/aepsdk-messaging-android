@@ -24,26 +24,35 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 /**
  * Implementation of [AepUIEventObserver] for handling content card events.
  *
- * @param provider An optional [ContentCardUIProvider] that owns the content card state.
- *   When provided, the observer will call [ContentCardUIProvider.updateContentCardState]
- *   to update card state after handling events (e.g., marking as displayed).
  * @param callback An optional callback to invoke when a content card event occurs.
- **/
+ * @param provider An optional [ContentCardUIProvider] that owns the content card state.
+ *   When provided, the observer will call [ContentCardUIProvider.onEvent] after handling
+ *   so the provider can emit state updates to its flow.
+ */
 class ContentCardEventObserver @JvmOverloads constructor(
     private val callback: ContentCardUIEventListener? = null,
     private val provider: ContentCardUIProvider? = null,
 ) : AepUIEventObserver {
 
-    private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(provider, callback) }
-    private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(provider, callback) }
-    private val imageOnlyEventHandler by lazy { ImageOnlyTemplateEventHandler(provider, callback) }
+    private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
+    private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(callback) }
+    private val imageOnlyEventHandler by lazy { ImageOnlyTemplateEventHandler(callback) }
 
     @Suppress("UNCHECKED_CAST")
     override fun onEvent(event: UIEvent<*, *>) {
-        when (val template = event.aepUi.getTemplate()) {
-            is SmallImageTemplate -> { smallImageEventHandler.onEvent(event as UIEvent<SmallImageTemplate, SmallImageCardUIState>, template.id) }
-            is LargeImageTemplate -> { largeImageEventHandler.onEvent(event as UIEvent<LargeImageTemplate, LargeImageCardUIState>, template.id) }
-            is ImageOnlyTemplate -> { imageOnlyEventHandler.onEvent(event as UIEvent<ImageOnlyTemplate, ImageOnlyCardUIState>, template.id) }
+        when (event.aepUi.getTemplate()) {
+            is SmallImageTemplate -> {
+                smallImageEventHandler.onEvent(event as UIEvent<SmallImageTemplate, SmallImageCardUIState>)
+                provider?.onEvent(event)
+            }
+            is LargeImageTemplate -> {
+                largeImageEventHandler.onEvent(event as UIEvent<LargeImageTemplate, LargeImageCardUIState>)
+                provider?.onEvent(event)
+            }
+            is ImageOnlyTemplate -> {
+                imageOnlyEventHandler.onEvent(event as UIEvent<ImageOnlyTemplate, ImageOnlyCardUIState>)
+                provider?.onEvent(event)
+            }
         }
     }
 }

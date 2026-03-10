@@ -95,6 +95,16 @@ internal object ContentCardSchemaDataUtils {
     }
 
     /**
+     * Returns a new [AepUI] instance with the same template and state as [ui].
+     * Used so that [kotlinx.coroutines.flow.StateFlow] sees a distinct value and emits when state was updated in place.
+     */
+    internal fun copyAepUI(ui: AepUI<*, *>): AepUI<*, *> = when (ui) {
+        is SmallImageUI -> SmallImageUI(ui.getTemplate(), ui.getState())
+        is LargeImageUI -> LargeImageUI(ui.getTemplate(), ui.getState())
+        is ImageOnlyUI -> ImageOnlyUI(ui.getTemplate(), ui.getState())
+    }
+
+    /**
      * Builds an [AepUITemplate] from a given [Proposition].
      *
      * @param proposition The proposition containing the content card data.

@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCardMap
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
 import com.adobe.marketing.mobile.services.DeviceInforming
@@ -635,7 +636,7 @@ class ContentCardUIProviderTests {
     }
 
     @Test
-    fun `updateContentCardState updates the content card state flow`() = runTest {
+    fun `onEvent updates the content card state flow`() = runTest {
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
         }.thenAnswer { invocation ->
@@ -644,7 +645,7 @@ class ContentCardUIProviderTests {
         }
 
         // Start collecting in the background (must keep collector active so we receive
-        // updateContentCardState emissions without triggering refreshContent again)
+        // onEvent emissions without triggering refreshContent again)
         val results = mutableListOf<Result<List<AepUI<*, *>>>>()
         val job = launch {
             contentCardUIProvider.getContentCardUI().collect { result ->
@@ -665,20 +666,19 @@ class ContentCardUIProviderTests {
         val firstCard = initialCards.first() as SmallImageUI
         assertFalse("Initial displayed flag should be false", firstCard.getState().displayed)
 
-        // Create a new card instance with displayed = true so StateFlow emits (different object reference).
-        // Mutating firstCard in place would produce an "equal" list and suppress StateFlow emission.
+        // New card instance with updated state
         val updatedCard = SmallImageUI(
             firstCard.getTemplate(),
             firstCard.getState().copy(displayed = true)
         )
-        contentCardUIProvider.updateContentCardState(updatedCard)
+        contentCardUIProvider.onEvent(UIEvent.Display(updatedCard))
 
         // Wait for the update to propagate
         advanceUntilIdle()
 
         // Collector should have received the update
         assertTrue(
-            "Should have received updateContentCardState emission, had ${results.size} before update",
+            "Should have received onEvent emission, had ${results.size} before update",
             results.size >= 2
         )
         val updatedResult = results.last()
@@ -688,6 +688,53 @@ class ContentCardUIProviderTests {
         assertTrue("Should have at least one card in updated result", updatedCards!!.isNotEmpty())
         val updatedFirstCard = updatedCards.first() as SmallImageUI
         assertTrue("displayed flag should be true after update", updatedFirstCard.getState().displayed)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `onEvent with in-place mutated card emits updated state`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val results = mutableListOf<Result<List<AepUI<*, *>>>>()
+        val job = launch {
+            contentCardUIProvider.getContentCardUI().collect { result ->
+                results.add(result)
+            }
+        }
+
+        advanceUntilIdle()
+
+        assertTrue("Should have initial result", results.isNotEmpty())
+        val initialCards = results.first().getOrNull()
+        assertNotNull("Initial cards should not be null", initialCards)
+        assertTrue("Should have at least one card", initialCards!!.isNotEmpty())
+
+        val firstCard = initialCards.first() as SmallImageUI
+        assertFalse("Initial displayed flag should be false", firstCard.getState().displayed)
+
+        // Mutate the same card in place (as handlers do), then call onEvent with that reference.
+        // Provider uses copyAepUI so StateFlow sees a distinct value and emits.
+        firstCard.updateState(firstCard.getState().copy(displayed = true))
+        contentCardUIProvider.onEvent(UIEvent.Display(firstCard))
+
+        advanceUntilIdle()
+
+        assertTrue(
+            "Should have received onEvent emission after in-place mutation, had ${results.size} results",
+            results.size >= 2
+        )
+        val updatedResult = results.last()
+        assertTrue("Updated result should be successful", updatedResult.isSuccess)
+        val updatedCards = updatedResult.getOrNull()
+        assertNotNull("Updated cards should not be null", updatedCards)
+        val updatedFirstCard = updatedCards!!.first() as SmallImageUI
+        assertTrue("displayed flag should be true after in-place mutation", updatedFirstCard.getState().displayed)
 
         job.cancel()
     }

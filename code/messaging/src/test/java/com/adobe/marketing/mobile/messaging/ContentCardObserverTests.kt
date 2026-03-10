@@ -64,7 +64,7 @@ class ContentCardObserverTests {
 
         observer.onEvent(event)
         val expectedEvent = UIEvent.Display(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent)
     }
 
     @Test
@@ -76,7 +76,7 @@ class ContentCardObserverTests {
         observer.onEvent(event)
 
         val expectedEvent = UIEvent.Dismiss(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent)
     }
 
     @Test
@@ -89,6 +89,18 @@ class ContentCardObserverTests {
         observer.onEvent(event)
 
         val expectedEvent = UIEvent.Interact(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>, UIAction.Click(id = "button1", actionUrl = "http://example.com"))
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent)
+    }
+
+    @Test
+    fun `Content card event observer calls provider onEvent when provider is set`() {
+        val callback = mock(ContentCardUIEventListener::class.java)
+        val provider = mock(ContentCardUIProvider::class.java)
+        val observer = ContentCardEventObserver(callback, provider)
+        val event = UIEvent.Display(mockAepUI)
+
+        observer.onEvent(event)
+
+        verify(provider, times(1)).onEvent(event)
     }
 }

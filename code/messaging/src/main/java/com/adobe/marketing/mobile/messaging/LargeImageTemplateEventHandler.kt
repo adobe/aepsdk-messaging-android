@@ -18,16 +18,11 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 /**
  * Large Image Template Event Handler for content card events.
  *
- * @property provider An optional [ContentCardUIProvider] to update card state in the flow.
  * @property callback An optional callback to invoke when a content card event occurs.
  */
 internal class LargeImageTemplateEventHandler(
-    provider: ContentCardUIProvider?,
     callback: ContentCardUIEventListener?
-) : MessagingEventHandler<LargeImageTemplate, LargeImageCardUIState>(
-    provider,
-    callback
-) {
+) : MessagingEventHandler<LargeImageTemplate, LargeImageCardUIState>(callback) {
     override fun getNewState(event: UIEvent<LargeImageTemplate, LargeImageCardUIState>): LargeImageCardUIState {
         val currentState = event.aepUi.getState()
         return when (event) {

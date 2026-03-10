@@ -15,9 +15,11 @@ import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.copyAepUI
 import com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.flow.Flow
@@ -49,24 +51,30 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     private val aepUIFlow: StateFlow<Result<List<AepUI<*, *>>>> = _aepUIFlow.asStateFlow()
 
     /**
-     * Updates the state of a specific content card. This is called by [ContentCardEventObserver]
-     * to update the card state after handling events (e.g., marking card as displayed).
+     * Receives a content card UI event and updates the flow. Called by [ContentCardEventObserver]
+     * after the event has been handled. When the handler mutates the card in place (same reference),
+     * we use a copy so [StateFlow] sees a distinct value and emits.
      *
-     * The updated AepUI will be emitted to all active collectors of [getContentCardUI].
-     *
-     * @param updatedCard The updated [AepUI] instance with new state.
+     * @param event The [UIEvent] whose [UIEvent.aepUi] holds the updated card state.
      */
-    internal fun updateContentCardState(updatedCard: AepUI<*, *>) {
+    internal fun onEvent(event: UIEvent<*, *>) {
+        val updatedCard = event.aepUi
         val currentResult = _aepUIFlow.value
-        if (currentResult.isSuccess) {
-            val currentList = currentResult.getOrNull() ?: emptyList()
-            val cardId = updatedCard.getTemplate().id
-            val updatedList = currentList.map { aepUI ->
-                if (aepUI.getTemplate().id == cardId) updatedCard else aepUI
-            }
-            // Create a new Result to ensure StateFlow emits the update
-            _aepUIFlow.value = Result.success(updatedList)
+        if (!currentResult.isSuccess) {
+            return
         }
+        val currentList = currentResult.getOrNull() ?: emptyList()
+        val cardId = updatedCard.getTemplate().id
+        val updatedList = currentList.map { aepUI ->
+            if (aepUI.getTemplate().id != cardId) {
+                aepUI
+            }
+            // in-place mutation: copy so StateFlow emits
+            else if (aepUI === updatedCard) {
+                copyAepUI(updatedCard)
+            } else updatedCard
+        }
+        _aepUIFlow.value = Result.success(updatedList)
     }
 
     /**
@@ -74,7 +82,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * This function initiates the content fetch and returns a flow of [AepUI] instances
      * that represent the UI templates. The flow emits updates whenever [refreshContent] is called
-     * or when [updateContentCardState] is called to update a card's state.
+     * or when [onEvent] is called to update a card's state.
      *
      * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */

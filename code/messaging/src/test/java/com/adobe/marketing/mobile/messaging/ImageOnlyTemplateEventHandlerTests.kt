@@ -98,10 +98,10 @@ class ImageOnlyTemplateEventHandlerTests {
     fun `Image Only Template event handler receives a display event`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Display(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).displayed
             verify(callback, times(1)).onDisplay(mockImageOnlyUI)
@@ -114,10 +114,10 @@ class ImageOnlyTemplateEventHandlerTests {
         runTest {
             `when`(mockImageOnlyCardUIState.displayed).thenReturn(true)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Display(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).displayed
             verify(callback, times(0)).onDisplay(mockImageOnlyUI)
@@ -129,10 +129,10 @@ class ImageOnlyTemplateEventHandlerTests {
     fun `Image Only Template event handler receives a dismiss event`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Dismiss(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).dismissed
             verify(callback, times(1)).onDismiss(mockImageOnlyUI)
@@ -145,10 +145,10 @@ class ImageOnlyTemplateEventHandlerTests {
         runTest {
             `when`(mockImageOnlyCardUIState.dismissed).thenReturn(true)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Dismiss(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).dismissed
             verify(callback, times(0)).onDismiss(mockImageOnlyUI)
@@ -160,11 +160,11 @@ class ImageOnlyTemplateEventHandlerTests {
     fun `Image Only Template event handler receives a click event`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")
@@ -177,11 +177,11 @@ class ImageOnlyTemplateEventHandlerTests {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
             `when`(callback.onInteract(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(true)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, never()).openUri(anyString())
@@ -193,11 +193,11 @@ class ImageOnlyTemplateEventHandlerTests {
     fun `Image Only Template event handler receives a click event with no action url`() {
         runTest {
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = null)
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", null)
             verify(mockUriOpening, never()).openUri(anyString())
@@ -208,11 +208,11 @@ class ImageOnlyTemplateEventHandlerTests {
     @Test
     fun `Image Only Template event handler receives a click event with no callback provided`() {
         runTest {
-            val handler = ImageOnlyTemplateEventHandler(null, null)
+            val handler = ImageOnlyTemplateEventHandler(null)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             // verify that the track is still called and that the url is still opened
             verify(mockUriOpening, times(1)).openUri("http://example.com")
@@ -225,11 +225,11 @@ class ImageOnlyTemplateEventHandlerTests {
         runTest {
             `when`(mockImageOnlyCardUIState.read).thenReturn(false)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")
@@ -243,11 +243,11 @@ class ImageOnlyTemplateEventHandlerTests {
         runTest {
             `when`(mockImageOnlyCardUIState.read).thenReturn(null)
             val callback = mock(ContentCardUIEventListener::class.java)
-            val handler = ImageOnlyTemplateEventHandler(null, callback)
+            val handler = ImageOnlyTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")

@@ -58,7 +58,7 @@ public final class MessagingConstants {
                 "https://ns.adobe.com/personalization/default-content-item";
         static final String SCHEMA_EVENT_HISTORY_OPERATION =
                 "https://ns.adobe.com/personalization/eventHistoryOperation";
-        static final String SCHEMA_INBOX = "https://ns.adobe.com/personalization/inbox-item";
+        static final String SCHEMA_INBOX = "https://ns.adobe.com/personalization/message/inbox";
 
         private SchemaValues() {}
     }
