@@ -12,21 +12,29 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxTemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import org.junit.After
 import org.junit.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.lang.ref.SoftReference
 
 /**
- * Tests for [InboxEventObserver] (internal tracking-only observer).
- * Verifies that inbox display events result in correct tracking via ContentCardMapper.
+ * Tests for [InboxEventObserver].
+ * Verifies that inbox events trigger tracking and provider state update, and item events are forwarded.
  */
 class InboxEventObserverTests {
 
@@ -35,7 +43,7 @@ class InboxEventObserverTests {
         ContentCardMapper.instance.clear()
     }
 
-    private fun createSuccessState(inboxId: String): InboxUIState.Success {
+    private fun createSuccessState(inboxId: String, displayed: Boolean = false): InboxUIState.Success {
         val template = InboxTemplate(
             id = inboxId,
             heading = AepText("Test Inbox"),
@@ -43,37 +51,58 @@ class InboxEventObserverTests {
             capacity = 10,
             emptyMessage = AepText("No messages")
         )
-        return InboxUIState.Success(template = template, items = emptyList())
+        return InboxUIState.Success(template = template, items = emptyList(), displayed = displayed)
     }
 
     @Test
-    fun `onInboxEvent Display tracks inbox proposition item from mapper`() {
-        val observer = InboxEventObserver()
+    fun `onInboxEvent Display performs tracking and calls provider onInboxEvent`() {
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val observer = InboxEventObserver(mockProvider, null)
 
         val mockPropositionItem = mock(PropositionItem::class.java)
         val mockProposition = mock(Proposition::class.java)
         mockPropositionItem.propositionReference = SoftReference(mockProposition)
-
         ContentCardMapper.instance.storeInboxPropositionItem("testInboxId", mockPropositionItem)
 
         val successState = createSuccessState("testInboxId")
-        observer.onInboxEvent(InboxEvent.Display(successState))
+        val event = InboxEvent.Display(successState)
+        observer.onInboxEvent(event)
 
         verify(mockPropositionItem, times(1)).track(MessagingEdgeEventType.DISPLAY)
+        verify(mockProvider, times(1)).onInboxEvent(event)
     }
 
     @Test
-    fun `onInboxEvent Display does nothing when no inbox proposition item is stored for given id`() {
-        val observer = InboxEventObserver()
+    fun `onInboxEvent Display does not track but calls provider onInboxEvent even when no proposition item in mapper`() {
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val observer = InboxEventObserver(mockProvider, null)
+
+        val successState = createSuccessState("noMappingId")
+        val event = InboxEvent.Display(successState)
+        observer.onInboxEvent(event)
+
+        verify(mockProvider, times(1)).onInboxEvent(event)
+    }
+
+    @Test
+    fun `onInboxEvent Display does not track but calls provider onInboxEvent even  when no inbox proposition item is stored for given id`() {
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val observer = InboxEventObserver(mockProvider, null)
+
+        val mockPropositionItem = mock(PropositionItem::class.java)
+        ContentCardMapper.instance.storeInboxPropositionItem("otherId", mockPropositionItem)
 
         val successState = createSuccessState("nonExistentInboxId")
         // No exception should be thrown when mapper has no inbox proposition item for this ID
         observer.onInboxEvent(InboxEvent.Display(successState))
+
+        verify(mockPropositionItem, never()).track(MessagingEdgeEventType.DISPLAY)
     }
 
     @Test
     fun `onInboxEvent Display tracks correct inbox proposition for multiple inboxes`() {
-        val observer = InboxEventObserver()
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val observer = InboxEventObserver(mockProvider, null)
 
         val mockPropositionItem1 = mock(PropositionItem::class.java)
         val mockProposition1 = mock(Proposition::class.java)
@@ -91,5 +120,85 @@ class InboxEventObserverTests {
 
         verify(mockPropositionItem1, times(0)).track(MessagingEdgeEventType.DISPLAY)
         verify(mockPropositionItem2, times(1)).track(MessagingEdgeEventType.DISPLAY)
+    }
+
+    @Test
+    fun `onInboxEvent Display skips tracking and does not call provider when displayed is true`() {
+        // Covers the case where InboxEventObserver is called with displayed=true directly,
+        // e.g. configuration change re-entry where the provider's surviving state has displayed=true.
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val observer = InboxEventObserver(mockProvider, null)
+
+        val mockPropositionItem = mock(PropositionItem::class.java)
+        val mockProposition = mock(Proposition::class.java)
+        mockPropositionItem.propositionReference = SoftReference(mockProposition)
+        ContentCardMapper.instance.storeInboxPropositionItem("testInboxId", mockPropositionItem)
+
+        val event = InboxEvent.Display(createSuccessState("testInboxId", displayed = true))
+        observer.onInboxEvent(event)
+
+        verify(mockPropositionItem, never()).track(MessagingEdgeEventType.DISPLAY)
+        verify(mockProvider, never()).onInboxEvent(event)
+    }
+
+    @Test
+    fun `onInboxEvent Display tracks and calls provider only on displayed=false across false-true-false sequence`() {
+        // Simulates the full lifecycle:
+        // 1. displayed=false → initial display, tracking fires, provider called
+        // 2. displayed=true  → guard blocks everything (e.g. config change with stale state)
+        // 3. displayed=false → refresh resets state, tracking fires again, provider called
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val observer = InboxEventObserver(mockProvider, null)
+
+        val mockPropositionItem = mock(PropositionItem::class.java)
+        val mockProposition = mock(Proposition::class.java)
+        mockPropositionItem.propositionReference = SoftReference(mockProposition)
+        ContentCardMapper.instance.storeInboxPropositionItem("testInboxId", mockPropositionItem)
+
+        val eventNotDisplayed = InboxEvent.Display(createSuccessState("testInboxId", displayed = false))
+        val eventDisplayed = InboxEvent.Display(createSuccessState("testInboxId", displayed = true))
+
+        observer.onInboxEvent(eventNotDisplayed) // step 1: tracks + provider called
+        observer.onInboxEvent(eventDisplayed) // step 2: skipped entirely
+        observer.onInboxEvent(eventNotDisplayed) // step 3: tracks again + provider called
+
+        verify(mockPropositionItem, times(2)).track(MessagingEdgeEventType.DISPLAY)
+        verify(mockProvider, times(2)).onInboxEvent(eventNotDisplayed)
+        verify(mockProvider, never()).onInboxEvent(eventDisplayed)
+    }
+
+    @Test
+    fun `onEvent forwards to provided itemEventObserver`() {
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val mockItemObserver = mock(AepUIEventObserver::class.java)
+        val observer = InboxEventObserver(mockProvider, mockItemObserver)
+
+        val mockAepUI = mock(AepUI::class.java)
+        val mockTemplate = mock(SmallImageTemplate::class.java)
+        `when`(mockTemplate.id).thenReturn("card1")
+        `when`(mockTemplate.getType()).thenReturn(AepUITemplateType.SMALL_IMAGE)
+        `when`(mockAepUI.getTemplate()).thenReturn(mockTemplate)
+
+        val event = UIEvent.Display(mockAepUI)
+        observer.onEvent(event)
+
+        verify(mockItemObserver, times(1)).onEvent(event)
+    }
+
+    @Test
+    fun `onEvent with null itemEventObserver uses default ContentCardEventObserver`() {
+        val mockProvider = mock(MessagingInboxProvider::class.java)
+        val observer = InboxEventObserver(mockProvider, null)
+
+        val mockAepUI = mock(AepUI::class.java)
+        val mockTemplate = mock(SmallImageTemplate::class.java)
+        `when`(mockTemplate.id).thenReturn("card1")
+        `when`(mockTemplate.getType()).thenReturn(AepUITemplateType.SMALL_IMAGE)
+        `when`(mockAepUI.getTemplate()).thenReturn(mockTemplate)
+        `when`(mockAepUI.getState()).thenReturn(SmallImageCardUIState())
+
+        val event = UIEvent.Display(mockAepUI)
+        // Should not throw; default ContentCardEventObserver handles the event
+        observer.onEvent(event)
     }
 }

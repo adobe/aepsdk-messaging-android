@@ -82,7 +82,7 @@ class ContentCardMapper private constructor() {
      * @param inboxId the inbox activity ID (from InboxTemplate.id)
      * @return the inbox [PropositionItem], or null if not stored
      */
-    fun getInboxPropositionItem(inboxId: String): PropositionItem? {
+    internal fun getInboxPropositionItem(inboxId: String): PropositionItem? {
         if (inboxId.isEmpty()) {
             return null
         }

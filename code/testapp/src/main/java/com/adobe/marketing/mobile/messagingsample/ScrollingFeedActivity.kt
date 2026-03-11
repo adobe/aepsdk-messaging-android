@@ -55,7 +55,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.messaging.MessagingInboxProvider
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
-import com.adobe.marketing.mobile.messaging.MessagingInboxEventObserver
+import com.adobe.marketing.mobile.messaging.InboxEventObserver
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 import kotlinx.coroutines.flow.SharingStarted
@@ -193,7 +193,7 @@ class ExistingViewModel: ViewModel() {
     
     val inboxContentProvider = MessagingInboxProvider(Surface("card/ms"))
     
-    val observer = MessagingInboxEventObserver(
+    val observer = InboxEventObserver(
         inboxContentProvider,
         ContentCardEventObserver(contentCardCallback)
     )
