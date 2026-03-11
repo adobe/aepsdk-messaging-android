@@ -19,8 +19,8 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 
 /**
  * Messaging implementation of [AepInboxEventObserver].
- * Handles tracking for inbox, delegates state updates ([MessagingInboxProvider.onInboxEvent]), and
- * forwards item-level events to the provided [AepUIEventObserver] or a default [ContentCardEventObserver] when null.
+ * Propagates [InboxEvent] to an internally maintained list of [AepUIEventObserver], and
+ * item-level [UIEvent] to the provided [AepUIEventObserver] or a default [ContentCardEventObserver] when null.
  *
  * @param provider The [MessagingInboxProvider] that owns inbox state; the observer calls
  *   [MessagingInboxProvider.onInboxEvent] so the provider updates its state.
@@ -32,23 +32,38 @@ class InboxEventObserver(
     private val itemEventObserver: AepUIEventObserver? = null
 ) : AepInboxEventObserver {
 
-    private val observer: AepUIEventObserver by lazy {
-        itemEventObserver ?: ContentCardEventObserver(null)
-    }
-
-    override fun onInboxEvent(event: InboxEvent) {
-        when (event) {
-            is InboxEvent.Display -> {
-                if (!event.inboxUIState.displayed) {
-                    ContentCardMapper.instance.getInboxPropositionItem(event.inboxUIState.template.id)
-                        ?.track(MessagingEdgeEventType.DISPLAY)
-                    provider.onInboxEvent(event)
+    private val trackingObserver by lazy {
+        object : AepInboxEventObserver {
+            override fun onInboxEvent(event: InboxEvent) {
+                when (event) {
+                    is InboxEvent.Display -> {
+                        if (!event.inboxUIState.displayed) {
+                            ContentCardMapper.instance.getInboxPropositionItem(event.inboxUIState.template.id)
+                                ?.track(MessagingEdgeEventType.DISPLAY)
+                        }
+                    }
                 }
+            }
+
+            override fun onEvent(event: UIEvent<*, *>) {
+                // Currently no-op for item events
             }
         }
     }
 
+    private val inboxObservers by lazy {
+        listOf(provider, trackingObserver)
+    }
+
+    private val itemObserver: AepUIEventObserver by lazy {
+        itemEventObserver ?: ContentCardEventObserver(null)
+    }
+
+    override fun onInboxEvent(event: InboxEvent) {
+        inboxObservers.forEach { it.onInboxEvent(event) }
+    }
+
     override fun onEvent(event: UIEvent<*, *>) {
-        observer.onEvent(event)
+        itemObserver.onEvent(event)
     }
 }

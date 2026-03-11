@@ -15,7 +15,9 @@ import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepInboxContentProvider
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +36,7 @@ import kotlin.coroutines.resume
  */
 class MessagingInboxProvider(
     val surface: Surface
-) : AepInboxContentProvider {
+) : AepInboxContentProvider, AepInboxEventObserver {
     data class InboxProposition(
         val inbox: Proposition,
         val contentCards: List<Proposition>
@@ -51,10 +53,9 @@ class MessagingInboxProvider(
     private fun toInboxUIState(result: Result<InboxProposition>): InboxUIState {
         val inboxProposition = result.getOrNull()
         if (inboxProposition != null) {
-            val inboxTemplate = ContentCardSchemaDataUtils.createInboxTemplate(inboxProposition.inbox)
-            if (inboxTemplate == null) {
-                return InboxUIState.Error(Throwable("Failed to create inbox template, invalid inbox proposition content"))
-            }
+            val inboxTemplate =
+                ContentCardSchemaDataUtils.createInboxTemplate(inboxProposition.inbox)
+                    ?: return InboxUIState.Error(Throwable("Failed to create inbox template, invalid inbox proposition content"))
             val aepUIList = inboxProposition.contentCards.mapNotNull { cardProposition ->
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
@@ -79,17 +80,6 @@ class MessagingInboxProvider(
                 result.exceptionOrNull()
                     ?: Throwable("Failed to create inbox, unknown error")
             )
-        }
-    }
-
-    /**
-     * Handles state updates needed for inbox events.
-     */
-    internal fun onInboxEvent(event: InboxEvent) {
-        when (event) {
-            is InboxEvent.Display -> {
-                _inboxStateFlow.value = event.inboxUIState.copy(displayed = true)
-            }
         }
     }
 
@@ -135,9 +125,9 @@ class MessagingInboxProvider(
 
         val propositionsMap = propositionsResult.getOrNull() ?: emptyMap()
 
-        // todo replace mock inbox proposition when Messaging SDK supports inbox propositions
-        val inboxProposition = getMockInboxProposition()
-        if (inboxProposition == null) {
+        val inboxPropositionList =
+            propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.INBOX }
+        if (inboxPropositionList.isNullOrEmpty()) {
             Log.debug(
                 MessagingConstants.LOG_TAG,
                 SELF_TAG,
@@ -145,9 +135,11 @@ class MessagingInboxProvider(
             )
             return Result.failure(Throwable("No inbox proposition found for surface: ${surface.uri}"))
         }
+        val highestPriorityInbox = inboxPropositionList.sortedByDescending { it.rank }.first()
         val contentCardPropositions =
-            propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD } ?: emptyList()
-        return Result.success(InboxProposition(inboxProposition, contentCardPropositions))
+            propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD }
+                ?: emptyList()
+        return Result.success(InboxProposition(highestPriorityInbox, contentCardPropositions))
     }
 
     /**
@@ -189,49 +181,18 @@ class MessagingInboxProvider(
             }
         }
 
-    // todo: remove this mock function when Messaging SDK supports inbox propositions
-    private fun getMockInboxProposition(): Proposition {
-        return Proposition(
-            "inbox_container",
-            surface.uri,
-            mapOf("activity" to mapOf("id" to "inbox_container")),
-            listOf(
-                PropositionItem(
-                    "inbox_template",
-                    SchemaType.INBOX,
-                    mapOf(
-                        "content" to mapOf(
-                            "heading" to mapOf("content" to "My Inbox"),
-                            "layout" to mapOf("orientation" to "vertical"),
-                            "capacity" to 10,
-                            "emptyStateSettings" to mapOf(
-                                "message" to mapOf("content" to "Your inbox is empty!"),
-                                "image" to mapOf(
-                                    "url" to "https://icons.veryicon.com/png/256/commerce-shopping/basic-icon-of-e-commerce/empty-21.png",
-                                    "darkUrl" to "https://icons.veryicon.com/png/256/commerce-shopping/basic-icon-of-e-commerce/empty-21.png"
-                                )
-                            ),
-                            "isUnreadEnabled" to true,
-                            "unreadIndicator" to mapOf(
-                                "unreadIcon" to mapOf(
-                                    "placement" to "topleft",
-                                    "image" to mapOf(
-                                        "url" to "https://icons.veryicon.com/png/o/leisure/crisp-app-icon-library-v3/notification-5.png",
-                                        "darkUrl" to "https://icons.veryicon.com/png/o/leisure/crisp-app-icon-library-v3/notification-5.png"
-                                    )
-                                ),
-                                "unreadBg" to mapOf(
-                                    "clr" to mapOf(
-                                        "light" to "#A9A9A9",
-                                        "dark" to "#D3D3D3"
-                                    )
-                                )
-                            )
-                        ),
-                        "meta" to emptyMap()
-                    )
-                )
-            )
-        )
+    /**
+     * Handles state updates needed for inbox events.
+     */
+    override fun onInboxEvent(event: InboxEvent) {
+        when (event) {
+            is InboxEvent.Display -> {
+                _inboxStateFlow.value = event.inboxUIState.copy(displayed = true)
+            }
+        }
+    }
+
+    override fun onEvent(event: UIEvent<*, *>) {
+        // Currently no-op for item events
     }
 }

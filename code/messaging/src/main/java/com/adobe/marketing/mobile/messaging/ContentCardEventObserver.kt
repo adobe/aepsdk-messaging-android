@@ -23,6 +23,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
  * Implementation of [AepUIEventObserver] for handling content card events.
+ * Propagates every event to the internally maintained a list of [AepUIEventObserver] instances.
  *
  * @param callback An optional callback to invoke when a content card event occurs.
  * @param provider An optional [ContentCardUIProvider] that owns the content card state.
@@ -34,26 +35,29 @@ class ContentCardEventObserver @JvmOverloads constructor(
     private val provider: ContentCardUIProvider? = null,
 ) : AepUIEventObserver {
 
-    private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
-    private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(callback) }
-    private val imageOnlyEventHandler by lazy { ImageOnlyTemplateEventHandler(callback) }
+    private val callbackObserver: AepUIEventObserver by lazy {
+        object : AepUIEventObserver {
+            private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
+            private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(callback) }
+            private val imageOnlyEventHandler by lazy { ImageOnlyTemplateEventHandler(callback) }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun onEvent(event: UIEvent<*, *>) {
-        when (event.aepUi.getTemplate()) {
-            is SmallImageTemplate -> {
-                smallImageEventHandler.onEvent(event as UIEvent<SmallImageTemplate, SmallImageCardUIState>)
-                provider?.onEvent(event)
-            }
-            is LargeImageTemplate -> {
-                largeImageEventHandler.onEvent(event as UIEvent<LargeImageTemplate, LargeImageCardUIState>)
-                provider?.onEvent(event)
-            }
-            is ImageOnlyTemplate -> {
-                imageOnlyEventHandler.onEvent(event as UIEvent<ImageOnlyTemplate, ImageOnlyCardUIState>)
-                provider?.onEvent(event)
+            @Suppress("UNCHECKED_CAST")
+            override fun onEvent(event: UIEvent<*, *>) {
+                when (event.aepUi.getTemplate()) {
+                    is SmallImageTemplate -> smallImageEventHandler.onEvent(event as UIEvent<SmallImageTemplate, SmallImageCardUIState>)
+                    is LargeImageTemplate -> largeImageEventHandler.onEvent(event as UIEvent<LargeImageTemplate, LargeImageCardUIState>)
+                    is ImageOnlyTemplate -> imageOnlyEventHandler.onEvent(event as UIEvent<ImageOnlyTemplate, ImageOnlyCardUIState>)
+                }
             }
         }
+    }
+
+    private val observers: List<AepUIEventObserver> by lazy {
+        listOfNotNull(callbackObserver, provider)
+    }
+
+    override fun onEvent(event: UIEvent<*, *>) {
+        observers.forEach { it.onEvent(event) }
     }
 }
 

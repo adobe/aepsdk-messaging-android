@@ -123,9 +123,10 @@ class InboxEventObserverTests {
     }
 
     @Test
-    fun `onInboxEvent Display skips tracking and does not call provider when displayed is true`() {
+    fun `onInboxEvent Display skips tracking but still calls provider when displayed is true`() {
         // Covers the case where InboxEventObserver is called with displayed=true directly,
         // e.g. configuration change re-entry where the provider's surviving state has displayed=true.
+        // The provider is always notified; only tracking is guarded by the displayed flag.
         val mockProvider = mock(MessagingInboxProvider::class.java)
         val observer = InboxEventObserver(mockProvider, null)
 
@@ -138,15 +139,15 @@ class InboxEventObserverTests {
         observer.onInboxEvent(event)
 
         verify(mockPropositionItem, never()).track(MessagingEdgeEventType.DISPLAY)
-        verify(mockProvider, never()).onInboxEvent(event)
+        verify(mockProvider, times(1)).onInboxEvent(event)
     }
 
     @Test
-    fun `onInboxEvent Display tracks and calls provider only on displayed=false across false-true-false sequence`() {
+    fun `onInboxEvent Display tracks only on displayed=false but always calls provider`() {
         // Simulates the full lifecycle:
-        // 1. displayed=false → initial display, tracking fires, provider called
-        // 2. displayed=true  → guard blocks everything (e.g. config change with stale state)
-        // 3. displayed=false → refresh resets state, tracking fires again, provider called
+        // 1. displayed=false → tracking fires, provider called
+        // 2. displayed=true  → tracking skipped, provider still called
+        // 3. displayed=false → tracking fires again, provider called
         val mockProvider = mock(MessagingInboxProvider::class.java)
         val observer = InboxEventObserver(mockProvider, null)
 
@@ -159,12 +160,12 @@ class InboxEventObserverTests {
         val eventDisplayed = InboxEvent.Display(createSuccessState("testInboxId", displayed = true))
 
         observer.onInboxEvent(eventNotDisplayed) // step 1: tracks + provider called
-        observer.onInboxEvent(eventDisplayed) // step 2: skipped entirely
+        observer.onInboxEvent(eventDisplayed) // step 2: no tracking, provider still called
         observer.onInboxEvent(eventNotDisplayed) // step 3: tracks again + provider called
 
         verify(mockPropositionItem, times(2)).track(MessagingEdgeEventType.DISPLAY)
         verify(mockProvider, times(2)).onInboxEvent(eventNotDisplayed)
-        verify(mockProvider, never()).onInboxEvent(eventDisplayed)
+        verify(mockProvider, times(1)).onInboxEvent(eventDisplayed)
     }
 
     @Test

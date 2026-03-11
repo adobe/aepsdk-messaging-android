@@ -17,6 +17,7 @@ import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.copyAepUI
@@ -28,7 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -39,7 +39,7 @@ import kotlin.coroutines.resume
  *
  * @property surface The surface for which content needs to be fetched.
  */
-class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
+class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider, AepUIEventObserver {
     companion object {
         private const val SELF_TAG: String = "ContentCardUIProvider"
     }
@@ -57,7 +57,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @param event The [UIEvent] whose [UIEvent.aepUi] holds the updated card state.
      */
-    internal fun onEvent(event: UIEvent<*, *>) {
+    override fun onEvent(event: UIEvent<*, *>) {
         val updatedCard = event.aepUi
         val currentResult = _aepUIFlow.value
         if (!currentResult.isSuccess) {

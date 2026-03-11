@@ -482,9 +482,9 @@ public final class MessagingConstants {
             public static final String MESSAGE = "message";
             public static final String IMAGE = "image";
             public static final String IS_UNREAD_ENABLED = "isUnreadEnabled";
-            public static final String UNREAD_INDICATOR = "unreadIndicator";
-            public static final String UNREAD_ICON = "unreadIcon";
-            public static final String UNREAD_BG = "unreadBg";
+            public static final String UNREAD_INDICATOR = "unread_indicator";
+            public static final String UNREAD_ICON = "unread_icon";
+            public static final String UNREAD_BG = "unread_bg";
             public static final String CLR = "clr";
             public static final String LIGHT = "light";
             public static final String DARK = "dark";

@@ -16,6 +16,9 @@ import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxTemplate
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCardMap
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
 import com.adobe.marketing.mobile.services.DeviceInforming
@@ -66,6 +69,9 @@ class MessagingInboxProviderTests {
     private lateinit var contentCardSchemaData: ContentCardSchemaData
     private lateinit var propositionItem: PropositionItem
     private lateinit var proposition: Proposition
+    private lateinit var inboxPropositionItem: PropositionItem
+    private lateinit var inboxProposition: Proposition
+    private lateinit var mockInboxTemplate: InboxTemplate
 
     @Mock
     private lateinit var serviceProvider: ServiceProvider
@@ -102,12 +108,25 @@ class MessagingInboxProviderTests {
         whenever(propositionItem.contentCardSchemaData).thenReturn(contentCardSchemaData)
         whenever(proposition.items).thenReturn(listOf(propositionItem))
 
+        inboxPropositionItem = mock(PropositionItem::class.java)
+        inboxProposition = mock(Proposition::class.java)
+        whenever(inboxPropositionItem.schema).thenReturn(SchemaType.INBOX)
+        whenever(inboxProposition.items).thenReturn(listOf(inboxPropositionItem))
+        mockInboxTemplate = InboxTemplate(
+            id = "test-inbox-template",
+            heading = AepText("Test Inbox"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages"),
+            isUnreadEnabled = true
+        )
+
         // Mock ContentCardSchemaDataUtils for read status and inbox template creation
         mockkObject(ContentCardSchemaDataUtils)
         every { ContentCardSchemaDataUtils.getReadStatus(any()) } returns null
         every { ContentCardSchemaDataUtils.buildTemplate(any()) } answers { callOriginal() }
         every { ContentCardSchemaDataUtils.getAepUI(any(), any()) } answers { callOriginal() }
-        every { ContentCardSchemaDataUtils.createInboxTemplate(any()) } answers { callOriginal() }
+        every { ContentCardSchemaDataUtils.createInboxTemplate(any()) } returns mockInboxTemplate
     }
 
     @After
@@ -127,7 +146,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -143,7 +162,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -156,27 +175,24 @@ class MessagingInboxProviderTests {
         assertEquals("testId", successState.items.first().getTemplate().id)
     }
 
-    //  todo: uncomment test when inbox proposition is not mocked
+    @Test
+    fun `getInboxUI returns Success with empty items when no content card propositions found`() =
+        runTest {
+            mockMessaging.`when`<Unit> {
+                Messaging.getPropositionsForSurfaces(any(), any())
+            }.thenAnswer { invocation ->
+                val callback =
+                    invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+                callback.call(mapOf(surface to listOf(inboxProposition)))
+            }
 
-//    @Test
-//    fun `getInboxUI returns Success with empty items when no content card propositions found`() =
-//        runTest {
-//            mockMessaging.`when`<Unit> {
-//                Messaging.getPropositionsForSurfaces(any(), any())
-//            }.thenAnswer { invocation ->
-//                val callback =
-//                    invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-//                callback.call()
-//            }
-//
-//            val flow = messagingInboxProvider.getInboxUI()
-//            val states = flow.take(2).toList()
-//
-//            assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
-//            val successState = states[1] as InboxUIState.Success
-//            assertTrue("Items should be empty", successState.items.isEmpty())
-//        }
-//
+            val flow = messagingInboxProvider.getInboxUI()
+            val states = flow.take(2).toList()
+
+            assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+            val successState = states[1] as InboxUIState.Success
+            assertTrue("Items should be empty", successState.items.isEmpty())
+        }
 
     @Test
     fun `getInboxUI handles proposition with non-content-card schema`() = runTest {
@@ -187,7 +203,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -210,7 +226,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -231,7 +247,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -253,7 +269,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -279,7 +295,7 @@ class MessagingInboxProviderTests {
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
             // Return both valid content card and non-content card proposition
-            callback.call(mapOf(surface to listOf(proposition, mixedProposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition, mixedProposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -312,7 +328,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition, invalidProposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition, invalidProposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -377,7 +393,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -441,7 +457,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow1 = messagingInboxProvider.getInboxUI()
@@ -464,7 +480,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -489,7 +505,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -514,7 +530,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -555,7 +571,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition, proposition2)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition, proposition2)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -575,35 +591,36 @@ class MessagingInboxProviderTests {
         assertFalse("Second card should be unread", secondCard?.getState()?.read == true)
     }
 
-    // TODO: Uncomment this test when inbox proposition can be configured with isUnreadEnabled = false
-    // Currently, getMockInboxProposition() is private and always returns isUnreadEnabled = true
-//    @Test
-//    fun `getInboxUI does not call getReadStatus when isUnreadEnabled is false`() = runTest {
-//        // This test requires the inbox proposition to have isUnreadEnabled = false
-//        // When isUnreadEnabled is false, getReadStatus should NOT be called
-//        // and the card's read status should be null
-//
-//        mockMessaging.`when`<Unit> {
-//            Messaging.getPropositionsForSurfaces(any(), any())
-//        }.thenAnswer { invocation ->
-//            val callback =
-//                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-//            callback.call(mapOf(surface to listOf(proposition)))
-//        }
-//
-//        val flow = messagingInboxProvider.getInboxUI()
-//        val states = flow.take(2).toList()
-//
-//        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
-//        val successState = states[1] as InboxUIState.Success
-//
-//        // Verify getReadStatus was NOT called since isUnreadEnabled is false
-//        mockkVerify(exactly = 0) { ContentCardSchemaDataUtils.getReadStatus(any()) }
-//
-//        // Card read status should be null when isUnreadEnabled is false
-//        val cardState = successState.items.first().getState()
-//        assertNull("Card read status should be null when isUnreadEnabled is false", cardState.read)
-//    }
+    @Test
+    fun `getInboxUI does not call getReadStatus when isUnreadEnabled is false`() = runTest {
+        every { ContentCardSchemaDataUtils.createInboxTemplate(any()) } returns InboxTemplate(
+            id = "test-inbox-template",
+            heading = AepText("Test Inbox"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages"),
+            isUnreadEnabled = false
+        )
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+
+        mockkVerify(exactly = 0) { ContentCardSchemaDataUtils.getReadStatus(any()) }
+
+        val cardState = successState.items.first().getState()
+        assertNull("Card read status should be null when isUnreadEnabled is false", cardState.read)
+    }
 
     @Test
     fun `refresh emits Loading then Error on API failure`() = runTest {
@@ -647,9 +664,9 @@ class MessagingInboxProviderTests {
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
             callCount++
             val dataToReturn = if (callCount == 1) {
-                mapOf(surface to listOf(proposition))
+                mapOf(surface to listOf(inboxProposition, proposition))
             } else {
-                mapOf(surface to listOf(proposition2))
+                mapOf(surface to listOf(inboxProposition, proposition2))
             }
             callback.call(dataToReturn)
         }
@@ -684,7 +701,7 @@ class MessagingInboxProviderTests {
             callCount++
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -696,13 +713,65 @@ class MessagingInboxProviderTests {
     }
 
     @Test
+    fun `getInboxUI picks inbox proposition with highest rank when multiple exist`() = runTest {
+        val lowRankInboxProp = mock(Proposition::class.java)
+        val highRankInboxProp = mock(Proposition::class.java)
+        val lowRankInboxItem = mock(PropositionItem::class.java)
+        val highRankInboxItem = mock(PropositionItem::class.java)
+
+        whenever(lowRankInboxItem.schema).thenReturn(SchemaType.INBOX)
+        whenever(highRankInboxItem.schema).thenReturn(SchemaType.INBOX)
+        whenever(lowRankInboxProp.items).thenReturn(listOf(lowRankInboxItem))
+        whenever(highRankInboxProp.items).thenReturn(listOf(highRankInboxItem))
+        whenever(lowRankInboxProp.rank).thenReturn(5)
+        whenever(highRankInboxProp.rank).thenReturn(10)
+
+        val lowRankTemplate = InboxTemplate(
+            id = "low-rank-inbox",
+            heading = AepText("Low Rank Inbox"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages")
+        )
+        val highRankTemplate = InboxTemplate(
+            id = "high-rank-inbox",
+            heading = AepText("High Rank Inbox"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages")
+        )
+        every { ContentCardSchemaDataUtils.createInboxTemplate(lowRankInboxProp) } returns lowRankTemplate
+        every { ContentCardSchemaDataUtils.createInboxTemplate(highRankInboxProp) } returns highRankTemplate
+
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            // Include both inbox propositions and a content card proposition
+            callback.call(mapOf(surface to listOf(lowRankInboxProp, highRankInboxProp, proposition)))
+        }
+
+        val flow = messagingInboxProvider.getInboxUI()
+        val states = flow.take(2).toList()
+
+        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
+        val successState = states[1] as InboxUIState.Success
+        assertEquals(
+            "Should use the inbox proposition with the highest rank",
+            "high-rank-inbox",
+            successState.template.id
+        )
+    }
+
+    @Test
     fun `Inbox proposition item is stored in ContentCardMapper on success`() = runTest {
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -722,7 +791,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         val flow = messagingInboxProvider.getInboxUI()
@@ -740,7 +809,7 @@ class MessagingInboxProviderTests {
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(proposition)))
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
         }
 
         // Start collecting all states in the background
