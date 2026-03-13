@@ -74,7 +74,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider, AepUIE
                 copyAepUI(updatedCard)
             } else updatedCard
         }
-        _aepUIFlow.value = Result.success(updatedList)
+        _aepUIFlow.update { Result.success(updatedList) }
     }
 
     /**
@@ -101,18 +101,20 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider, AepUIE
      */
     override suspend fun refreshContent() {
         val templateResult = fetchContent()
-        _contentFlow.value = templateResult
+        _contentFlow.update { templateResult }
 
         // Also update _aepUIFlow so getContentCardUI collectors receive refresh updates
-        _aepUIFlow.value = if (templateResult.isSuccess) {
-            val aepUIList = templateResult.getOrDefault(emptyList())
-                .mapNotNull { item -> ContentCardSchemaDataUtils.getAepUI(item) }
-            Result.success(aepUIList)
-        } else {
-            Result.failure(
-                templateResult.exceptionOrNull()
-                    ?: Throwable("Failed to process propositions for surface ${surface.uri}: Unknown Error")
-            )
+        _aepUIFlow.update {
+            if (templateResult.isSuccess) {
+                val aepUIList = templateResult.getOrDefault(emptyList())
+                    .mapNotNull { item -> ContentCardSchemaDataUtils.getAepUI(item) }
+                Result.success(aepUIList)
+            } else {
+                Result.failure(
+                    templateResult.exceptionOrNull()
+                        ?: Throwable("Failed to process propositions for surface ${surface.uri}: Unknown Error")
+                )
+            }
         }
     }
 

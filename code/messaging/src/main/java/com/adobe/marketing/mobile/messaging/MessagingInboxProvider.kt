@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -104,8 +105,8 @@ class MessagingInboxProvider(
      * so this method is only needed for manual refresh operations.
      */
     override suspend fun refresh() {
-        _inboxStateFlow.value = InboxUIState.Loading
-        _inboxStateFlow.value = toInboxUIState(fetchInbox())
+        _inboxStateFlow.update { InboxUIState.Loading }
+        _inboxStateFlow.update { toInboxUIState(fetchInbox()) }
     }
 
     /**
@@ -187,7 +188,7 @@ class MessagingInboxProvider(
     override fun onInboxEvent(event: InboxEvent) {
         when (event) {
             is InboxEvent.Display -> {
-                _inboxStateFlow.value = event.inboxUIState.copy(displayed = true)
+                _inboxStateFlow.update { event.inboxUIState.copy(displayed = true) }
             }
         }
     }
