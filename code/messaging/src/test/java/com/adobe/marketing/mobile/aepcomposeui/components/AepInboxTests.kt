@@ -52,6 +52,7 @@ import com.example.compose.TestTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.mockk.MockKAnnotations
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
@@ -60,9 +61,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowLog
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -149,6 +154,7 @@ class AepInboxTests(
         emptyMessage: AepText? = mockEmptyMessage,
         emptyImage: AepImage? = null
     ) = InboxTemplate(
+        id = "empty-inbox-template",
         heading = AepText("Inbox"),
         layout = AepInboxLayout.VERTICAL,
         capacity = 10,
@@ -162,6 +168,7 @@ class AepInboxTests(
         unreadIcon: AepImage? = null,
         unreadIconAlignment: Alignment? = null
     ) = InboxTemplate(
+        id = "inbox-template-with-items",
         heading = AepText("Inbox"),
         layout = AepInboxLayout.VERTICAL,
         capacity = 10,
@@ -177,6 +184,7 @@ class AepInboxTests(
         emptyMessage: AepText? = mockEmptyMessage,
         emptyImage: AepImage? = null
     ) = InboxTemplate(
+        id = "horizontal-inbox-template",
         heading = AepText("Horizontal Inbox"),
         layout = AepInboxLayout.HORIZONTAL,
         capacity = 10,
@@ -190,6 +198,7 @@ class AepInboxTests(
         unreadIcon: AepImage? = null,
         unreadIconAlignment: Alignment? = null
     ) = InboxTemplate(
+        id = "horizontal-inbox-template-with-items",
         heading = AepText("Horizontal Inbox"),
         layout = AepInboxLayout.HORIZONTAL,
         capacity = 10,
@@ -210,7 +219,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -240,7 +249,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = customStyle,
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -266,7 +275,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -293,7 +302,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = InboxUIStyle.Builder().build(),
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -320,7 +329,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -347,7 +356,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = InboxUIStyle.Builder().build(),
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -379,7 +388,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = customStyle,
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -410,7 +419,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = customStyle,
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -430,7 +439,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -466,7 +475,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = customStyle,
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -503,7 +512,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -541,7 +550,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = InboxUIStyle.Builder().build(),
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -579,7 +588,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -617,7 +626,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = InboxUIStyle.Builder().build(),
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -641,6 +650,7 @@ class AepInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             // Template has unread enabled but no unreadBgColor
             val template = InboxTemplate(
+                id = "custom-unread-style-template",
                 heading = AepText("Inbox"),
                 layout = AepInboxLayout.VERTICAL,
                 capacity = 10,
@@ -667,7 +677,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = customStyle,
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -698,6 +708,7 @@ class AepInboxTests(
             TestTheme(useDarkTheme = true) {
                 // Template has unread enabled but no unreadBgColor
                 val template = InboxTemplate(
+                    id = "custom-unread-style-template-dark",
                     heading = AepText("Inbox"),
                     layout = AepInboxLayout.VERTICAL,
                     capacity = 10,
@@ -724,7 +735,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = customStyle,
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -748,6 +759,7 @@ class AepInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             // Template has unread icon
             val template = InboxTemplate(
+                id = "custom-unread-icon-style-template",
                 heading = AepText("Inbox"),
                 layout = AepInboxLayout.VERTICAL,
                 capacity = 10,
@@ -779,7 +791,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = customStyle,
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -810,6 +822,7 @@ class AepInboxTests(
             TestTheme(useDarkTheme = true) {
                 // Template has unread icon
                 val template = InboxTemplate(
+                    id = "custom-unread-icon-style-template-dark",
                     heading = AepText("Inbox"),
                     layout = AepInboxLayout.VERTICAL,
                     capacity = 10,
@@ -841,7 +854,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = customStyle,
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -874,7 +887,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -907,7 +920,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = InboxUIStyle.Builder().build(),
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -934,7 +947,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -971,7 +984,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -1009,7 +1022,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = InboxUIStyle.Builder().build(),
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -1047,7 +1060,7 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
@@ -1085,7 +1098,7 @@ class AepInboxTests(
                 AepInbox(
                     uiState = uiState,
                     inboxStyle = InboxUIStyle.Builder().build(),
-                    observer = null
+                    observer = mockk(relaxed = true)
                 )
             }
         }
@@ -1109,6 +1122,7 @@ class AepInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             // Create template with capacity of 2
             val template = InboxTemplate(
+                id = "limited-horizontal-inbox-template",
                 heading = AepText("Limited Horizontal Inbox"),
                 layout = AepInboxLayout.HORIZONTAL,
                 capacity = 2,
@@ -1126,12 +1140,329 @@ class AepInboxTests(
             AepInbox(
                 uiState = uiState,
                 inboxStyle = InboxUIStyle.Builder().build(),
-                observer = null
+                observer = mockk(relaxed = true)
             )
         }
 
         // Capture screenshot - should only show 2 items
         composeTestRule.onRoot()
             .captureRoboImage(filePath = "build/outputs/roborazzi/AepInboxTests_HorizontalCapacityLimit_${Build.VERSION.SDK_INT}_$qualifier.png")
+    }
+}
+
+@RunWith(RobolectricTestRunner::class)
+class AepInboxBehaviorTests {
+    @get: Rule
+    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+    private lateinit var mockAepInboxEventObserver: com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
+    private lateinit var mockBitmap: Bitmap
+    private val capturedInboxIds = mutableListOf<String>()
+
+    @Before
+    fun setUp() {
+        ShadowLog.clear()
+        ShadowLog.setupLogging()
+        capturedInboxIds.clear()
+
+        MockKAnnotations.init(this)
+        mockAepInboxEventObserver = mockk(relaxed = true)
+        every { mockAepInboxEventObserver.onInboxEvent(any()) } answers {
+            val event = firstArg<com.adobe.marketing.mobile.aepcomposeui.InboxEvent>()
+            if (event is com.adobe.marketing.mobile.aepcomposeui.InboxEvent.Display) {
+                capturedInboxIds.add(event.inboxUIState.template.id)
+            }
+        }
+        mockBitmap = BitmapFactory.decodeResource(
+            RuntimeEnvironment.getApplication().resources,
+            android.R.drawable.ic_menu_report_image
+        )
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
+    }
+
+    private fun setupImageMocking() {
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<Bitmap>) -> Unit>().invoke(Result.success(mockBitmap))
+        }
+    }
+
+    @Composable
+    private fun mockSmallImageUI(id: String) = SmallImageUI(
+        template = SmallImageTemplate(
+            id = id,
+            title = AepText(stringResource(id = android.R.string.dialog_alert_title)),
+            body = AepText(stringResource(id = android.R.string.httpErrorBadUrl)),
+            image = AepImage("https://www.mockImageUrl.com"),
+            actionUrl = "mockActionUrl",
+            buttons = listOf(
+                AepButton(
+                    id = "mockButtonId1",
+                    text = AepText(stringResource(id = android.R.string.ok)),
+                    actionUrl = "mockButtonUrl1"
+                )
+            ),
+            dismissBtn = AepIcon(R.drawable.close_filled)
+        ),
+        state = SmallImageCardUIState()
+    )
+
+    @Test
+    fun `Test AepInbox calls observer onInboxEvent Display when displayed`() {
+        // setup
+        setupImageMocking()
+
+        // test
+        composeTestRule.setContent {
+            val template = InboxTemplate(
+                id = "test-inbox-template",
+                heading = AepText("Test Inbox"),
+                layout = AepInboxLayout.VERTICAL,
+                capacity = 10,
+                emptyMessage = AepText("No messages")
+            )
+            val items = listOf(
+                mockSmallImageUI("item1"),
+                mockSmallImageUI("item2")
+            )
+            val uiState = InboxUIState.Success(template = template, items = items)
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+
+        // verify
+        composeTestRule.waitForIdle()
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called exactly once")
+        assertEquals("test-inbox-template", capturedInboxIds[0], "onInboxEvent Display should be called with correct inbox ID")
+    }
+
+    @Test
+    fun `Test AepInbox does not call onInboxEvent Display on recomposition`() {
+        // setup
+        setupImageMocking()
+
+        // test - set content and trigger recomposition
+        composeTestRule.setContent {
+            val template = InboxTemplate(
+                id = "test-inbox-template-recomp",
+                heading = AepText("Test Inbox"),
+                layout = AepInboxLayout.VERTICAL,
+                capacity = 10,
+                emptyMessage = AepText("No messages")
+            )
+            val items = listOf(
+                mockSmallImageUI("item1")
+            )
+            val uiState = InboxUIState.Success(template = template, items = items)
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+
+        composeTestRule.waitForIdle()
+        val initialCallCount = capturedInboxIds.size
+
+        // Force recomposition by changing configuration
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val config = Configuration(context.resources.configuration)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+
+        composeTestRule.waitForIdle()
+
+        // verify - should still be called only once (same state instance)
+        assertEquals(
+            initialCallCount, capturedInboxIds.size,
+            "onInboxEvent Display should not be called again on recomposition with same state instance"
+        )
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should have been called exactly once")
+        assertEquals("test-inbox-template-recomp", capturedInboxIds[0], "onInboxEvent Display should be called with correct inbox ID")
+    }
+
+    @Test
+    fun `Test AepInbox does not call onInboxEvent Display for Loading state`() {
+        // setup
+        val uiState = InboxUIState.Loading
+
+        // test
+        composeTestRule.setContent {
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+
+        // verify
+        composeTestRule.waitForIdle()
+        assertTrue(capturedInboxIds.isEmpty(), "onInboxEvent Display should not be called for Loading state")
+    }
+
+    @Test
+    fun `Test AepInbox does not call onInboxEvent Display for Error state`() {
+        // setup
+        val uiState = InboxUIState.Error(Throwable("Test error"))
+
+        // test
+        composeTestRule.setContent {
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+
+        // verify
+        composeTestRule.waitForIdle()
+        assertTrue(capturedInboxIds.isEmpty(), "onInboxEvent Display should not be called for Error state")
+    }
+
+    @Test
+    fun `Test AepInbox does not call onInboxEvent Display on configuration change`() {
+        // setup
+        setupImageMocking()
+
+        // test
+        composeTestRule.setContent {
+            val template = InboxTemplate(
+                id = "test-inbox-config-change",
+                heading = AepText("Test Inbox"),
+                layout = AepInboxLayout.VERTICAL,
+                capacity = 10,
+                emptyMessage = AepText("No messages")
+            )
+            val items = listOf(mockSmallImageUI("item1"))
+            val uiState = InboxUIState.Success(template = template, items = items)
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+
+        composeTestRule.waitForIdle()
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called once initially")
+
+        // Simulate configuration change (e.g., screen rotation)
+        composeTestRule.activity.recreate()
+        composeTestRule.waitForIdle()
+
+        // verify - should still be called only once due to rememberSaveable
+        assertEquals(
+            1, capturedInboxIds.size,
+            "onInboxEvent Display should not be called again after configuration change"
+        )
+        assertEquals("test-inbox-config-change", capturedInboxIds[0])
+    }
+
+    @Test
+    fun `Test AepInbox calls onInboxEvent Display again when refreshed`() {
+        // setup
+        setupImageMocking()
+
+        val displayedFlag = androidx.compose.runtime.mutableStateOf(false)
+
+        // test - set content with reactive state
+        composeTestRule.setContent {
+            val template = InboxTemplate(
+                id = "test-inbox-refresh",
+                heading = AepText("Test Inbox"),
+                layout = AepInboxLayout.VERTICAL,
+                capacity = 10,
+                emptyMessage = AepText("No messages")
+            )
+            val items = listOf(mockSmallImageUI("item1"))
+            val currentState = InboxUIState.Success(
+                template = template,
+                items = items,
+                displayed = displayedFlag.value
+            )
+            AepInbox(
+                uiState = currentState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called once initially")
+
+        // Simulate the observer updating displayed to true (as would happen in real usage)
+        displayedFlag.value = true
+        composeTestRule.waitForIdle()
+
+        // Simulate refresh - reset displayed back to false (as provider would do)
+        displayedFlag.value = false
+        composeTestRule.waitForIdle()
+
+        // verify - should be called again because displayed changed from true back to false
+        assertEquals(
+            2, capturedInboxIds.size,
+            "onInboxEvent Display should be called again when refreshed (displayed flag resets to false)"
+        )
+        assertEquals("test-inbox-refresh", capturedInboxIds[0])
+        assertEquals("test-inbox-refresh", capturedInboxIds[1])
+    }
+
+    @Test
+    fun `Test AepInbox calls onInboxEvent Display when template ID changes`() {
+        // setup
+        setupImageMocking()
+
+        val template1 = InboxTemplate(
+            id = "test-inbox-template-1",
+            heading = AepText("Test Inbox 1"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages")
+        )
+
+        val template2 = InboxTemplate(
+            id = "test-inbox-template-2",
+            heading = AepText("Test Inbox 2"),
+            layout = AepInboxLayout.VERTICAL,
+            capacity = 10,
+            emptyMessage = AepText("No messages")
+        )
+
+        val useFirstTemplate = androidx.compose.runtime.mutableStateOf(true)
+
+        // test - set content with reactive template selection
+        composeTestRule.setContent {
+            val template = if (useFirstTemplate.value) template1 else template2
+            val items = listOf(mockSmallImageUI("item1"))
+            val uiState = InboxUIState.Success(template = template, items = items)
+            AepInbox(
+                uiState = uiState,
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = mockAepInboxEventObserver
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        assertEquals(1, capturedInboxIds.size, "onInboxEvent Display should be called once for first template")
+        assertEquals("test-inbox-template-1", capturedInboxIds[0])
+
+        // Change to different template ID
+        useFirstTemplate.value = false
+        composeTestRule.waitForIdle()
+
+        // verify - should be called again because template.id changed
+        assertEquals(
+            2, capturedInboxIds.size,
+            "onInboxEvent Display should be called again when template ID changes"
+        )
+        assertEquals("test-inbox-template-1", capturedInboxIds[0])
+        assertEquals("test-inbox-template-2", capturedInboxIds[1])
     }
 }

@@ -23,16 +23,19 @@ class InboxTemplateTests {
 
     @Test
     fun `create InboxTemplate with required parameters only`() {
+        val id = "inbox-template-1"
         val heading = AepText("Inbox")
         val layout = AepInboxLayout.VERTICAL
         val capacity = 10
 
         val template = InboxTemplate(
+            id = id,
             heading = heading,
             layout = layout,
             capacity = capacity
         )
 
+        assertEquals(id, template.id)
         assertEquals(heading, template.heading)
         assertEquals(layout, template.layout)
         assertEquals(capacity, template.capacity)
@@ -46,6 +49,7 @@ class InboxTemplateTests {
 
     @Test
     fun `create InboxTemplate with all parameters`() {
+        val id = "inbox-template-2"
         val heading = AepText("My Inbox")
         val layout = AepInboxLayout.HORIZONTAL
         val capacity = 20
@@ -57,6 +61,7 @@ class InboxTemplateTests {
         val unreadIconAlignment = Alignment.TopEnd
 
         val template = InboxTemplate(
+            id = id,
             heading = heading,
             layout = layout,
             capacity = capacity,
@@ -68,6 +73,7 @@ class InboxTemplateTests {
             unreadIconAlignment = unreadIconAlignment
         )
 
+        assertEquals(id, template.id)
         assertEquals(heading, template.heading)
         assertEquals(layout, template.layout)
         assertEquals(capacity, template.capacity)
@@ -82,6 +88,7 @@ class InboxTemplateTests {
     @Test
     fun `create InboxTemplate with vertical layout`() {
         val template = InboxTemplate(
+            id = "vertical-inbox",
             heading = AepText("Vertical Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 5
@@ -94,6 +101,7 @@ class InboxTemplateTests {
     @Test
     fun `create InboxTemplate with horizontal layout`() {
         val template = InboxTemplate(
+            id = "horizontal-inbox",
             heading = AepText("Horizontal Inbox"),
             layout = AepInboxLayout.HORIZONTAL,
             capacity = 5
@@ -112,6 +120,7 @@ class InboxTemplateTests {
         )
 
         val template = InboxTemplate(
+            id = "empty-inbox",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10,
@@ -133,6 +142,7 @@ class InboxTemplateTests {
         val unreadIconAlignment = Alignment.BottomStart
 
         val template = InboxTemplate(
+            id = "unread-inbox",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10,
@@ -151,6 +161,7 @@ class InboxTemplateTests {
     @Test
     fun `create InboxTemplate with unread indicator disabled`() {
         val template = InboxTemplate(
+            id = "no-unread-inbox",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10,
@@ -163,11 +174,13 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate data class equality`() {
         val template1 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
         )
         val template2 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
@@ -179,11 +192,13 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate data class inequality with different heading`() {
         val template1 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox 1"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
         )
         val template2 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox 2"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
@@ -195,11 +210,13 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate data class inequality with different layout`() {
         val template1 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
         )
         val template2 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.HORIZONTAL,
             capacity = 10
@@ -211,11 +228,13 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate data class inequality with different capacity`() {
         val template1 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
         )
         val template2 = InboxTemplate(
+            id = "inbox-1",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 20
@@ -227,6 +246,7 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate copy with modified heading`() {
         val original = InboxTemplate(
+            id = "original-inbox",
             heading = AepText("Original"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
@@ -234,6 +254,7 @@ class InboxTemplateTests {
 
         val modified = original.copy(heading = AepText("Modified"))
 
+        assertEquals(original.id, modified.id)
         assertEquals("Modified", modified.heading.content)
         assertEquals(original.layout, modified.layout)
         assertEquals(original.capacity, modified.capacity)
@@ -242,6 +263,7 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate copy with modified layout`() {
         val original = InboxTemplate(
+            id = "layout-inbox",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10
@@ -249,6 +271,7 @@ class InboxTemplateTests {
 
         val modified = original.copy(layout = AepInboxLayout.HORIZONTAL)
 
+        assertEquals(original.id, modified.id)
         assertEquals(original.heading, modified.heading)
         assertEquals(AepInboxLayout.HORIZONTAL, modified.layout)
         assertEquals(original.capacity, modified.capacity)
@@ -268,8 +291,9 @@ class InboxTemplateTests {
             Alignment.BottomEnd
         )
 
-        alignments.forEach { alignment ->
+        alignments.forEachIndexed { index, alignment ->
             val template = InboxTemplate(
+                id = "alignment-inbox-$index",
                 heading = AepText("Inbox"),
                 layout = AepInboxLayout.VERTICAL,
                 capacity = 10,
@@ -282,6 +306,7 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate with zero capacity`() {
         val template = InboxTemplate(
+            id = "zero-capacity-inbox",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 0
@@ -293,6 +318,7 @@ class InboxTemplateTests {
     @Test
     fun `InboxTemplate with large capacity`() {
         val template = InboxTemplate(
+            id = "large-capacity-inbox",
             heading = AepText("Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = Int.MAX_VALUE

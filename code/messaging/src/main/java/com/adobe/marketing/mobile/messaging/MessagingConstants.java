@@ -58,7 +58,7 @@ public final class MessagingConstants {
                 "https://ns.adobe.com/personalization/default-content-item";
         static final String SCHEMA_EVENT_HISTORY_OPERATION =
                 "https://ns.adobe.com/personalization/eventHistoryOperation";
-        static final String SCHEMA_INBOX = "https://ns.adobe.com/personalization/inbox-item";
+        static final String SCHEMA_INBOX = "https://ns.adobe.com/personalization/message/inbox";
 
         private SchemaValues() {}
     }
@@ -464,6 +464,31 @@ public final class MessagingConstants {
             public static final String SIMPLE = "simple";
             public static final String CIRCLE = "circle";
 
+            public static final String TOP_LEFT = "topleft";
+            public static final String TOP_RIGHT = "topright";
+            public static final String BOTTOM_LEFT = "bottomleft";
+            public static final String BOTTOM_RIGHT = "bottomright";
+        }
+    }
+
+    public static final class Inbox {
+        public static class UIKeys {
+            public static final String CONTENT = "content";
+            public static final String HEADING = "heading";
+            public static final String LAYOUT = "layout";
+            public static final String ORIENTATION = "orientation";
+            public static final String CAPACITY = "capacity";
+            public static final String EMPTY_STATE_SETTINGS = "emptyStateSettings";
+            public static final String MESSAGE = "message";
+            public static final String IMAGE = "image";
+            public static final String IS_UNREAD_ENABLED = "isUnreadEnabled";
+            public static final String UNREAD_INDICATOR = "unread_indicator";
+            public static final String UNREAD_ICON = "unread_icon";
+            public static final String UNREAD_BG = "unread_bg";
+            public static final String CLR = "clr";
+            public static final String LIGHT = "light";
+            public static final String DARK = "dark";
+            public static final String PLACEMENT = "placement";
             public static final String TOP_LEFT = "topleft";
             public static final String TOP_RIGHT = "topright";
             public static final String BOTTOM_LEFT = "bottomleft";

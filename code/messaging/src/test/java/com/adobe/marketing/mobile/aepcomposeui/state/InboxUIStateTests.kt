@@ -26,6 +26,7 @@ class InboxUIStateTests {
 
     private fun createTestInboxTemplate(): InboxTemplate {
         return InboxTemplate(
+            id = "test-inbox-template",
             heading = AepText("Test Heading"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10

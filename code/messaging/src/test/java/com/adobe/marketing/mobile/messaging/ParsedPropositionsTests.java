@@ -48,6 +48,11 @@ public class ParsedPropositionsTests {
     private Map<String, Object> mockCodeBasedContent;
     private Map<String, Object> inappPropositionContent;
 
+    private PropositionItem mockInboxPropositionItem;
+    private Proposition mockInboxProposition;
+    private Surface mockInboxSurface;
+    private Map<String, Object> mockInboxContent;
+
     private final Map<String, Object> mockScopeDetails =
             new HashMap<String, Object>() {
                 {
@@ -106,6 +111,20 @@ public class ParsedPropositionsTests {
                         new ArrayList<PropositionItem>() {
                             {
                                 add(mockCodeBasedPropositionItem);
+                            }
+                        });
+
+        mockInboxSurface = Surface.fromUriString("mobileapp://mockPackageName/inbox");
+        mockInboxContent = MessagingTestUtils.getMapFromFile("inboxPropositionContent.json");
+        mockInboxPropositionItem = new PropositionItem("inbox", SchemaType.INBOX, mockInboxContent);
+        mockInboxProposition =
+                new Proposition(
+                        "inbox",
+                        mockInboxSurface.getUri(),
+                        mockScopeDetails,
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(mockInboxPropositionItem);
                             }
                         });
     }
@@ -675,6 +694,43 @@ public class ParsedPropositionsTests {
         Proposition codeBasedProp =
                 parsedPropositions.propositionsToCache.get(mockCodeBasedSurface).get(0);
         Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getItemData());
+        Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
+    }
+
+    @Test
+    public void test_parsedPropositionConstructor_WithInboxProposition() {
+        // setup
+        Map<Surface, List<Proposition>> propositions =
+                new HashMap<Surface, List<Proposition>>() {
+                    {
+                        put(
+                                mockInboxSurface,
+                                new ArrayList<Proposition>() {
+                                    {
+                                        add(mockInboxProposition);
+                                    }
+                                });
+                    }
+                };
+
+        // test
+        ParsedPropositions parsedPropositions =
+                new ParsedPropositions(
+                        propositions,
+                        new ArrayList<Surface>() {
+                            {
+                                add(mockInboxSurface);
+                            }
+                        },
+                        mockExtensionApi);
+
+        // verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
+        Assert.assertEquals(1, parsedPropositions.propositionsToCache.size());
+        Proposition inboxProp = parsedPropositions.propositionsToCache.get(mockInboxSurface).get(0);
+        Assert.assertEquals(mockInboxContent, inboxProp.getItems().get(0).getItemData());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
         Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }

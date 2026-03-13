@@ -40,9 +40,9 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.junit.MockitoJUnitRunner
+import org.robolectric.RobolectricTestRunner
 
-@RunWith(MockitoJUnitRunner.Silent::class)
+@RunWith(RobolectricTestRunner::class)
 class ContentCardSchemaDataUtilsTest {
 
     private lateinit var contentCardMap: MutableMap<String, Any>
@@ -697,5 +697,550 @@ class ContentCardSchemaDataUtilsTest {
             assertEquals(true, ContentCardSchemaDataUtils.getReadStatus("activity1"))
             assertEquals(false, ContentCardSchemaDataUtils.getReadStatus("activity2"))
         }
+    }
+
+    // Tests for createAlignment
+    @Test
+    fun `test createAlignment with top left`() {
+        val result = ContentCardSchemaDataUtils.createAlignment("topleft")
+        assertEquals(androidx.compose.ui.Alignment.TopStart, result)
+    }
+
+    @Test
+    fun `test createAlignment with top left uppercase`() {
+        val result = ContentCardSchemaDataUtils.createAlignment("TOPLEFT")
+        assertEquals(androidx.compose.ui.Alignment.TopStart, result)
+    }
+
+    @Test
+    fun `test createAlignment with top right`() {
+        val result = ContentCardSchemaDataUtils.createAlignment("topright")
+        assertEquals(androidx.compose.ui.Alignment.TopEnd, result)
+    }
+
+    @Test
+    fun `test createAlignment with bottom left`() {
+        val result = ContentCardSchemaDataUtils.createAlignment("bottomleft")
+        assertEquals(androidx.compose.ui.Alignment.BottomStart, result)
+    }
+
+    @Test
+    fun `test createAlignment with bottom right`() {
+        val result = ContentCardSchemaDataUtils.createAlignment("bottomright")
+        assertEquals(androidx.compose.ui.Alignment.BottomEnd, result)
+    }
+
+    @Test
+    fun `test createAlignment with invalid value`() {
+        val result = ContentCardSchemaDataUtils.createAlignment("invalid")
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createAlignment with null value`() {
+        val result = ContentCardSchemaDataUtils.createAlignment(null)
+        assertNull(result)
+    }
+
+    // Tests for createAepColor
+    @Test
+    fun `test createAepColor with valid light color only`() {
+        val colorMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LIGHT to "#FFFF0000"
+        )
+        val result = ContentCardSchemaDataUtils.createAepColor(colorMap, "inboxId")
+        assertNotNull(result)
+        assertEquals(androidx.compose.ui.graphics.Color.Red, result?.light)
+        assertNull(result?.dark)
+    }
+
+    @Test
+    fun `test createAepColor with light and dark colors`() {
+        val colorMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LIGHT to "#FFFF0000",
+            MessagingConstants.Inbox.UIKeys.DARK to "#FF00FF00"
+        )
+        val result = ContentCardSchemaDataUtils.createAepColor(colorMap, "inboxId")
+        assertNotNull(result)
+        assertEquals(androidx.compose.ui.graphics.Color.Red, result?.light)
+        assertEquals(androidx.compose.ui.graphics.Color.Green, result?.dark)
+    }
+
+    @Test
+    fun `test createAepColor with missing light color`() {
+        val colorMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.DARK to "#FF00FF00"
+        )
+        val result = ContentCardSchemaDataUtils.createAepColor(colorMap, "inboxId")
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createAepColor with null light color`() {
+        val colorMap = emptyMap<String, Any>()
+        val result = ContentCardSchemaDataUtils.createAepColor(colorMap, "inboxId")
+        assertNull(result)
+    }
+
+    // Tests for createAepInboxLayout
+    @Test
+    fun `test createAepInboxLayout with valid vertical orientation`() {
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val inboxMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap
+        )
+        val result = ContentCardSchemaDataUtils.createAepInboxLayout(inboxMap, "inboxId")
+        assertNotNull(result)
+        assertEquals(com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout.VERTICAL, result)
+    }
+
+    @Test
+    fun `test createAepInboxLayout with valid horizontal orientation`() {
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "horizontal"
+        )
+        val inboxMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap
+        )
+        val result = ContentCardSchemaDataUtils.createAepInboxLayout(inboxMap, "inboxId")
+        assertNotNull(result)
+        assertEquals(com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout.HORIZONTAL, result)
+    }
+
+    @Test
+    fun `test createAepInboxLayout with invalid orientation`() {
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "invalid"
+        )
+        val inboxMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap
+        )
+        val result = ContentCardSchemaDataUtils.createAepInboxLayout(inboxMap, "inboxId")
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createAepInboxLayout with missing layout key`() {
+        val inboxMap = emptyMap<String, Any>()
+        val result = ContentCardSchemaDataUtils.createAepInboxLayout(inboxMap, "inboxId")
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createAepInboxLayout with empty layout map`() {
+        val layoutMap = emptyMap<String, Any>()
+        val inboxMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap
+        )
+        val result = ContentCardSchemaDataUtils.createAepInboxLayout(inboxMap, "inboxId")
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createAepInboxLayout with missing orientation`() {
+        val layoutMap = mapOf<String, Any>()
+        val inboxMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap
+        )
+        val result = ContentCardSchemaDataUtils.createAepInboxLayout(inboxMap, "inboxId")
+        assertNull(result)
+    }
+
+    // Tests for createInboxTemplate
+
+    @Test
+    fun `test createInboxTemplate with valid data`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 10
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNotNull(result)
+        assertEquals("inboxId", result?.id)
+        assertEquals("My Inbox", result?.heading?.content)
+        assertNotNull(result?.layout)
+        assertEquals(10, result?.capacity)
+    }
+
+    @Test
+    fun `test createInboxTemplate with empty state settings`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val emptyMessageMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "No messages"
+        )
+        val emptyImageMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.URL to "https://example.com/empty.png"
+        )
+        val emptyStateSettings = mapOf(
+            MessagingConstants.Inbox.UIKeys.MESSAGE to emptyMessageMap,
+            MessagingConstants.ContentCard.UIKeys.IMAGE to emptyImageMap
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 10,
+            MessagingConstants.Inbox.UIKeys.EMPTY_STATE_SETTINGS to emptyStateSettings
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNotNull(result)
+        assertEquals("No messages", result?.emptyMessage?.content)
+        assertEquals("https://example.com/empty.png", result?.emptyImage?.url)
+    }
+
+    @Test
+    fun `test createInboxTemplate with unread indicator settings`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "horizontal"
+        )
+        val unreadIconMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.IMAGE to mapOf(MessagingConstants.ContentCard.UIKeys.URL to "https://example.com/unread.png")
+        )
+        val unreadBgColorMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LIGHT to "#FFFF0000"
+        )
+        val unreadBgMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.CLR to unreadBgColorMap
+        )
+        val unreadIndicator = mapOf(
+            MessagingConstants.Inbox.UIKeys.UNREAD_ICON to unreadIconMap,
+            MessagingConstants.Inbox.UIKeys.UNREAD_BG to unreadBgMap,
+            MessagingConstants.Inbox.UIKeys.PLACEMENT to "topleft"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 10,
+            MessagingConstants.Inbox.UIKeys.IS_UNREAD_ENABLED to true,
+            MessagingConstants.Inbox.UIKeys.UNREAD_INDICATOR to unreadIndicator
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNotNull(result)
+        assertEquals(true, result?.isUnreadEnabled)
+        assertEquals("https://example.com/unread.png", result?.unreadIcon?.url)
+        assertNotNull(result?.unreadBgColor)
+        assertEquals(androidx.compose.ui.Alignment.TopStart, result?.unreadIconAlignment)
+    }
+
+    @Test
+    fun `test createInboxTemplate with null proposition items`() {
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(proposition.items).thenReturn(emptyList())
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with empty content map`() {
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(emptyMap())
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with missing heading`() {
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 10
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with empty heading content`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to ""
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 10
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with missing layout`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 10
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with missing capacity`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with zero capacity`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 0
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with negative capacity`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to -1
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with default isUnreadEnabled false`() {
+        val headingMap = mapOf(
+            MessagingConstants.ContentCard.UIKeys.CONTENT to "My Inbox"
+        )
+        val layoutMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.ORIENTATION to "vertical"
+        )
+        val contentMap = mapOf(
+            MessagingConstants.Inbox.UIKeys.HEADING to headingMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT to layoutMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY to 10
+        )
+
+        val inboxSchemaData = mock(InboxContentSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(inboxSchemaData)
+        Mockito.`when`(inboxSchemaData.content).thenReturn(contentMap)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNotNull(result)
+        assertEquals(false, result?.isUnreadEnabled)
+    }
+
+    @Test
+    fun `test createInboxTemplate with non-inbox schema`() {
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test createInboxTemplate with null inboxSchemaData`() {
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(propositionItem.inboxSchemaData).thenReturn(null)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        Mockito.`when`(proposition.activityId).thenReturn("inboxId")
+
+        val result = ContentCardSchemaDataUtils.createInboxTemplate(proposition)
+        assertNull(result)
+    }
+
+    // Tests for isInbox
+    @Test
+    fun `test isInbox with valid inbox proposition`() {
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.INBOX)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+
+        val result = ContentCardSchemaDataUtils.isInbox(proposition)
+        assertTrue(result)
+    }
+
+    @Test
+    fun `test isInbox with non-inbox schema`() {
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+
+        val result = ContentCardSchemaDataUtils.isInbox(proposition)
+        assertFalse(result)
+    }
+
+    @Test
+    fun `test isInbox with empty items`() {
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(proposition.items).thenReturn(emptyList())
+
+        val result = ContentCardSchemaDataUtils.isInbox(proposition)
+        assertFalse(result)
     }
 }

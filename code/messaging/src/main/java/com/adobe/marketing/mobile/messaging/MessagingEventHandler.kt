@@ -22,6 +22,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider
 /**
  * Base interaction handler for messaging events.
  * This class is responsible for handling the display, dismiss and interact events for a content card proposition.
+ * State updates for the content flow are performed by [ContentCardEventObserver] via [ContentCardUIProvider.onEvent].
  *
  * @param T The type of the template associated with the UI component.
  * @param S The type of the state associated with the UI component.
@@ -39,11 +40,11 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
      * Delegates the logic for interact event handling to [onInteractEvent]
      * which can be overridden by subclasses to perform template specific logic.
      *
-     * @param event the event to handle
-     * @param activityId the id of the proposition
+     * @param event the event to handle (activity id is derived from [event.aepUi.getTemplate].id)
      */
-    internal fun onEvent(event: UIEvent<T, S>, activityId: String) {
+    internal fun onEvent(event: UIEvent<T, S>) {
         val ui = event.aepUi
+        val activityId = event.aepUi.getTemplate().id
         when (event) {
             is UIEvent.Display -> {
                 Log.trace(
@@ -110,7 +111,7 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
                     "${event.aepUi.getTemplate().getType()} with id $activityId is interacted"
                 )
 
-                onInteractEvent(event, activityId)
+                onInteractEvent(event)
             }
         }
     }
@@ -129,10 +130,10 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
      * Performs the logic for interact events.
      * This method can be overridden by subclasses to perform template specific logic.
      *
-     * @param event the interact event to handle
-     * @param activityId the id of the proposition
+     * @param event the interact event to handle (activity id is derived from [event.aepUi.getTemplate].id)
      */
-    internal open fun onInteractEvent(event: UIEvent.Interact<T, S>, activityId: String) {
+    internal open fun onInteractEvent(event: UIEvent.Interact<T, S>) {
+        val activityId = event.aepUi.getTemplate().id
         val templateType = event.aepUi.getTemplate().getType()
         when (event.action) {
             is UIAction.Click -> {

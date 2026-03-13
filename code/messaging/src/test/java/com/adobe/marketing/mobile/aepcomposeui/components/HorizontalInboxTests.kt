@@ -177,6 +177,7 @@ class HorizontalInboxTests(
         emptyMessage: AepText? = AepText("No messages"),
         emptyImage: AepImage? = null
     ) = InboxTemplate(
+        id = "horizontal-inbox-template",
         heading = AepText("Inbox"),
         layout = AepInboxLayout.HORIZONTAL,
         capacity = 10,
@@ -262,6 +263,7 @@ class HorizontalInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             // Template with capacity of 2
             val template = InboxTemplate(
+                id = "limited-horizontal-inbox-template",
                 heading = AepText("Inbox"),
                 layout = AepInboxLayout.HORIZONTAL,
                 capacity = 2,

@@ -1087,6 +1087,50 @@ public class PropositionItemTests {
         assertNull(eventHistoryOperationSchemaData);
     }
 
+    // getInboxSchemaData tests
+    @Test
+    public void test_getInboxSchemaData() throws MessageRequiredFieldMissingException {
+        // setup
+        Map<String, Object> inboxData =
+                MessagingTestUtils.getMapFromFile("inboxPropositionContent.json");
+
+        // test
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.INBOX, inboxData);
+
+        // verify
+        assertNotNull(propositionItem);
+        InboxContentSchemaData schemaData = propositionItem.getInboxSchemaData();
+        assertNotNull(schemaData);
+        assertEquals(
+                inboxData.get(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT),
+                schemaData.getContent());
+        assertEquals(
+                inboxData.get(MessagingTestConstants.ConsequenceDetailDataKeys.METADATA),
+                schemaData.getMetadata());
+    }
+
+    @Test
+    public void test_getInboxSchemaData_emptyData() throws MessageRequiredFieldMissingException {
+        // test
+        PropositionItem propositionItem =
+                new PropositionItem(testId, SchemaType.INBOX, Collections.emptyMap());
+        InboxContentSchemaData schemaData = propositionItem.getInboxSchemaData();
+        // verify
+        assertNull(schemaData);
+    }
+
+    @Test
+    public void test_getInboxSchemaData_invalidSchemaType()
+            throws MessageRequiredFieldMissingException {
+        // test
+        PropositionItem propositionItem =
+                new PropositionItem(testId, SchemaType.JSON_CONTENT, jsonContentMap);
+
+        InboxContentSchemaData schemaData = propositionItem.getInboxSchemaData();
+        // verify
+        assertNull(schemaData);
+    }
+
     private List<RuleConsequence> parseRuleConsequence(String rulesJson) {
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         return rules.get(0).getConsequenceList();

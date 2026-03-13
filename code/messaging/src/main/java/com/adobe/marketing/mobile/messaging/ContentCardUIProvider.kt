@@ -15,9 +15,12 @@ import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.copyAepUI
 import com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -37,7 +39,7 @@ import kotlin.coroutines.resume
  *
  * @property surface The surface for which content needs to be fetched.
  */
-class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
+class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider, AepUIEventObserver {
     companion object {
         private const val SELF_TAG: String = "ContentCardUIProvider"
     }
@@ -45,32 +47,48 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     private val _contentFlow = MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
     private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow.asStateFlow()
 
-    private fun toAepUIList(): Flow<Result<List<AepUI<*, *>>>> = contentFlow.mapNotNull { templateResult ->
-        if (templateResult.isSuccess) {
-            Result.success(
-                templateResult.getOrDefault(emptyList())
-                    .mapNotNull { item -> ContentCardSchemaDataUtils.getAepUI(item) }
-            )
-        } else {
-            Result.failure(
-                templateResult.exceptionOrNull()
-                    ?: Throwable("Failed to process propositions for surface ${surface.uri}: Unknown Error")
-            )
+    private val _aepUIFlow = MutableStateFlow<Result<List<AepUI<*, *>>>>(Result.success(emptyList()))
+    private val aepUIFlow: StateFlow<Result<List<AepUI<*, *>>>> = _aepUIFlow.asStateFlow()
+
+    /**
+     * Receives a content card UI event and updates the flow. Called by [ContentCardEventObserver]
+     * after the event has been handled. When the handler mutates the card in place (same reference),
+     * we use a copy so [StateFlow] sees a distinct value and emits.
+     *
+     * @param event The [UIEvent] whose [UIEvent.aepUi] holds the updated card state.
+     */
+    override fun onEvent(event: UIEvent<*, *>) {
+        val updatedCard = event.aepUi
+        val currentResult = _aepUIFlow.value
+        if (!currentResult.isSuccess) {
+            return
         }
+        val currentList = currentResult.getOrNull() ?: emptyList()
+        val cardId = updatedCard.getTemplate().id
+        val updatedList = currentList.map { aepUI ->
+            if (aepUI.getTemplate().id != cardId) {
+                aepUI
+            }
+            // in-place mutation: copy so StateFlow emits
+            else if (aepUI === updatedCard) {
+                copyAepUI(updatedCard)
+            } else updatedCard
+        }
+        _aepUIFlow.update { Result.success(updatedList) }
     }
 
     /**
      * Retrieves a flow of AepUI instances for the given surface.
      *
-     * This function initiates the content fetch using [getContent] and then returns a flow of
-     * [AepUI] instances that represent the UI templates. The flow emits updates whenever new
-     * content is fetched or any changes occur.
+     * This function initiates the content fetch and returns a flow of [AepUI] instances
+     * that represent the UI templates. The flow emits updates whenever [refreshContent] is called
+     * or when [onEvent] is called to update a card's state.
      *
      * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */
-    suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
-        _contentFlow.update { fetchContent() }
-        return toAepUIList()
+    fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> = flow {
+        refreshContent()
+        emitAll(aepUIFlow)
     }
 
     /**
@@ -82,7 +100,22 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * so this method is only needed for manual refresh operations.
      */
     override suspend fun refreshContent() {
-        _contentFlow.update { fetchContent() }
+        val templateResult = fetchContent()
+        _contentFlow.update { templateResult }
+
+        // Also update _aepUIFlow so getContentCardUI collectors receive refresh updates
+        _aepUIFlow.update {
+            if (templateResult.isSuccess) {
+                val aepUIList = templateResult.getOrDefault(emptyList())
+                    .mapNotNull { item -> ContentCardSchemaDataUtils.getAepUI(item) }
+                Result.success(aepUIList)
+            } else {
+                Result.failure(
+                    templateResult.exceptionOrNull()
+                        ?: Throwable("Failed to process propositions for surface ${surface.uri}: Unknown Error")
+                )
+            }
+        }
     }
 
     /**

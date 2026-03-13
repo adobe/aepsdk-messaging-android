@@ -21,11 +21,8 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
  * @property callback An optional callback to invoke when a content card event occurs.
  */
 internal class ImageOnlyTemplateEventHandler(
-    private val callback: ContentCardUIEventListener?
-) :
-    MessagingEventHandler<ImageOnlyTemplate, ImageOnlyCardUIState>(
-        callback
-    ) {
+    callback: ContentCardUIEventListener?
+) : MessagingEventHandler<ImageOnlyTemplate, ImageOnlyCardUIState>(callback) {
     override fun getNewState(event: UIEvent<ImageOnlyTemplate, ImageOnlyCardUIState>): ImageOnlyCardUIState {
         val currentState = event.aepUi.getState()
         return when (event) {

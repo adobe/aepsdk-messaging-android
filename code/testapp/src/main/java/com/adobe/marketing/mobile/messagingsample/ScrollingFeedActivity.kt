@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +55,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.messaging.MessagingInboxProvider
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
+import com.adobe.marketing.mobile.messaging.InboxEventObserver
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 import kotlinx.coroutines.flow.SharingStarted
@@ -93,7 +93,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
             setContent {
                 AppTheme {
                     val cardStyle = AepCardStyle(
-                        modifier = Modifier.width(400.dp).padding(8.dp),
+                        modifier = Modifier.padding(8.dp),
                     )
                     val smallImageCardStyle = SmallImageUIStyle.Builder()
                         .cardStyle(cardStyle)
@@ -160,7 +160,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         uiState = inboxUi,
                         inboxStyle = inboxContainerStyle,
                         itemsStyle = cardUIStyle,
-                        observer = ContentCardEventObserver(ContentCardCallback())
+                        observer = viewModel.observer
                     )
                 }
             }
@@ -189,9 +189,16 @@ class ContentCardCallback: ContentCardUIEventListener {
 }
 // create new view model or reuse existing one to hold the aepUIList
 class ExistingViewModel: ViewModel() {
-    private val containerUIProvider = MessagingInboxProvider(Surface("card/ms"))
+    private val contentCardCallback = ContentCardCallback()
+    
+    val inboxContentProvider = MessagingInboxProvider(Surface("card/ms"))
+    
+    val observer = InboxEventObserver(
+        inboxContentProvider,
+        ContentCardEventObserver(contentCardCallback)
+    )
 
-    val inboxUIStateFlow = containerUIProvider.getInboxUI()
+    val inboxUIStateFlow = inboxContentProvider.getInboxUI()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -200,7 +207,7 @@ class ExistingViewModel: ViewModel() {
 
     fun refresh() {
         viewModelScope.launch {
-            containerUIProvider.refresh()
+            inboxContentProvider.refresh()
         }
     }
 }

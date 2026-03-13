@@ -101,7 +101,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Display(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).displayed
             verify(callback, times(1)).onDisplay(mockImageOnlyUI)
@@ -117,7 +117,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Display(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).displayed
             verify(callback, times(0)).onDisplay(mockImageOnlyUI)
@@ -132,7 +132,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Dismiss(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).dismissed
             verify(callback, times(1)).onDismiss(mockImageOnlyUI)
@@ -148,7 +148,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val handler = ImageOnlyTemplateEventHandler(callback)
             val event = UIEvent.Dismiss(mockImageOnlyUI)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(mockImageOnlyCardUIState, times(1)).dismissed
             verify(callback, times(0)).onDismiss(mockImageOnlyUI)
@@ -164,7 +164,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")
@@ -181,7 +181,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, never()).openUri(anyString())
@@ -197,7 +197,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val action = UIAction.Click(id = "button1", actionUrl = null)
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", null)
             verify(mockUriOpening, never()).openUri(anyString())
@@ -212,7 +212,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             // verify that the track is still called and that the url is still opened
             verify(mockUriOpening, times(1)).openUri("http://example.com")
@@ -229,7 +229,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")
@@ -247,7 +247,7 @@ class ImageOnlyTemplateEventHandlerTests {
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockImageOnlyUI, action)
 
-            handler.onEvent(event, "propositionId")
+            handler.onEvent(event)
 
             verify(callback, times(1)).onInteract(mockImageOnlyUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")
