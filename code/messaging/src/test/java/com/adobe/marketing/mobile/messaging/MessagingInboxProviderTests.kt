@@ -713,102 +713,48 @@ class MessagingInboxProviderTests {
     }
 
     @Test
-    fun `fetchInbox selects inbox proposition with highest priority`() = runTest {
-        val lowPriorityInboxProp = mock(Proposition::class.java)
-        val highPriorityInboxProp = mock(Proposition::class.java)
-        val lowPriorityInboxItem = mock(PropositionItem::class.java)
-        val highPriorityInboxItem = mock(PropositionItem::class.java)
+    fun `fetchInbox selects first inbox proposition in the list`() = runTest {
+        val firstInboxProp = mock(Proposition::class.java)
+        val secondInboxProp = mock(Proposition::class.java)
+        val firstInboxItem = mock(PropositionItem::class.java)
+        val secondInboxItem = mock(PropositionItem::class.java)
 
-        whenever(lowPriorityInboxItem.schema).thenReturn(SchemaType.INBOX)
-        whenever(highPriorityInboxItem.schema).thenReturn(SchemaType.INBOX)
-        whenever(lowPriorityInboxProp.items).thenReturn(listOf(lowPriorityInboxItem))
-        whenever(highPriorityInboxProp.items).thenReturn(listOf(highPriorityInboxItem))
-        whenever(lowPriorityInboxProp.priority).thenReturn(10)
-        whenever(highPriorityInboxProp.priority).thenReturn(50)
+        whenever(firstInboxItem.schema).thenReturn(SchemaType.INBOX)
+        whenever(secondInboxItem.schema).thenReturn(SchemaType.INBOX)
+        whenever(firstInboxProp.items).thenReturn(listOf(firstInboxItem))
+        whenever(secondInboxProp.items).thenReturn(listOf(secondInboxItem))
 
-        val lowPriorityTemplate = InboxTemplate(
-            id = "low-priority-inbox",
-            heading = AepText("Low Priority Inbox"),
+        val firstTemplate = InboxTemplate(
+            id = "first-inbox",
+            heading = AepText("First Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10,
             emptyMessage = AepText("No messages")
         )
-        val highPriorityTemplate = InboxTemplate(
-            id = "high-priority-inbox",
-            heading = AepText("High Priority Inbox"),
+        val secondTemplate = InboxTemplate(
+            id = "second-inbox",
+            heading = AepText("Second Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10,
             emptyMessage = AepText("No messages")
         )
-        every { ContentCardSchemaDataUtils.createInboxTemplate(lowPriorityInboxProp) } returns lowPriorityTemplate
-        every { ContentCardSchemaDataUtils.createInboxTemplate(highPriorityInboxProp) } returns highPriorityTemplate
+        every { ContentCardSchemaDataUtils.createInboxTemplate(firstInboxProp) } returns firstTemplate
+        every { ContentCardSchemaDataUtils.createInboxTemplate(secondInboxProp) } returns secondTemplate
 
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            callback.call(mapOf(surface to listOf(lowPriorityInboxProp, highPriorityInboxProp)))
+            callback.call(mapOf(surface to listOf(firstInboxProp, secondInboxProp)))
         }
 
         val states = messagingInboxProvider.getInboxUI().take(2).toList()
 
         assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
         assertEquals(
-            "Should select the inbox proposition with the highest priority",
-            "high-priority-inbox",
-            (states[1] as InboxUIState.Success).template.id
-        )
-    }
-
-    @Test
-    fun `fetchInbox selects latest modified inbox proposition when priorities are equal`() = runTest {
-        // The propositions list is ordered latest-modified first.
-        // Both have the same priority, so the first element (latest modified) should win.
-        val olderInboxProp = mock(Proposition::class.java)
-        val newerInboxProp = mock(Proposition::class.java)
-        val olderInboxItem = mock(PropositionItem::class.java)
-        val newerInboxItem = mock(PropositionItem::class.java)
-
-        whenever(olderInboxItem.schema).thenReturn(SchemaType.INBOX)
-        whenever(newerInboxItem.schema).thenReturn(SchemaType.INBOX)
-        whenever(olderInboxProp.items).thenReturn(listOf(olderInboxItem))
-        whenever(newerInboxProp.items).thenReturn(listOf(newerInboxItem))
-        whenever(olderInboxProp.priority).thenReturn(25)
-        whenever(newerInboxProp.priority).thenReturn(25)
-
-        val olderTemplate = InboxTemplate(
-            id = "older-inbox",
-            heading = AepText("Older Inbox"),
-            layout = AepInboxLayout.VERTICAL,
-            capacity = 10,
-            emptyMessage = AepText("No messages")
-        )
-        val newerTemplate = InboxTemplate(
-            id = "newer-inbox",
-            heading = AepText("Newer Inbox"),
-            layout = AepInboxLayout.VERTICAL,
-            capacity = 10,
-            emptyMessage = AepText("No messages")
-        )
-        every { ContentCardSchemaDataUtils.createInboxTemplate(olderInboxProp) } returns olderTemplate
-        every { ContentCardSchemaDataUtils.createInboxTemplate(newerInboxProp) } returns newerTemplate
-
-        mockMessaging.`when`<Unit> {
-            Messaging.getPropositionsForSurfaces(any(), any())
-        }.thenAnswer { invocation ->
-            val callback =
-                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            // List is ordered latest-modified first: newerInboxProp comes before olderInboxProp
-            callback.call(mapOf(surface to listOf(newerInboxProp, olderInboxProp)))
-        }
-
-        val states = messagingInboxProvider.getInboxUI().take(2).toList()
-
-        assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
-        assertEquals(
-            "Should select the latest modified inbox proposition when priorities are equal",
-            "newer-inbox",
+            "Should select the first inbox proposition in the server-ordered list",
+            "first-inbox",
             (states[1] as InboxUIState.Success).template.id
         )
     }

@@ -136,9 +136,7 @@ class MessagingInboxProvider(
             )
             return Result.failure(Throwable("No inbox proposition found for surface: ${surface.uri}"))
         }
-        val highestPriorityInbox = inboxPropositionList.first { proposition ->
-            proposition.priority == inboxPropositionList.maxOf { it.priority }
-        }
+        val highestPriorityInbox = inboxPropositionList.first()
         val contentCardPropositions =
             propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD }
                 ?: emptyList()
