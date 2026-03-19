@@ -136,6 +136,7 @@ class MessagingInboxProvider(
             )
             return Result.failure(Throwable("No inbox proposition found for surface: ${surface.uri}"))
         }
+        // IDS response has the propositions ordered by priority and last modified time, so the first proposition with the inbox schema should be the one to display
         val highestPriorityInbox = inboxPropositionList.first()
         val contentCardPropositions =
             propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD }

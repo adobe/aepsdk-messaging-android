@@ -1318,4 +1318,14 @@ class ContentCardSchemaDataUtilsTest {
     fun `test toComposeColor with lowercase hex is parsed correctly`() {
         assertEquals(androidx.compose.ui.graphics.Color.Red, "#ff0000".toComposeColor())
     }
+
+    @Test
+    fun `test toComposeColor with invalid hex characters returns null`() {
+        assertNull("#GGGGGG".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with invalid 8-char hex characters returns null`() {
+        assertNull("#FF0000ZZ".toComposeColor())
+    }
 }
