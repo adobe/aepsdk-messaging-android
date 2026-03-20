@@ -52,7 +52,7 @@ class InboxEventObserver(
     }
 
     private val inboxObservers by lazy {
-        listOf(provider, trackingObserver)
+        listOf(provider.inboxEventObserver, trackingObserver)
     }
 
     private val itemObserver: AepUIEventObserver by lazy {

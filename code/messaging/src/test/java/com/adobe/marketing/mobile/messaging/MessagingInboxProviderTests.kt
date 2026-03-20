@@ -827,7 +827,7 @@ class MessagingInboxProviderTests {
         assertFalse("Initial displayed flag should be false", initialSuccess.displayed)
 
         // Update the state by notifying the provider of display event
-        messagingInboxProvider.onInboxEvent(InboxEvent.Display(initialSuccess))
+        messagingInboxProvider.inboxEventObserver.onInboxEvent(InboxEvent.Display(initialSuccess))
 
         // Wait for the update to propagate
         advanceUntilIdle()

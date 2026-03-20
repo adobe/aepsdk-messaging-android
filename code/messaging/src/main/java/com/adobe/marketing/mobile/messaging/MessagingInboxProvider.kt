@@ -37,7 +37,7 @@ import kotlin.coroutines.resume
  */
 class MessagingInboxProvider(
     val surface: Surface
-) : AepInboxContentProvider, AepInboxEventObserver {
+) : AepInboxContentProvider {
     data class InboxProposition(
         val inbox: Proposition,
         val contentCards: List<Proposition>
@@ -184,17 +184,20 @@ class MessagingInboxProvider(
         }
 
     /**
-     * Handles state updates needed for inbox events.
+     * Internal observer that handles state updates needed for inbox events.
+     * Kept internal to prevent integrating apps from calling these methods directly.
      */
-    override fun onInboxEvent(event: InboxEvent) {
-        when (event) {
-            is InboxEvent.Display -> {
-                _inboxStateFlow.update { event.inboxUIState.copy(displayed = true) }
+    internal val inboxEventObserver: AepInboxEventObserver = object : AepInboxEventObserver {
+        override fun onInboxEvent(event: InboxEvent) {
+            when (event) {
+                is InboxEvent.Display -> {
+                    _inboxStateFlow.update { event.inboxUIState.copy(displayed = true) }
+                }
             }
         }
-    }
 
-    override fun onEvent(event: UIEvent<*, *>) {
-        // Currently no-op for item events
+        override fun onEvent(event: UIEvent<*, *>) {
+            // Currently no-op for item events
+        }
     }
 }
