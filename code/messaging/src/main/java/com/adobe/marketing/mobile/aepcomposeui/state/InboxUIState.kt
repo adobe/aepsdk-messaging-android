@@ -34,7 +34,7 @@ sealed interface InboxUIState {
     data class Success(
         val template: InboxTemplate,
         val items: List<AepUI<*, *>>,
-        val displayed: Boolean = false
+        internal val displayed: Boolean = false
     ) : InboxUIState
 
     /**
