@@ -39,7 +39,7 @@ import kotlin.coroutines.resume
  *
  * @property surface The surface for which content needs to be fetched.
  */
-class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider, AepUIEventObserver {
+class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     companion object {
         private const val SELF_TAG: String = "ContentCardUIProvider"
     }
@@ -51,30 +51,29 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider, AepUIE
     private val aepUIFlow: StateFlow<Result<List<AepUI<*, *>>>> = _aepUIFlow.asStateFlow()
 
     /**
-     * Receives a content card UI event and updates the flow. Called by [ContentCardEventObserver]
-     * after the event has been handled. When the handler mutates the card in place (same reference),
-     * we use a copy so [StateFlow] sees a distinct value and emits.
-     *
-     * @param event The [UIEvent] whose [UIEvent.aepUi] holds the updated card state.
+     * Internal observer that receives content card UI events and updates the flow.
+     * Kept internal to prevent integrating apps from calling this directly.
      */
-    override fun onEvent(event: UIEvent<*, *>) {
-        val updatedCard = event.aepUi
-        val currentResult = _aepUIFlow.value
-        if (!currentResult.isSuccess) {
-            return
-        }
-        val currentList = currentResult.getOrNull() ?: emptyList()
-        val cardId = updatedCard.getTemplate().id
-        val updatedList = currentList.map { aepUI ->
-            if (aepUI.getTemplate().id != cardId) {
-                aepUI
+    internal val uiEventObserver: AepUIEventObserver = object : AepUIEventObserver {
+        override fun onEvent(event: UIEvent<*, *>) {
+            val updatedCard = event.aepUi
+            val currentResult = _aepUIFlow.value
+            if (!currentResult.isSuccess) {
+                return
             }
-            // in-place mutation: copy so StateFlow emits
-            else if (aepUI === updatedCard) {
-                copyAepUI(updatedCard)
-            } else updatedCard
+            val currentList = currentResult.getOrNull() ?: emptyList()
+            val cardId = updatedCard.getTemplate().id
+            val updatedList = currentList.map { aepUI ->
+                if (aepUI.getTemplate().id != cardId) {
+                    aepUI
+                }
+                // in-place mutation: copy so StateFlow emits
+                else if (aepUI === updatedCard) {
+                    copyAepUI(updatedCard)
+                } else updatedCard
+            }
+            _aepUIFlow.update { Result.success(updatedList) }
         }
-        _aepUIFlow.update { Result.success(updatedList) }
     }
 
     /**
