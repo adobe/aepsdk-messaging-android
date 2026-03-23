@@ -18,12 +18,11 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 
 /**
- * Messaging implementation of [AepInboxEventObserver].
- * Propagates [InboxEvent] to an internally maintained list of [AepUIEventObserver], and
- * item-level [UIEvent] to the provided [AepUIEventObserver] or a default [ContentCardEventObserver] when null.
+ * Messaging implementation of [AepInboxEventObserver] for use with [AepInbox].
+ * Handles inbox-level events and Adobe Journey Optimizer tracking inside the SDK, and forwards
+ * item-level [UIEvent] instances to [itemEventObserver] or to a default [ContentCardEventObserver] when null.
  *
- * @param provider The [MessagingInboxProvider] that owns inbox state; the observer calls
- *   [MessagingInboxProvider.onInboxEvent] so the provider updates its state.
+ * @param provider The [MessagingInboxProvider] that owns inbox state
  * @param itemEventObserver Optional [AepUIEventObserver] for item-level events (e.g. [ContentCardEventObserver]).
  *   When null, a default [ContentCardEventObserver] with null callback is used.
  */
@@ -52,7 +51,7 @@ class InboxEventObserver(
     }
 
     private val inboxObservers by lazy {
-        listOf(provider, trackingObserver)
+        listOf(provider.inboxEventObserver, trackingObserver)
     }
 
     private val itemObserver: AepUIEventObserver by lazy {

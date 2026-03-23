@@ -15,6 +15,7 @@ import com.adobe.marketing.mobile.MessagingEdgeEventType
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepInboxEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
@@ -57,6 +58,8 @@ class InboxEventObserverTests {
     @Test
     fun `onInboxEvent Display performs tracking and calls provider onInboxEvent`() {
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        val mockInboxEventObserver = mock(AepInboxEventObserver::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mockInboxEventObserver)
         val observer = InboxEventObserver(mockProvider, null)
 
         val mockPropositionItem = mock(PropositionItem::class.java)
@@ -69,24 +72,27 @@ class InboxEventObserverTests {
         observer.onInboxEvent(event)
 
         verify(mockPropositionItem, times(1)).track(MessagingEdgeEventType.DISPLAY)
-        verify(mockProvider, times(1)).onInboxEvent(event)
+        verify(mockInboxEventObserver, times(1)).onInboxEvent(event)
     }
 
     @Test
     fun `onInboxEvent Display does not track but calls provider onInboxEvent even when no proposition item in mapper`() {
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        val mockInboxEventObserver = mock(AepInboxEventObserver::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mockInboxEventObserver)
         val observer = InboxEventObserver(mockProvider, null)
 
         val successState = createSuccessState("noMappingId")
         val event = InboxEvent.Display(successState)
         observer.onInboxEvent(event)
 
-        verify(mockProvider, times(1)).onInboxEvent(event)
+        verify(mockInboxEventObserver, times(1)).onInboxEvent(event)
     }
 
     @Test
     fun `onInboxEvent Display does not track but calls provider onInboxEvent even  when no inbox proposition item is stored for given id`() {
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mock(AepInboxEventObserver::class.java))
         val observer = InboxEventObserver(mockProvider, null)
 
         val mockPropositionItem = mock(PropositionItem::class.java)
@@ -102,6 +108,7 @@ class InboxEventObserverTests {
     @Test
     fun `onInboxEvent Display tracks correct inbox proposition for multiple inboxes`() {
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mock(AepInboxEventObserver::class.java))
         val observer = InboxEventObserver(mockProvider, null)
 
         val mockPropositionItem1 = mock(PropositionItem::class.java)
@@ -128,6 +135,8 @@ class InboxEventObserverTests {
         // e.g. configuration change re-entry where the provider's surviving state has displayed=true.
         // The provider is always notified; only tracking is guarded by the displayed flag.
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        val mockInboxEventObserver = mock(AepInboxEventObserver::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mockInboxEventObserver)
         val observer = InboxEventObserver(mockProvider, null)
 
         val mockPropositionItem = mock(PropositionItem::class.java)
@@ -139,7 +148,7 @@ class InboxEventObserverTests {
         observer.onInboxEvent(event)
 
         verify(mockPropositionItem, never()).track(MessagingEdgeEventType.DISPLAY)
-        verify(mockProvider, times(1)).onInboxEvent(event)
+        verify(mockInboxEventObserver, times(1)).onInboxEvent(event)
     }
 
     @Test
@@ -149,6 +158,8 @@ class InboxEventObserverTests {
         // 2. displayed=true  → tracking skipped, provider still called
         // 3. displayed=false → tracking fires again, provider called
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        val mockInboxEventObserver = mock(AepInboxEventObserver::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mockInboxEventObserver)
         val observer = InboxEventObserver(mockProvider, null)
 
         val mockPropositionItem = mock(PropositionItem::class.java)
@@ -164,8 +175,8 @@ class InboxEventObserverTests {
         observer.onInboxEvent(eventNotDisplayed) // step 3: tracks again + provider called
 
         verify(mockPropositionItem, times(2)).track(MessagingEdgeEventType.DISPLAY)
-        verify(mockProvider, times(2)).onInboxEvent(eventNotDisplayed)
-        verify(mockProvider, times(1)).onInboxEvent(eventDisplayed)
+        verify(mockInboxEventObserver, times(2)).onInboxEvent(eventNotDisplayed)
+        verify(mockInboxEventObserver, times(1)).onInboxEvent(eventDisplayed)
     }
 
     @Test

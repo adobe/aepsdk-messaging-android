@@ -671,7 +671,7 @@ class ContentCardUIProviderTests {
             firstCard.getTemplate(),
             firstCard.getState().copy(displayed = true)
         )
-        contentCardUIProvider.onEvent(UIEvent.Display(updatedCard))
+        contentCardUIProvider.uiEventObserver.onEvent(UIEvent.Display(updatedCard))
 
         // Wait for the update to propagate
         advanceUntilIdle()
@@ -721,7 +721,7 @@ class ContentCardUIProviderTests {
         // Mutate the same card in place (as handlers do), then call onEvent with that reference.
         // Provider uses copyAepUI so StateFlow sees a distinct value and emits.
         firstCard.updateState(firstCard.getState().copy(displayed = true))
-        contentCardUIProvider.onEvent(UIEvent.Display(firstCard))
+        contentCardUIProvider.uiEventObserver.onEvent(UIEvent.Display(firstCard))
 
         advanceUntilIdle()
 

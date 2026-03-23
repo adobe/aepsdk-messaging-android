@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
@@ -93,14 +94,16 @@ class ContentCardObserverTests {
     }
 
     @Test
-    fun `Content card event observer calls provider onEvent when provider is set`() {
+    fun `Content card event observer calls provider uiEventObserver onEvent when provider is set`() {
         val callback = mock(ContentCardUIEventListener::class.java)
         val provider = mock(ContentCardUIProvider::class.java)
+        val mockUiEventObserver = mock(AepUIEventObserver::class.java)
+        `when`(provider.uiEventObserver).thenReturn(mockUiEventObserver)
         val observer = ContentCardEventObserver(callback, provider)
         val event = UIEvent.Display(mockAepUI)
 
         observer.onEvent(event)
 
-        verify(provider, times(1)).onEvent(event)
+        verify(mockUiEventObserver, times(1)).onEvent(event)
     }
 }

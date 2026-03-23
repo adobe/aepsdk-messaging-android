@@ -23,7 +23,8 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
  * Implementation of [AepUIEventObserver] for handling content card events.
- * Propagates every event to the internally maintained a list of [AepUIEventObserver] instances.
+ * Propagates each event to an internally maintained chain: template event handlers (and optional
+ * [ContentCardUIEventListener] callback), then optionally the [ContentCardUIProvider] for flow updates.
  *
  * @param callback An optional callback to invoke when a content card event occurs.
  * @param provider An optional [ContentCardUIProvider] that owns the content card state.
@@ -53,7 +54,7 @@ class ContentCardEventObserver @JvmOverloads constructor(
     }
 
     private val observers: List<AepUIEventObserver> by lazy {
-        listOfNotNull(callbackObserver, provider)
+        listOfNotNull(callbackObserver, provider?.uiEventObserver)
     }
 
     override fun onEvent(event: UIEvent<*, *>) {

@@ -746,7 +746,7 @@ class ContentCardSchemaDataUtilsTest {
     @Test
     fun `test createAepColor with valid light color only`() {
         val colorMap = mapOf(
-            MessagingConstants.Inbox.UIKeys.LIGHT to "#FFFF0000"
+            MessagingConstants.Inbox.UIKeys.LIGHT to "#FF0000FF"
         )
         val result = ContentCardSchemaDataUtils.createAepColor(colorMap, "inboxId")
         assertNotNull(result)
@@ -757,8 +757,8 @@ class ContentCardSchemaDataUtilsTest {
     @Test
     fun `test createAepColor with light and dark colors`() {
         val colorMap = mapOf(
-            MessagingConstants.Inbox.UIKeys.LIGHT to "#FFFF0000",
-            MessagingConstants.Inbox.UIKeys.DARK to "#FF00FF00"
+            MessagingConstants.Inbox.UIKeys.LIGHT to "#FF0000FF",
+            MessagingConstants.Inbox.UIKeys.DARK to "#00FF00FF"
         )
         val result = ContentCardSchemaDataUtils.createAepColor(colorMap, "inboxId")
         assertNotNull(result)
@@ -1242,5 +1242,90 @@ class ContentCardSchemaDataUtilsTest {
 
         val result = ContentCardSchemaDataUtils.isInbox(proposition)
         assertFalse(result)
+    }
+
+    // Tests for toComposeColor
+    @Test
+    fun `test toComposeColor with 6-char RGB hex returns opaque color`() {
+        assertEquals(androidx.compose.ui.graphics.Color.Red, "#FF0000".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 6-char RGB hex green`() {
+        assertEquals(androidx.compose.ui.graphics.Color.Green, "#00FF00".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 6-char RGB hex blue`() {
+        assertEquals(androidx.compose.ui.graphics.Color.Blue, "#0000FF".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 6-char RGB hex black`() {
+        assertEquals(androidx.compose.ui.graphics.Color.Black, "#000000".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 6-char RGB hex white`() {
+        assertEquals(androidx.compose.ui.graphics.Color.White, "#FFFFFF".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 8-char RRGGBBAA hex fully opaque red`() {
+        assertEquals(androidx.compose.ui.graphics.Color.Red, "#FF0000FF".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 8-char RRGGBBAA hex fully opaque green`() {
+        assertEquals(androidx.compose.ui.graphics.Color.Green, "#00FF00FF".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 8-char RRGGBBAA hex zero alpha`() {
+        val result = "#FF000000".toComposeColor()
+        assertNotNull(result)
+        assertEquals(androidx.compose.ui.graphics.Color(255, 0, 0, 0), result)
+    }
+
+    @Test
+    fun `test toComposeColor with 8-char RRGGBBAA hex semi-transparent`() {
+        val result = "#FF000080".toComposeColor()
+        assertNotNull(result)
+        assertEquals(androidx.compose.ui.graphics.Color(255, 0, 0, 128), result)
+    }
+
+    @Test
+    fun `test toComposeColor with 5-char hex returns null`() {
+        assertNull("#FFFFF".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with 7-char hex returns null`() {
+        assertNull("#FFFFFFF".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with empty string returns null`() {
+        assertNull("".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with only hash returns null`() {
+        assertNull("#".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with lowercase hex is parsed correctly`() {
+        assertEquals(androidx.compose.ui.graphics.Color.Red, "#ff0000".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with invalid hex characters returns null`() {
+        assertNull("#GGGGGG".toComposeColor())
+    }
+
+    @Test
+    fun `test toComposeColor with invalid 8-char hex characters returns null`() {
+        assertNull("#FF0000ZZ".toComposeColor())
     }
 }

@@ -713,54 +713,49 @@ class MessagingInboxProviderTests {
     }
 
     @Test
-    fun `getInboxUI picks inbox proposition with highest rank when multiple exist`() = runTest {
-        val lowRankInboxProp = mock(Proposition::class.java)
-        val highRankInboxProp = mock(Proposition::class.java)
-        val lowRankInboxItem = mock(PropositionItem::class.java)
-        val highRankInboxItem = mock(PropositionItem::class.java)
+    fun `fetchInbox selects first inbox proposition in the list`() = runTest {
+        val firstInboxProp = mock(Proposition::class.java)
+        val secondInboxProp = mock(Proposition::class.java)
+        val firstInboxItem = mock(PropositionItem::class.java)
+        val secondInboxItem = mock(PropositionItem::class.java)
 
-        whenever(lowRankInboxItem.schema).thenReturn(SchemaType.INBOX)
-        whenever(highRankInboxItem.schema).thenReturn(SchemaType.INBOX)
-        whenever(lowRankInboxProp.items).thenReturn(listOf(lowRankInboxItem))
-        whenever(highRankInboxProp.items).thenReturn(listOf(highRankInboxItem))
-        whenever(lowRankInboxProp.rank).thenReturn(5)
-        whenever(highRankInboxProp.rank).thenReturn(10)
+        whenever(firstInboxItem.schema).thenReturn(SchemaType.INBOX)
+        whenever(secondInboxItem.schema).thenReturn(SchemaType.INBOX)
+        whenever(firstInboxProp.items).thenReturn(listOf(firstInboxItem))
+        whenever(secondInboxProp.items).thenReturn(listOf(secondInboxItem))
 
-        val lowRankTemplate = InboxTemplate(
-            id = "low-rank-inbox",
-            heading = AepText("Low Rank Inbox"),
+        val firstTemplate = InboxTemplate(
+            id = "first-inbox",
+            heading = AepText("First Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10,
             emptyMessage = AepText("No messages")
         )
-        val highRankTemplate = InboxTemplate(
-            id = "high-rank-inbox",
-            heading = AepText("High Rank Inbox"),
+        val secondTemplate = InboxTemplate(
+            id = "second-inbox",
+            heading = AepText("Second Inbox"),
             layout = AepInboxLayout.VERTICAL,
             capacity = 10,
             emptyMessage = AepText("No messages")
         )
-        every { ContentCardSchemaDataUtils.createInboxTemplate(lowRankInboxProp) } returns lowRankTemplate
-        every { ContentCardSchemaDataUtils.createInboxTemplate(highRankInboxProp) } returns highRankTemplate
+        every { ContentCardSchemaDataUtils.createInboxTemplate(firstInboxProp) } returns firstTemplate
+        every { ContentCardSchemaDataUtils.createInboxTemplate(secondInboxProp) } returns secondTemplate
 
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
         }.thenAnswer { invocation ->
             val callback =
                 invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
-            // Include both inbox propositions and a content card proposition
-            callback.call(mapOf(surface to listOf(lowRankInboxProp, highRankInboxProp, proposition)))
+            callback.call(mapOf(surface to listOf(firstInboxProp, secondInboxProp)))
         }
 
-        val flow = messagingInboxProvider.getInboxUI()
-        val states = flow.take(2).toList()
+        val states = messagingInboxProvider.getInboxUI().take(2).toList()
 
         assertTrue("Second state should be Success", states[1] is InboxUIState.Success)
-        val successState = states[1] as InboxUIState.Success
         assertEquals(
-            "Should use the inbox proposition with the highest rank",
-            "high-rank-inbox",
-            successState.template.id
+            "Should select the first inbox proposition in the server-ordered list",
+            "first-inbox",
+            (states[1] as InboxUIState.Success).template.id
         )
     }
 
@@ -832,7 +827,7 @@ class MessagingInboxProviderTests {
         assertFalse("Initial displayed flag should be false", initialSuccess.displayed)
 
         // Update the state by notifying the provider of display event
-        messagingInboxProvider.onInboxEvent(InboxEvent.Display(initialSuccess))
+        messagingInboxProvider.inboxEventObserver.onInboxEvent(InboxEvent.Display(initialSuccess))
 
         // Wait for the update to propagate
         advanceUntilIdle()

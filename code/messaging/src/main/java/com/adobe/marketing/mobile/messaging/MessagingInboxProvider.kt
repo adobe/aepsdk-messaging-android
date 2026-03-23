@@ -37,7 +37,7 @@ import kotlin.coroutines.resume
  */
 class MessagingInboxProvider(
     val surface: Surface
-) : AepInboxContentProvider, AepInboxEventObserver {
+) : AepInboxContentProvider {
     data class InboxProposition(
         val inbox: Proposition,
         val contentCards: List<Proposition>
@@ -136,7 +136,8 @@ class MessagingInboxProvider(
             )
             return Result.failure(Throwable("No inbox proposition found for surface: ${surface.uri}"))
         }
-        val highestPriorityInbox = inboxPropositionList.sortedByDescending { it.rank }.first()
+        // IDS response has the propositions ordered by priority and last modified time, so the first proposition with the inbox schema should be the one to display
+        val highestPriorityInbox = inboxPropositionList.first()
         val contentCardPropositions =
             propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD }
                 ?: emptyList()
@@ -183,17 +184,20 @@ class MessagingInboxProvider(
         }
 
     /**
-     * Handles state updates needed for inbox events.
+     * Internal observer that handles state updates needed for inbox events.
+     * Kept internal to prevent integrating apps from calling these methods directly.
      */
-    override fun onInboxEvent(event: InboxEvent) {
-        when (event) {
-            is InboxEvent.Display -> {
-                _inboxStateFlow.update { event.inboxUIState.copy(displayed = true) }
+    internal val inboxEventObserver: AepInboxEventObserver = object : AepInboxEventObserver {
+        override fun onInboxEvent(event: InboxEvent) {
+            when (event) {
+                is InboxEvent.Display -> {
+                    _inboxStateFlow.update { event.inboxUIState.copy(displayed = true) }
+                }
             }
         }
-    }
 
-    override fun onEvent(event: UIEvent<*, *>) {
-        // Currently no-op for item events
+        override fun onEvent(event: UIEvent<*, *>) {
+            // Currently no-op for item events
+        }
     }
 }
