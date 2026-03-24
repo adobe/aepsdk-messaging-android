@@ -197,7 +197,19 @@ class MessagingInboxProvider(
         }
 
         override fun onEvent(event: UIEvent<*, *>) {
-            // Currently no-op for item events
+            if (event is UIEvent.Dismiss) {
+                val currentState = _inboxStateFlow.value
+                if (currentState is InboxUIState.Success) {
+                    val dismissedId = event.aepUi.getTemplate().id
+                    _inboxStateFlow.update {
+                        currentState.copy(
+                            items = currentState.items.filter {
+                                it.getTemplate().id != dismissedId
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

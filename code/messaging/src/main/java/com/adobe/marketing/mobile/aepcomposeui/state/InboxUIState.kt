@@ -29,7 +29,6 @@ sealed interface InboxUIState {
      *
      * @param template The properties to be used for rendering the inbox
      * @param items List of AEP UI elements to display in the inbox
-     * @param displayed Whether the inbox display event has been tracked
      */
     data class Success(
         val template: InboxTemplate,

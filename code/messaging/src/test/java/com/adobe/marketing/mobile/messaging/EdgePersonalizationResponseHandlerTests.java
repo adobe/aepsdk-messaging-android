@@ -1909,6 +1909,140 @@ public class EdgePersonalizationResponseHandlerTests {
                 });
     }
 
+    @Test
+    public void
+            test_retrieveMessages_doesNotStoreContentCardsInTheSameMapAsOtherInMemoryPropositions() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
+                                .thenCallRealMethod();
+
+                        // setup a shared surface for inbox and content cards
+                        Surface surface = new Surface("apifeed");
+                        List<Surface> surfaces = Collections.singletonList(surface);
+
+                        // build an inbox proposition payload to populate inMemoryPropositions
+                        Map<String, Object> inboxItemData =
+                                MessagingTestUtils.getMapFromFile("inboxPropositionContent.json");
+                        Map<String, Object> inboxItem = new HashMap<>();
+                        inboxItem.put("id", "inbox-item-id-001");
+                        inboxItem.put("schema", SchemaType.INBOX.toString());
+                        inboxItem.put("data", inboxItemData);
+
+                        Map<String, Object> activityMap = new HashMap<>();
+                        activityMap.put("id", "test-inbox-activity-id");
+                        Map<String, Object> scopeDetails = new HashMap<>();
+                        scopeDetails.put("activity", activityMap);
+                        scopeDetails.put("decisionProvider", "AJO");
+
+                        Map<String, Object> inboxPropositionMap = new HashMap<>();
+                        inboxPropositionMap.put("id", "inbox-proposition-id-001");
+                        inboxPropositionMap.put("scope", surface.getUri());
+                        inboxPropositionMap.put("scopeDetails", scopeDetails);
+                        inboxPropositionMap.put(
+                                "items", Collections.singletonList(inboxItem));
+
+                        Map<String, Object> eventData = new HashMap<>();
+                        eventData.put(
+                                "payload",
+                                Collections.singletonList(inboxPropositionMap));
+                        eventData.put("requestEventId", "TESTING_ID");
+                        Event mockEvent = mock(Event.class);
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+
+                        edgePersonalizationResponseHandler.setMessagesRequestEventId(
+                                "TESTING_ID", surfaces);
+                        edgePersonalizationResponseHandler
+                                .handleEdgePersonalizationNotification(mockEvent);
+
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                        mockEvent = mock(Event.class);
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(
+                                mockEvent);
+
+                        // setup 2 qualified content cards in contentCardsBySurface
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 2;
+                        Map<Surface, List<Proposition>> qualifiedContentCards = new HashMap<>();
+                        qualifiedContentCards.put(
+                                surface,
+                                MessagingTestUtils.generateQualifiedContentCards(config));
+                        edgePersonalizationResponseHandler
+                                .setQualifiedContentCardsBySurface(qualifiedContentCards);
+
+                        reset(mockExtensionApi);
+                        ArgumentCaptor<Event> localCaptor =
+                                ArgumentCaptor.forClass(Event.class);
+
+                        // first call — dispatches 1 inbox + 2 content cards = 3 propositions
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                                surfaces, mockEvent);
+
+                        // clear content cards — simulates a scenario where they are no longer
+                        // qualified
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                new HashMap<>());
+
+                        // second call — should dispatch only the 1 inbox proposition
+                        // without the fix, the 2 content cards leaked into inMemoryPropositions
+                        // on the first call, so the second call would wrongly return 3
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                                surfaces, mockEvent);
+
+                        verify(mockExtensionApi, times(2)).dispatch(localCaptor.capture());
+                        List<Event> dispatchedEvents = localCaptor.getAllValues();
+
+                        List<Map<String, Object>> firstCallPropositions =
+                                DataReader.optTypedListOfMap(
+                                        Object.class,
+                                        dispatchedEvents.get(0).getEventData(),
+                                        "propositions",
+                                        null);
+                        List<Map<String, Object>> secondCallPropositions =
+                                DataReader.optTypedListOfMap(
+                                        Object.class,
+                                        dispatchedEvents.get(1).getEventData(),
+                                        "propositions",
+                                        null);
+
+                        // verify first call has 1 inbox and 2 content card (ruleset) propositions
+                        assertEquals(3, firstCallPropositions.size());
+                        assertEquals(
+                                SchemaType.INBOX,
+                                Proposition.fromEventData(firstCallPropositions.get(0))
+                                        .getItems()
+                                        .get(0)
+                                        .getSchema());
+                        assertEquals(
+                                SchemaType.RULESET,
+                                Proposition.fromEventData(firstCallPropositions.get(1))
+                                        .getItems()
+                                        .get(0)
+                                        .getSchema());
+                        assertEquals(
+                                SchemaType.RULESET,
+                                Proposition.fromEventData(firstCallPropositions.get(2))
+                                        .getItems()
+                                        .get(0)
+                                        .getSchema());
+
+                        // verify second call contains only the inbox proposition — no leaked
+                        // content cards
+                        assertEquals(1, secondCallPropositions.size());
+                        assertEquals(
+                                SchemaType.INBOX,
+                                Proposition.fromEventData(secondCallPropositions.get(0))
+                                        .getItems()
+                                        .get(0)
+                                        .getSchema());
+                    }
+                });
+    }
+
     // ========================================================================================
     // edgePersonalizationResponseHandler load cached propositions on instantiation
     // ========================================================================================

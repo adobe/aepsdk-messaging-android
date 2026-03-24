@@ -27,9 +27,9 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
  * [ContentCardUIEventListener] callback), then optionally the [ContentCardUIProvider] for flow updates.
  *
  * @param callback An optional callback to invoke when a content card event occurs.
- * @param provider An optional [ContentCardUIProvider] that owns the content card state.
- *   When provided, the observer will call [ContentCardUIProvider.onEvent] after handling
- *   so the provider can emit state updates to its flow.
+ * @param provider An optional [ContentCardUIProvider] for the same surface as your card list.
+ *   When provided, the observer notifies the provider after handling so [ContentCardUIProvider.getContentCardUIFlow]
+ *   collectors can receive updated card state without a manual refresh.
  */
 class ContentCardEventObserver @JvmOverloads constructor(
     private val callback: ContentCardUIEventListener? = null,
