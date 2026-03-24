@@ -1941,42 +1941,36 @@ public class EdgePersonalizationResponseHandlerTests {
                         inboxPropositionMap.put("id", "inbox-proposition-id-001");
                         inboxPropositionMap.put("scope", surface.getUri());
                         inboxPropositionMap.put("scopeDetails", scopeDetails);
-                        inboxPropositionMap.put(
-                                "items", Collections.singletonList(inboxItem));
+                        inboxPropositionMap.put("items", Collections.singletonList(inboxItem));
 
                         Map<String, Object> eventData = new HashMap<>();
-                        eventData.put(
-                                "payload",
-                                Collections.singletonList(inboxPropositionMap));
+                        eventData.put("payload", Collections.singletonList(inboxPropositionMap));
                         eventData.put("requestEventId", "TESTING_ID");
                         Event mockEvent = mock(Event.class);
                         when(mockEvent.getEventData()).thenReturn(eventData);
 
                         edgePersonalizationResponseHandler.setMessagesRequestEventId(
                                 "TESTING_ID", surfaces);
-                        edgePersonalizationResponseHandler
-                                .handleEdgePersonalizationNotification(mockEvent);
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                mockEvent);
 
                         eventData = new HashMap<>();
                         eventData.put(ENDING_EVENT_ID, "TESTING_ID");
                         mockEvent = mock(Event.class);
                         when(mockEvent.getEventData()).thenReturn(eventData);
-                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(
-                                mockEvent);
+                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
                         // setup 2 qualified content cards in contentCardsBySurface
                         MessageTestConfig config = new MessageTestConfig();
                         config.count = 2;
                         Map<Surface, List<Proposition>> qualifiedContentCards = new HashMap<>();
                         qualifiedContentCards.put(
-                                surface,
-                                MessagingTestUtils.generateQualifiedContentCards(config));
-                        edgePersonalizationResponseHandler
-                                .setQualifiedContentCardsBySurface(qualifiedContentCards);
+                                surface, MessagingTestUtils.generateQualifiedContentCards(config));
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                qualifiedContentCards);
 
                         reset(mockExtensionApi);
-                        ArgumentCaptor<Event> localCaptor =
-                                ArgumentCaptor.forClass(Event.class);
+                        ArgumentCaptor<Event> localCaptor = ArgumentCaptor.forClass(Event.class);
 
                         // first call — dispatches 1 inbox + 2 content cards = 3 propositions
                         edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
