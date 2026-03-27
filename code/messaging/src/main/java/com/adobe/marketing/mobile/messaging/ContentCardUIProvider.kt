@@ -80,14 +80,32 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * Retrieves a flow of AepUI instances for the given surface.
      *
      * This function initiates the content fetch and returns a flow of [AepUI] instances
-     * that represent the UI templates. The flow emits updates whenever [refreshContent] is called
-     * or when [onEvent] is called to update a card's state.
+     * that represent the UI templates. The flow emits updates when [refreshContent] is called
+     * and when card UI events are processed (for example via [ContentCardEventObserver] with this provider).
      *
      * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */
-    fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> = flow {
+    fun getContentCardUIFlow(): Flow<Result<List<AepUI<*, *>>>> = flow {
         refreshContent()
         emitAll(aepUIFlow)
+    }
+
+    /**
+     * Retrieves a flow of AepUI instances for the given surface.
+     *
+     * Deprecated in favor of [getContentCardUIFlow] which is a non-suspend function and follows
+     * idiomatic Kotlin Flow design — the flow reference can be obtained without a coroutine context,
+     * and suspension occurs during collection rather than at the call site.
+     *
+     * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
+     */
+    @Deprecated(
+        message = "Use getContentCardUIFlow() instead.",
+        replaceWith = ReplaceWith("getContentCardUIFlow()")
+    )
+    suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
+        refreshContent()
+        return aepUIFlow
     }
 
     /**
@@ -102,7 +120,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
         val templateResult = fetchContent()
         _contentFlow.update { templateResult }
 
-        // Also update _aepUIFlow so getContentCardUI collectors receive refresh updates
+        // Also update _aepUIFlow so getContentCardUIFlow collectors receive refresh updates
         _aepUIFlow.update {
             if (templateResult.isSuccess) {
                 val aepUIList = templateResult.getOrDefault(emptyList())

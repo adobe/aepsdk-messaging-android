@@ -182,6 +182,8 @@ class InboxEventObserverTests {
     @Test
     fun `onEvent forwards to provided itemEventObserver`() {
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        val mockInboxObserver = mock(AepInboxEventObserver::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mockInboxObserver)
         val mockItemObserver = mock(AepUIEventObserver::class.java)
         val observer = InboxEventObserver(mockProvider, mockItemObserver)
 
@@ -200,6 +202,8 @@ class InboxEventObserverTests {
     @Test
     fun `onEvent with null itemEventObserver uses default ContentCardEventObserver`() {
         val mockProvider = mock(MessagingInboxProvider::class.java)
+        val mockInboxObserver = mock(AepInboxEventObserver::class.java)
+        `when`(mockProvider.inboxEventObserver).thenReturn(mockInboxObserver)
         val observer = InboxEventObserver(mockProvider, null)
 
         val mockAepUI = mock(AepUI::class.java)

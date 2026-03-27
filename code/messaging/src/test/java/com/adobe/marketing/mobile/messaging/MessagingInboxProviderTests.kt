@@ -15,6 +15,7 @@ import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.InboxEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
@@ -837,6 +838,42 @@ class MessagingInboxProviderTests {
         val finalState = states.last()
         assertTrue("Final state should be Success", finalState is InboxUIState.Success)
         assertTrue("displayed flag should be true after update", (finalState as InboxUIState.Success).displayed)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `onEvent Dismiss removes dismissed item from inbox state`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback =
+                invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(inboxProposition, proposition)))
+        }
+
+        val states = mutableListOf<InboxUIState>()
+        val job = launch {
+            messagingInboxProvider.getInboxUI().collect { state ->
+                states.add(state)
+            }
+        }
+
+        advanceUntilIdle()
+
+        assertTrue("Should have at least 2 states", states.size >= 2)
+        val initialSuccess = states[1] as InboxUIState.Success
+        assertEquals("Should have 1 item initially", 1, initialSuccess.items.size)
+
+        // Dismiss the only item
+        val itemToDismiss = initialSuccess.items.first()
+        messagingInboxProvider.inboxEventObserver.onEvent(UIEvent.Dismiss(itemToDismiss))
+
+        advanceUntilIdle()
+
+        assertTrue("Should have at least 3 states after dismiss", states.size >= 3)
+        val finalState = states.last() as InboxUIState.Success
+        assertTrue("Items should be empty after dismiss", finalState.items.isEmpty())
 
         job.cancel()
     }

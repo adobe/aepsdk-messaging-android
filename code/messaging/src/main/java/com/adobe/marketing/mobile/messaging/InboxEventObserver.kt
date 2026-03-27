@@ -64,5 +64,6 @@ class InboxEventObserver(
 
     override fun onEvent(event: UIEvent<*, *>) {
         itemObserver.onEvent(event)
+        provider.inboxEventObserver.onEvent(event)
     }
 }

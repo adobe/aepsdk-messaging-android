@@ -995,7 +995,7 @@ class EdgePersonalizationResponseHandler {
         for (final Surface surface : surfaces) {
             final List<Proposition> propositionsList = inMemoryPropositions.get(surface);
             if (!MessagingUtils.isNullOrEmpty(propositionsList)) {
-                propositionMap.put(surface, propositionsList);
+                propositionMap.put(surface, new ArrayList<>(propositionsList));
             }
         }
         return propositionMap;
