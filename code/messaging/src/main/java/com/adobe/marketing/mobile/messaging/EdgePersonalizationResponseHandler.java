@@ -298,6 +298,9 @@ class EdgePersonalizationResponseHandler {
                                 "Unable to run completion logic for a personalization request event"
                                         + " - error occurred: %s",
                                 adobeError.getErrorName());
+                        if (handler != null) {
+                            handler.handle.call(false);
+                        }
                     }
 
                     // the callback is called by Edge extension when a request's stream has been
@@ -687,7 +690,7 @@ class EdgePersonalizationResponseHandler {
                                     EventType.MESSAGING,
                                     EventSource.REQUEST_CONTENT)
                             .build();
-            updateQualifiedContentCardsForEvent(event);
+            removeOrReplaceContentCards(event, requestedSurfaces);
         }
 
         // collect and update launch rules engine for in-app and event history
@@ -769,81 +772,185 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Checks to see if the user has qualified for any content cards based on provided {@link
-     * Event}.
+     * Incrementally updates the content card cache for surfaces qualified by the rules engine.
      *
-     * @param event may result in content card qualification.
+     * <p>Called during rules engine processing (e.g. lifecycle or generic events). For each surface
+     * qualified by the provided {@link Event}:
+     *
+     * <ul>
+     *   <li>If a proposition already exists in the cache, it is removed and re-added (replaced) so
+     *       the latest data is reflected without duplicates.
+     *   <li>If a proposition is new (not previously in the cache), a {@code TRIGGER} event is sent
+     *       to Edge Network and the proposition is added to the cache.
+     * </ul>
+     *
+     * <p>This method is additive — it does not remove surfaces that return no results. Use {@link
+     * #removeOrReplaceContentCards(Event, List)} for authoritative refreshes that should clear
+     * stale surfaces.
+     *
+     * @param event the rules engine {@link Event} that may result in content card qualification.
      */
-    void updateQualifiedContentCardsForEvent(final Event event) {
+    @SuppressWarnings("NestedIfDepth")
+    void addOrReplaceContentCards(final Event event) {
         final Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                 getPropositionsFromContentCardRulesEngine(event);
         for (final Map.Entry<Surface, List<Proposition>> entry :
                 qualifiedContentCardsBySurface.entrySet()) {
-            addOrReplaceContentCards(entry.getValue(), entry.getKey());
+            final List<Proposition> propositions = entry.getValue();
+            final Surface surface = entry.getKey();
+            List<Proposition> existingPropositionsArray = contentCardsBySurface.get(surface);
+            if (existingPropositionsArray == null) {
+                existingPropositionsArray = new ArrayList<>();
+            }
+
+            int startingCount = existingPropositionsArray.size();
+            // Track proposition items that are new so we can fire TRIGGER events for them
+            List<PropositionItem> newPropositionItems = new ArrayList<>();
+
+            for (final Proposition proposition : propositions) {
+                if (existingPropositionsArray.contains(proposition)) {
+                    // Remove the stale entry so the updated proposition is added at the end
+                    existingPropositionsArray.remove(proposition);
+                } else {
+                    // Proposition is new — collect its first item for a batched TRIGGER event
+                    final List<PropositionItem> propItems = proposition.getItems();
+                    if (!propItems.isEmpty()) {
+                        newPropositionItems.add(propItems.get(0));
+                    }
+                }
+                existingPropositionsArray.add(proposition);
+
+                // Store qualified content cards as schema data in the ContentCardMapper for later
+                // use by the UI layer
+                final ContentCardSchemaData propositionAsContentCard =
+                        proposition.getItems().get(0).getContentCardSchemaData();
+                ContentCardMapper.getInstance()
+                        .storeContentCardSchemaData(propositionAsContentCard);
+            }
+
+            contentCardsBySurface.put(surface, existingPropositionsArray);
+
+            // Send batched trigger events for new proposition items only
+            if (!newPropositionItems.isEmpty()) {
+                sendBatchedPropositionInteraction(
+                        newPropositionItems, null, MessagingEdgeEventType.TRIGGER);
+            }
+
+            int newCount = existingPropositionsArray.size();
+            if (startingCount != newCount) {
+                final Locale locale =
+                        ServiceProvider.getInstance().getDeviceInfoService().getActiveLocale();
+                String message =
+                        newCount > 0
+                                ? String.format(
+                                        locale,
+                                        "User has qualified for %d content card(s) for surface %s",
+                                        newCount,
+                                        surface.getUri())
+                                : String.format(
+                                        locale,
+                                        "User has not qualified for any content card(s) for surface"
+                                                + " %s",
+                                        surface.getUri());
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, message);
+            }
         }
     }
 
     /**
-     * Manages qualified content cards by surface. Prevents multiple entries for the same
-     * proposition in {@code contentCardsBySurface}. If an existing entry for a proposition is
-     * found, it is replaced with the value in propositions. If no prior entry exists for a
-     * proposition, a `trigger` event will be sent and written to event history).
+     * Authoritatively refreshes the content card cache using the response from a personalization
+     * network request.
      *
-     * @param propositions list of qualified {@link Proposition}s for the given surface.
-     * @param surface {@link Surface} to which qualified propositions belong.
+     * <p>Called after a personalization response stream completes. Treats the response as the
+     * source of truth for the requested surfaces:
+     *
+     * <ul>
+     *   <li>Any requested surface that returned no qualified propositions is removed from the
+     *       cache, preventing stale cards from persisting after a server-side change.
+     *   <li>For surfaces that did return propositions, the cached list is fully replaced (not
+     *       merged) with the new results.
+     *   <li>Propositions that are new (not previously in the cache) generate a {@code TRIGGER}
+     *       event sent to Edge Network.
+     * </ul>
+     *
+     * @param event the personalization response {@link Event} used to query the rules engine.
+     * @param requestedSurfaces the list of {@link Surface}s that were included in the originating
+     *     personalization request; used to identify surfaces that should be cleared if absent from
+     *     the response.
      */
-    @SuppressWarnings("NestedIfDepth")
-    private void addOrReplaceContentCards(
-            final List<Proposition> propositions, final Surface surface) {
-        List<Proposition> existingPropositionsArray = contentCardsBySurface.get(surface);
-        if (existingPropositionsArray == null) {
-            existingPropositionsArray = new ArrayList<>();
-        }
+    void removeOrReplaceContentCards(final Event event, final List<Surface> requestedSurfaces) {
+        final Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                getPropositionsFromContentCardRulesEngine(event);
 
-        int startingCount = existingPropositionsArray.size();
-        List<PropositionItem> newPropositionItems = new ArrayList<>();
-
-        for (final Proposition proposition : propositions) {
-            if (existingPropositionsArray.contains(proposition)) {
-                existingPropositionsArray.remove(proposition);
-            } else {
-                final List<PropositionItem> propItems = proposition.getItems();
-                if (!propItems.isEmpty()) {
-                    newPropositionItems.add(propItems.get(0));
-                }
+        // Clear any requested surface that returned no qualified propositions in this response.
+        // This ensures cards removed server-side are also evicted from the local cache.
+        for (final Surface surface : requestedSurfaces) {
+            if (!qualifiedContentCardsBySurface.containsKey(surface)) {
+                contentCardsBySurface.remove(surface);
             }
-            existingPropositionsArray.add(proposition);
-
-            // store qualified content cards as schema data in the ContentCardMapper for later use
-            final ContentCardSchemaData propositionAsContentCard =
-                    proposition.getItems().get(0).getContentCardSchemaData();
-            ContentCardMapper.getInstance().storeContentCardSchemaData(propositionAsContentCard);
         }
 
-        contentCardsBySurface.put(surface, existingPropositionsArray);
+        // Fully replace cached propositions for surfaces that have qualified content cards
+        for (final Map.Entry<Surface, List<Proposition>> entry :
+                qualifiedContentCardsBySurface.entrySet()) {
+            final List<Proposition> propositions = entry.getValue();
+            final Surface surface = entry.getKey();
+            List<Proposition> existingPropositionsArray = contentCardsBySurface.get(surface);
+            if (existingPropositionsArray == null) {
+                existingPropositionsArray = new ArrayList<>();
+            }
 
-        // Send batched trigger events for new proposition items
-        if (!newPropositionItems.isEmpty()) {
-            sendBatchedPropositionInteraction(
-                    newPropositionItems, null, MessagingEdgeEventType.TRIGGER);
-        }
+            int startingCount = existingPropositionsArray.size();
+            // Build a fresh list from the response rather than mutating the existing one
+            List<Proposition> newPropositionsArray = new ArrayList<>();
+            // Track proposition items that are genuinely new so we can fire TRIGGER events
+            List<PropositionItem> newPropositionItems = new ArrayList<>();
 
-        int newCount = existingPropositionsArray.size();
-        if (startingCount != newCount) {
-            final Locale locale =
-                    ServiceProvider.getInstance().getDeviceInfoService().getActiveLocale();
-            String message =
-                    newCount > 0
-                            ? String.format(
-                                    locale,
-                                    "User has qualified for %d content card(s) for surface %s",
-                                    newCount,
-                                    surface.getUri())
-                            : String.format(
-                                    locale,
-                                    "User has not qualified for any content card(s) for surface %s",
-                                    surface.getUri());
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, message);
+            for (final Proposition proposition : propositions) {
+                if (!existingPropositionsArray.contains(proposition)) {
+                    // Proposition is new — collect its first item for a batched TRIGGER event
+                    final List<PropositionItem> propItems = proposition.getItems();
+                    if (!propItems.isEmpty()) {
+                        newPropositionItems.add(propItems.get(0));
+                    }
+                }
+                newPropositionsArray.add(proposition);
+
+                // Store qualified content cards as schema data in the ContentCardMapper for later
+                // use by the UI layer
+                final ContentCardSchemaData propositionAsContentCard =
+                        proposition.getItems().get(0).getContentCardSchemaData();
+                ContentCardMapper.getInstance()
+                        .storeContentCardSchemaData(propositionAsContentCard);
+            }
+
+            // Replace the cached list entirely with the fresh response data
+            contentCardsBySurface.put(surface, newPropositionsArray);
+
+            // Send batched trigger events for new proposition items only
+            if (!newPropositionItems.isEmpty()) {
+                sendBatchedPropositionInteraction(
+                        newPropositionItems, null, MessagingEdgeEventType.TRIGGER);
+            }
+
+            int newCount = existingPropositionsArray.size();
+            if (startingCount != newCount) {
+                final Locale locale =
+                        ServiceProvider.getInstance().getDeviceInfoService().getActiveLocale();
+                String message =
+                        newCount > 0
+                                ? String.format(
+                                        locale,
+                                        "User has qualified for %d content card(s) for surface %s",
+                                        newCount,
+                                        surface.getUri())
+                                : String.format(
+                                        locale,
+                                        "User has not qualified for any content card(s) for surface"
+                                                + " %s",
+                                        surface.getUri());
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, message);
+            }
         }
     }
 
@@ -995,7 +1102,7 @@ class EdgePersonalizationResponseHandler {
         for (final Surface surface : surfaces) {
             final List<Proposition> propositionsList = inMemoryPropositions.get(surface);
             if (!MessagingUtils.isNullOrEmpty(propositionsList)) {
-                propositionMap.put(surface, new ArrayList<>(propositionsList));
+                propositionMap.put(surface, propositionsList);
             }
         }
         return propositionMap;

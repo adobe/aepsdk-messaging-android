@@ -885,6 +885,163 @@ public class MessagingPublicAPITests {
     // Content Card Tests
     // --------------------------------------------------------------------------------------------
     @Test
+    public void testContentCard_Removal() throws InterruptedException {
+        // setup
+        final List<Surface> surfacePaths = new ArrayList<>();
+        Surface surface1 = new Surface("promos/feed1");
+        surfacePaths.add(surface1);
+        Surface surface2 = new Surface("promos/feed2");
+        surfacePaths.add(surface2);
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(
+                new HashMap<String, Object>() {
+                    {
+                        put(
+                                "uri",
+                                "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
+                    }
+                });
+        expectedSurfaces.add(
+                new HashMap<String, Object>() {
+                    {
+                        put(
+                                "uri",
+                                "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
+                    }
+                });
+
+        // setup mock server response for content card propositions
+        setMockNetworkResponseForPersonalizationRequests("multipleContentCardNetworkResponse.json");
+
+        // test retrieving propositions from server
+        Messaging.updatePropositionsForSurfaces(surfacePaths);
+        TestHelper.sleep(500);
+
+        // verify messaging request content event
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(1, messagingRequestEvents.size());
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        assertEquals(true, messagingEventData.get("updatepropositions"));
+        assertEquals(expectedSurfaces, messagingEventData.get("surfaces"));
+
+        // verify edge request content event
+        final List<Event> edgePersonalizationRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        assertEquals(1, edgePersonalizationRequestEvents.size());
+        final Map<String, Object> edgeEventData =
+                edgePersonalizationRequestEvents.get(0).getEventData();
+        final Map<String, Object> xdmDataMap =
+                DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
+        final Map<String, Object> queryDataMap =
+                DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
+        final Map<String, Object> personalizationDataMap =
+                DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
+        final List<String> surfacesList =
+                DataReader.optStringList(personalizationDataMap, "surfaces", null);
+        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals(2, surfacesList.size());
+        assertEquals(
+                "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
+                surfacesList.get(0));
+        assertEquals(
+                "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
+                surfacesList.get(1));
+
+        // dispatch content card qualification event
+        MobileCore.dispatchEvent(
+                new Event.Builder(
+                                "Places entry event", EventType.PLACES, EventSource.REQUEST_CONTENT)
+                        .setEventData(
+                                new HashMap<String, Object>() {
+                                    {
+                                        put("regionEventType", "entered");
+                                    }
+                                })
+                        .build());
+        TestHelper.sleep(500);
+
+        // retrieve qualified content cards
+        CountDownLatch latch = new CountDownLatch(1);
+        final Map<Surface, List<Proposition>> qualifiedCardPropositions = new HashMap<>();
+        Messaging.getPropositionsForSurfaces(
+                surfacePaths,
+                new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
+                    @Override
+                    public void fail(AdobeError adobeError) {
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void call(Map<Surface, List<Proposition>> surfaceListMap) {
+                        qualifiedCardPropositions.putAll(surfaceListMap);
+                        latch.countDown();
+                    }
+                });
+
+        // verify qualified content card is returned
+        assertTrue(latch.await(1000, TimeUnit.SECONDS));
+        assertEquals(2, qualifiedCardPropositions.size());
+        List<Proposition> contentCardList1 = qualifiedCardPropositions.get(surface1);
+        assertNotNull(contentCardList1);
+        assertEquals(2, contentCardList1.size());
+        assertEquals(
+                SchemaType.CONTENT_CARD, contentCardList1.get(0).getItems().get(0).getSchema());
+        List<Proposition> contentCardList2 = qualifiedCardPropositions.get(surface2);
+        assertNotNull(contentCardList2);
+        assertEquals(1, contentCardList2.size());
+        assertEquals(
+                SchemaType.CONTENT_CARD, contentCardList2.get(0).getItems().get(0).getSchema());
+
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithTriggersNetworkResponse.json");
+
+        // test retrieving propositions from server
+        Messaging.updatePropositionsForSurfaces(surfacePaths);
+        TestHelper.sleep(500);
+
+        // dispatch content card qualification event
+        MobileCore.dispatchEvent(
+                new Event.Builder(
+                                "Places entry event", EventType.PLACES, EventSource.REQUEST_CONTENT)
+                        .setEventData(
+                                new HashMap<String, Object>() {
+                                    {
+                                        put("regionEventType", "entered");
+                                    }
+                                })
+                        .build());
+        TestHelper.sleep(500);
+
+        // retrieve qualified content cards
+        CountDownLatch latch1 = new CountDownLatch(1);
+        final Map<Surface, List<Proposition>> qualifiedCardPropositions1 = new HashMap<>();
+        Messaging.getPropositionsForSurfaces(
+                surfacePaths,
+                new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
+                    @Override
+                    public void fail(AdobeError adobeError) {
+                        latch1.countDown();
+                    }
+
+                    @Override
+                    public void call(Map<Surface, List<Proposition>> surfaceListMap) {
+                        qualifiedCardPropositions1.putAll(surfaceListMap);
+                        latch1.countDown();
+                    }
+                });
+
+        // verify empty qualified content card list is returned
+        assertTrue(latch1.await(1000, TimeUnit.SECONDS));
+        assertEquals(1, qualifiedCardPropositions1.size());
+        List<Proposition> contentCardList3 = qualifiedCardPropositions1.get(surface1);
+        assertNotNull(contentCardList3);
+        assertEquals(1, contentCardList3.size());
+    }
+
+    @Test
     public void testContentCard_Qualification() throws InterruptedException {
         // setup
         final List<Surface> surfacePaths = new ArrayList<>();
