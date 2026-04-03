@@ -31,7 +31,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
  * Composable that renders an empty inbox if the empty message or image is provided.
  */
 @Composable
-fun EmptyInbox(
+internal fun EmptyInbox(
     emptyMessage: AepText? = null,
     emptyMessageStyle: AepTextStyle = AepTextStyle(),
     emptyImage: AepImage? = null,
