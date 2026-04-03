@@ -18,9 +18,9 @@ import androidx.compose.ui.Modifier
 /**
  * Class representing the style for a column AEP UI.
  *
- * @param modifier The modifier for the column.
- * @param verticalArrangement The vertical arrangement for the column.
- * @param horizontalAlignment The horizontal alignment for the column.
+ * @property modifier The modifier for the column.
+ * @property verticalArrangement The vertical arrangement for the column.
+ * @property horizontalAlignment The horizontal alignment for the column.
  */
 class AepColumnStyle(
     var modifier: Modifier? = null,

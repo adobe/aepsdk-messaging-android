@@ -20,11 +20,12 @@ import androidx.compose.ui.graphics.Shape
 /**
  * Class representing the style for a Card Composable.
  *
- * @param modifier The modifier to be applied to the card.
- * @param shape The shape of the card.
- * @param colors The colors that will be used to resolve the colors for this card in different states
- * @param elevation The elevation of the button.
- * @param border The border to draw around the container of this button.
+ * @property modifier The modifier to be applied to the card.
+ * @property enabled The enabled state of the card.
+ * @property shape The shape of the card.
+ * @property colors The colors that will be used to resolve the colors for this card in different states
+ * @property elevation The elevation of the card.
+ * @property border The border to draw around the container of this card.
  */
 class AepCardStyle(
     var modifier: Modifier? = null,

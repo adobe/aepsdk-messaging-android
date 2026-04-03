@@ -22,14 +22,14 @@ import androidx.compose.ui.graphics.Shape
 /**
  * Class representing the style of an AEPButton Composable.
  *
- * @param modifier The modifier to be applied to the button.
- * @param enabled The enabled state of the button.
- * @param elevation The elevation of the button.
- * @param shape The shape of the button.
- * @param border The border to draw around the container of this button.
- * @param colors The colors that will be used to resolve the colors for this button in different states
- * @param contentPadding the spacing values to apply internally between the container and the text
- * @param textStyle The text style for the button.
+ * @property modifier The modifier to be applied to the button.
+ * @property enabled The enabled state of the button.
+ * @property elevation The elevation of the button.
+ * @property shape The shape of the button.
+ * @property border The border to draw around the container of this button.
+ * @property colors The colors that will be used to resolve the colors for this button in different states
+ * @property contentPadding the spacing values to apply internally between the container and the text
+ * @property textStyle The text style for the button.
  */
 class AepButtonStyle(
     var modifier: Modifier? = null,

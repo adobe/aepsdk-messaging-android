@@ -18,9 +18,9 @@ import androidx.compose.ui.Modifier
 /**
  * Class representing the style for a row AEP UI.
  *
- * @param modifier The modifier for the row.
- * @param horizontalArrangement The horizontal arrangement for the row.
- * @param verticalAlignment The vertical alignment for the row.
+ * @property modifier The modifier for the row.
+ * @property horizontalArrangement The horizontal arrangement for the row.
+ * @property verticalAlignment The vertical alignment for the row.
  */
 class AepRowStyle(
     var modifier: Modifier? = null,

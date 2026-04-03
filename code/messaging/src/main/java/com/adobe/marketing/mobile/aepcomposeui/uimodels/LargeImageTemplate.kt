@@ -14,13 +14,13 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
 /**
  * Class representing a large image template, which implements the [AepUITemplate] interface.
  *
- * @param id The unique identifier for this template.
- * @param title The title text and display settings.
- * @param body The body text and display settings.
- * @param image The details of the image to be displayed.
- * @param actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
- * @param buttons The details for the large image template buttons.
- * @param dismissBtn The details for the large image template dismiss button.
+ * @property id The unique identifier for this template.
+ * @property title The title text and display settings.
+ * @property body The body text and display settings.
+ * @property image The details of the image to be displayed.
+ * @property actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
+ * @property buttons The details for the large image template buttons.
+ * @property dismissBtn The details for the large image template dismiss button.
  */
 data class LargeImageTemplate(
     override val id: String,
