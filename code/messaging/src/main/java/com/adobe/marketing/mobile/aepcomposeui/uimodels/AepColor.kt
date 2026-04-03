@@ -16,8 +16,8 @@ import androidx.compose.ui.graphics.Color
 /**
  * Data class representing colors for both light and dark themes in AEP UI components.
  *
- * @param light The color to use in light theme mode.
- * @param dark The color to use in dark theme mode.
+ * @property light The color to use in light theme mode.
+ * @property dark The color to use in dark theme mode.
  */
 data class AepColor(
     val light: Color,

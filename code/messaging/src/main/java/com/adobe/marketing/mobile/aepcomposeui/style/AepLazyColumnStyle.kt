@@ -20,13 +20,13 @@ import androidx.compose.ui.Modifier
 /**
  * Class representing the style for an AEP LazyColumn component.
  *
- * @param modifier The modifier for the LazyColumn.
- * @param contentPadding The padding values for the content inside the LazyColumn.
- * @param reverseLayout Whether the layout should be reversed.
- * @param verticalArrangement The vertical arrangement of the items in the LazyColumn.
- * @param horizontalAlignment The horizontal alignment of the items in the LazyColumn.
- * @param flingBehavior The fling behavior for the LazyColumn.
- * @param userScrollEnabled Whether user scrolling is enabled for the LazyColumn.
+ * @property modifier The modifier for the LazyColumn.
+ * @property contentPadding The padding values for the content inside the LazyColumn.
+ * @property reverseLayout Whether the layout should be reversed.
+ * @property verticalArrangement The vertical arrangement of the items in the LazyColumn.
+ * @property horizontalAlignment The horizontal alignment of the items in the LazyColumn.
+ * @property flingBehavior The fling behavior for the LazyColumn.
+ * @property userScrollEnabled Whether user scrolling is enabled for the LazyColumn.
  */
 class AepLazyColumnStyle(
     var modifier: Modifier? = null,
