@@ -114,6 +114,7 @@ public class MessagingPushPayload {
                     add(MessagingConstants.Push.PayloadKeys.ACTION_URI);
                     add(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS);
                     add(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID);
+                    add(MessagingConstants.Push.PayloadKeys.THEME_OVERRIDE);
                 }
             };
 
@@ -139,6 +140,7 @@ public class MessagingPushPayload {
     private Map<String, String> data;
     private String messageId;
     private String inappMessageId;
+    private String themeOverride;
 
     /**
      * Constructor
@@ -228,6 +230,13 @@ public class MessagingPushPayload {
         return imageUrl;
     }
 
+    /**
+     * @return optional theme hint from the push payload (e.g. {@code adb_theme}); may be null
+     */
+    public String getThemeOverride() {
+        return themeOverride;
+    }
+
     public String getMessageId() {
         return messageId;
     }
@@ -273,6 +282,7 @@ public class MessagingPushPayload {
         this.actionUri = data.get(MessagingConstants.Push.PayloadKeys.ACTION_URI);
         this.imageUrl = data.get(MessagingConstants.Push.PayloadKeys.IMAGE_URL);
         this.inappMessageId = data.get(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID);
+        this.themeOverride = data.get(MessagingConstants.Push.PayloadKeys.THEME_OVERRIDE);
 
         try {
             String count = data.get(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER);

@@ -34,4 +34,12 @@ class MessagingPushConstants {
 
         private Tracking() {}
     }
+
+    /** Values for {@code MessagingPushPayload#getThemeOverride()} / push key {@code adb_theme}. */
+    static final class ThemeOverride {
+        /** Use {@link androidx.core.app.NotificationCompat.BigTextStyle} for the notification. */
+        static final String BIG_TEXT = "BigText";
+
+        private ThemeOverride() {}
+    }
 }

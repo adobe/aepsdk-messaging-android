@@ -14,8 +14,10 @@ package com.adobe.marketing.mobile.messaging;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,10 +28,12 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.MessagingPushPayload;
+import org.mockito.ArgumentMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -207,5 +211,56 @@ public class MessagingPushBuilderTests {
         // verify
         assertNotNull(notification);
         verify(mockNotificationBuilder, times(1)).setPriority(Notification.PRIORITY_DEFAULT);
+    }
+
+    @Test
+    public void test_notificationBuild_appliesBigTextStyle_when_themeOverrideIsBigText_and_noImage() {
+        when(payload.getImageUrl()).thenReturn(null);
+        when(payload.getThemeOverride())
+                .thenReturn(MessagingPushConstants.ThemeOverride.BIG_TEXT);
+
+        Notification notification = builder.build(payload, context);
+        NotificationCompat.Builder mockNotificationBuilder =
+                mockBuilderConstructor.constructed().get(0);
+
+        assertNotNull(notification);
+        verify(mockNotificationBuilder, times(1))
+                .setStyle(ArgumentMatchers.isA(NotificationCompat.BigTextStyle.class));
+        utils.verify(() -> MessagingPushUtils.download(any()), never());
+    }
+
+    @Test
+    public void test_notificationBuild_skipsBigTextStyle_when_themeOverrideIsBigText_and_bodyEmpty() {
+        when(payload.getImageUrl()).thenReturn(null);
+        when(payload.getThemeOverride())
+                .thenReturn(MessagingPushConstants.ThemeOverride.BIG_TEXT);
+        when(payload.getBody()).thenReturn(null);
+
+        Notification notification = builder.build(payload, context);
+        NotificationCompat.Builder mockNotificationBuilder =
+                mockBuilderConstructor.constructed().get(0);
+
+        assertNotNull(notification);
+        verify(mockNotificationBuilder, never())
+                .setStyle(ArgumentMatchers.isA(NotificationCompat.BigTextStyle.class));
+    }
+
+    @Test
+    public void test_notificationBuild_ignoresThemeOverrideBigText_when_imageUrlPresent() {
+        when(payload.getThemeOverride())
+                .thenReturn(MessagingPushConstants.ThemeOverride.BIG_TEXT);
+        Bitmap bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+        utils.when(() -> MessagingPushUtils.download(eq(LARGE_IMAGE_URL))).thenReturn(bitmap);
+
+        Notification notification = builder.build(payload, context);
+        NotificationCompat.Builder mockNotificationBuilder =
+                mockBuilderConstructor.constructed().get(0);
+
+        assertNotNull(notification);
+        verify(mockNotificationBuilder, times(1))
+                .setStyle(ArgumentMatchers.isA(NotificationCompat.BigPictureStyle.class));
+        verify(mockNotificationBuilder, never())
+                .setStyle(ArgumentMatchers.isA(NotificationCompat.BigTextStyle.class));
+        utils.verify(() -> MessagingPushUtils.download(eq(LARGE_IMAGE_URL)), times(1));
     }
 }

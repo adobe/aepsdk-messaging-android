@@ -216,8 +216,9 @@ class MessagingPushBuilder {
     /**
      * Sets the image for the notification then builds the notification. If a large icon url is
      * received from the payload, the media is downloaded and the notification style is set to
-     * BigPictureStyle. If large icon url is not received from the payload, default style is used
-     * for the notification.
+     * BigPictureStyle (theme override is ignored when an image URL is present). If there is no
+     * image URL and {@code themeOverride} is {@code BigText}, {@link NotificationCompat.BigTextStyle}
+     * is applied when body text is present. Otherwise the default style is used.
      *
      * @param notificationBuilder the notification builder
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
@@ -226,25 +227,50 @@ class MessagingPushBuilder {
     private static Notification buildNotification(
             final NotificationCompat.Builder notificationBuilder,
             final MessagingPushPayload payload) {
-        // Quick bail out if there is no image url
-        if (StringUtils.isNullOrEmpty(payload.getImageUrl())) return notificationBuilder.build();
+        if (!StringUtils.isNullOrEmpty(payload.getImageUrl())) {
+            // API 34+ (UPSIDE_DOWN_CAKE): GIF rich media is loaded via cache + content Uri and shown
+            // with BigPictureStyle (Icon#createWithContentUri). Older API levels use the bitmap path.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+                    && MessagingPushUtils.isGifContent(payload.getImageUrl())) {
+                return downloadGifThenBuildNotification(notificationBuilder, payload);
+            } else {
+                final Bitmap bitmap = MessagingPushUtils.download(payload.getImageUrl());
+                // Bail out if the download fails
+                if (bitmap == null) return notificationBuilder.build();
 
-        // If the device is running on Android 34 or above and the image is a gif, download the gif
-        // and build the notification
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
-                && MessagingPushUtils.isGifContent(payload.getImageUrl())) {
-            return downloadGifThenBuildNotification(notificationBuilder, payload);
-        } else {
-            final Bitmap bitmap = MessagingPushUtils.download(payload.getImageUrl());
-            // Bail out if the download fails
-            if (bitmap == null) return notificationBuilder.build();
+                final NotificationCompat.BigPictureStyle bigPictureStyle =
+                        new NotificationCompat.BigPictureStyle();
+                bigPictureStyle.bigPicture(bitmap);
+                notificationBuilder.setStyle(bigPictureStyle);
+            }
+            return notificationBuilder.build();
+        }
 
-            final NotificationCompat.BigPictureStyle bigPictureStyle =
-                    new NotificationCompat.BigPictureStyle();
-            bigPictureStyle.bigPicture(bitmap);
-            notificationBuilder.setStyle(bigPictureStyle);
+        if (MessagingPushConstants.ThemeOverride.BIG_TEXT.equalsIgnoreCase(payload.getThemeOverride())) {
+            setBigTextStyleIfNeeded(notificationBuilder, payload);
         }
         return notificationBuilder.build();
+    }
+
+    /**
+     * Applies {@link NotificationCompat.BigTextStyle} when {@code themeOverride} is the literal
+     * {@code BigText} and body text is present. Uses {@code NotificationCompat} only (no API 34
+     * GIF path); the UPSIDE_DOWN_CAKE branch applies only when {@code imageUrl} points at GIF
+     * media.
+     */
+    private static void setBigTextStyleIfNeeded(
+            final NotificationCompat.Builder notificationBuilder,
+            final MessagingPushPayload payload) {
+        if (StringUtils.isNullOrEmpty(payload.getBody())) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "themeOverride is BigText but body is empty; using default notification style.");
+            return;
+        }
+        final NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
+        style.bigText(payload.getBody());
+        notificationBuilder.setStyle(style);
     }
 
     /**

@@ -180,6 +180,7 @@ public class MessagingPushPayloadTests {
         mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_URI, "mockActionUri");
         mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, "mockActionButtons");
         mockData.put(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID, "mockInAppMessageId");
+        mockData.put(MessagingConstants.Push.PayloadKeys.THEME_OVERRIDE, "mockTheme");
         MessagingPushPayload payload = new MessagingPushPayload(mockData);
         Intent mockIntent = mock(Intent.class);
 
@@ -211,6 +212,9 @@ public class MessagingPushPayloadTests {
         verify(mockIntent, times(1))
                 .putExtra(
                         MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID, "mockInAppMessageId");
+        verify(mockIntent, times(1))
+                .putExtra(
+                        MessagingConstants.Push.PayloadKeys.THEME_OVERRIDE, "mockTheme");
     }
 
     @Test
