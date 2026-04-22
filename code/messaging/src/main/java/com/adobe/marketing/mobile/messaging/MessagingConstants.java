@@ -429,6 +429,7 @@ public final class MessagingConstants {
         public class TrackingKeys {
             public static final String MESSAGE_ID = "messageId";
             public static final String GOOGLE_MESSAGE_ID = "google.message_id";
+            public static final String ACTION_DISMISS = "Dismiss";
 
             private TrackingKeys() {}
         }

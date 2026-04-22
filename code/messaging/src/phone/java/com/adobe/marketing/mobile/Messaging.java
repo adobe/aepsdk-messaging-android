@@ -196,7 +196,10 @@ public final class Messaging {
             }
         }
 
-        final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
+        String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
+        if (StringUtils.isNullOrEmpty(xdmData)) {
+            xdmData = intent.getStringExtra(_XDM);
+        }
         if (StringUtils.isNullOrEmpty(xdmData)) {
             Log.warning(
                     LOG_TAG,

@@ -27,7 +27,8 @@ public final class PushNotificationEventManager {
 
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "PushNotificationEventManager";
-    private static final String ACTION_ID_DISMISS = "Dismiss";
+    private static final String ACTION_ID_DISMISS =
+            MessagingConstants.Push.TrackingKeys.ACTION_DISMISS;
 
     private static volatile PushNotificationListener listener;
 

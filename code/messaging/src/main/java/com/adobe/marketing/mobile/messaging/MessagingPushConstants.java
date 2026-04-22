@@ -27,7 +27,8 @@ class MessagingPushConstants {
             static final String ACTION_ID = "actionId";
             static final String ACTION_URI = "actionUri";
             static final String MESSAGE_ID = "messageId";
-            static final String ACTION_DISMISS = "Dismiss";
+            static final String ACTION_DISMISS =
+                    MessagingConstants.Push.TrackingKeys.ACTION_DISMISS;
 
             private Keys() {}
         }

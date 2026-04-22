@@ -437,9 +437,11 @@ class MessagingPushBuilder {
         intent.setClass(context.getApplicationContext(), MessagingPushTrackerActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         addActionDetailsToIntent(intent, actionUri, actionID);
+        // putDataInExtras copies the raw FCM data map for payload reconstruction in callbacks.
+        // addPushTrackingDetails adds tracking-specific extras (messageId from FCM metadata,
+        // _xdm transformed to adobe_xdm) that may not exist in the raw data map.
         addPushPayloadToIntent(intent, payload);
         Messaging.addPushTrackingDetails(intent, payload.getMessageId(), payload.getData());
-        // adding tracking details
         PendingIntent resultIntent =
                 TaskStackBuilder.create(context)
                         .addNextIntentWithParentStack(intent)
