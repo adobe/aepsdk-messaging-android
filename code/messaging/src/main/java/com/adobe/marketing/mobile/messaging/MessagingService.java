@@ -66,6 +66,8 @@ public class MessagingService extends FirebaseMessagingService {
                 NotificationManagerCompat.from(context);
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
+        PushNotificationEventManager.notifyReceived(payload);
+
         // dispatch Push notification displayed event
         final HashMap<String, Object> notificationData = new HashMap<>(remoteMessage.getData());
         final Event pushNotificationReceivedEvent =

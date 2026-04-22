@@ -19,6 +19,7 @@ import com.adobe.marketing.mobile.messaging.IamRefreshHandler;
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.MessagingUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
+import com.adobe.marketing.mobile.messaging.PushNotificationEventManager;
 import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.messaging.Surface;
 import com.adobe.marketing.mobile.services.Log;
@@ -269,6 +270,8 @@ public final class Messaging {
             eventData.put(TRACK_INFO_KEY_ACTION_ID, customActionId);
             eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
+
+        PushNotificationEventManager.notifyInteraction(intent, messageId, customActionId);
 
         final Event messagingEvent =
                 new Event.Builder(
@@ -564,5 +567,28 @@ public final class Messaging {
 
     private static ExecutorService getPushToInappExecutor() {
         return ExecutorHolder.INSTANCE;
+    }
+
+    /**
+     * Registers a listener to receive push notification lifecycle events (received, opened,
+     * dismissed). Only one listener can be active at a time; setting a new listener replaces the
+     * previous one.
+     *
+     * @param listener the {@link PushNotificationListener} to register, or {@code null} to
+     *     unregister
+     */
+    public static void setPushNotificationListener(
+            @Nullable final PushNotificationListener listener) {
+        PushNotificationEventManager.setListener(listener);
+    }
+
+    /**
+     * Returns the currently registered push notification listener, if any.
+     *
+     * @return the registered {@link PushNotificationListener}, or {@code null} if none is set
+     */
+    @Nullable
+    public static PushNotificationListener getPushNotificationListener() {
+        return PushNotificationEventManager.getListener();
     }
 }

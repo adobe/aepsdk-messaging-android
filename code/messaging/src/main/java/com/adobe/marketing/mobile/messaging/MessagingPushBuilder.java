@@ -460,9 +460,9 @@ class MessagingPushBuilder {
             final NotificationCompat.Builder builder,
             final MessagingPushPayload payload,
             final Context context) {
-        // Create an intent for the broadcast receiver
         Intent deleteIntent = new Intent(context, NotificationInteractionReceiver.class);
         deleteIntent.setAction(MessagingPushConstants.NotificationAction.DISMISSED);
+        addPushPayloadToIntent(deleteIntent, payload);
         Messaging.addPushTrackingDetails(deleteIntent, payload.getMessageId(), payload.getData());
 
         // Create a PendingIntent for the broadcast

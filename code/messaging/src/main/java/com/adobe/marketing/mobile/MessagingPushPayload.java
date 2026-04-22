@@ -232,6 +232,10 @@ public class MessagingPushPayload {
         return messageId;
     }
 
+    public void setMessageId(final String messageId) {
+        this.messageId = messageId;
+    }
+
     /**
      * @return an {@link ActionType}
      */
@@ -314,14 +318,12 @@ public class MessagingPushPayload {
      * @param intent {@code Intent} to be modified
      */
     public void putDataInExtras(final Intent intent) {
-        // Adding this check to avoid crashes in case intent or data is null
         if (data == null || intent == null) {
             return;
         }
-        for (final String key : pushPayloadKeys) {
-            final String value = data.get(key);
-            if (!StringUtils.isNullOrEmpty(value)) {
-                intent.putExtra(key, value);
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            if (!StringUtils.isNullOrEmpty(entry.getValue())) {
+                intent.putExtra(entry.getKey(), entry.getValue());
             }
         }
     }
