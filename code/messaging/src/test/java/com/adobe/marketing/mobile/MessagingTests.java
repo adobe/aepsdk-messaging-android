@@ -1400,7 +1400,8 @@ public class MessagingTests {
 
                     ArgumentCaptor<MessagingPushPayload> payloadCaptor =
                             ArgumentCaptor.forClass(MessagingPushPayload.class);
-                    verify(listener, times(1)).onNotificationOpened(payloadCaptor.capture(), eq(null));
+                    verify(listener, times(1))
+                            .onNotificationOpened(payloadCaptor.capture(), eq(null));
                     verify(listener, times(0)).onNotificationDismissed(any());
 
                     MessagingPushPayload payload = payloadCaptor.getValue();

@@ -43,7 +43,8 @@ public interface PushNotificationListener {
      * @param actionButtonId the label/ID of the tapped action button, or {@code null} if the user
      *     tapped the notification body
      */
-    void onNotificationOpened(@NonNull MessagingPushPayload payload, @Nullable String actionButtonId);
+    void onNotificationOpened(
+            @NonNull MessagingPushPayload payload, @Nullable String actionButtonId);
 
     /**
      * Called when the user dismisses (swipes away / clears) the notification.

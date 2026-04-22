@@ -37,8 +37,7 @@ public final class PushNotificationEventManager {
         listener = newListener;
     }
 
-    @Nullable
-    public static PushNotificationListener getListener() {
+    @Nullable public static PushNotificationListener getListener() {
         return listener;
     }
 
