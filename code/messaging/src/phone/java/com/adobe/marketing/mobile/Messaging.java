@@ -581,14 +581,4 @@ public final class Messaging {
             @Nullable final PushNotificationListener listener) {
         PushNotificationEventManager.setListener(listener);
     }
-
-    /**
-     * Returns the currently registered push notification listener, if any.
-     *
-     * @return the registered {@link PushNotificationListener}, or {@code null} if none is set
-     */
-    @Nullable
-    public static PushNotificationListener getPushNotificationListener() {
-        return PushNotificationEventManager.getListener();
-    }
 }
