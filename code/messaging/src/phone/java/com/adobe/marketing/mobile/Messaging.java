@@ -271,7 +271,7 @@ public final class Messaging {
             eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
 
-        PushNotificationEventManager.notifyInteraction(intent, messageId, customActionId);
+        PushNotificationEventManager.notifyInteraction(intent, customActionId);
 
         final Event messagingEvent =
                 new Event.Builder(
