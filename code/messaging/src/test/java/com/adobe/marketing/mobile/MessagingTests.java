@@ -1494,8 +1494,7 @@ public class MessagingTests {
                     Messaging.setPushNotificationListener(null);
 
                     when(mockIntent.getStringExtra("messageId")).thenReturn("msg-000");
-                    when(mockIntent.getStringExtra("adobe_xdm"))
-                            .thenReturn("{\"test\":\"xdm\"}");
+                    when(mockIntent.getStringExtra("adobe_xdm")).thenReturn("{\"test\":\"xdm\"}");
 
                     Messaging.handleNotificationResponse(mockIntent, true, null);
 
@@ -1518,8 +1517,7 @@ public class MessagingTests {
                     Messaging.setPushNotificationListener(null);
 
                     when(mockIntent.getStringExtra("messageId")).thenReturn("msg-unset");
-                    when(mockIntent.getStringExtra("adobe_xdm"))
-                            .thenReturn("{\"test\":\"xdm\"}");
+                    when(mockIntent.getStringExtra("adobe_xdm")).thenReturn("{\"test\":\"xdm\"}");
 
                     Messaging.handleNotificationResponse(mockIntent, true, null);
 
@@ -1543,8 +1541,7 @@ public class MessagingTests {
                             .onNotificationOpened(any(), any());
 
                     when(mockIntent.getStringExtra("messageId")).thenReturn("msg-crash");
-                    when(mockIntent.getStringExtra("adobe_xdm"))
-                            .thenReturn("{\"test\":\"xdm\"}");
+                    when(mockIntent.getStringExtra("adobe_xdm")).thenReturn("{\"test\":\"xdm\"}");
 
                     Messaging.handleNotificationResponse(mockIntent, true, null);
 
