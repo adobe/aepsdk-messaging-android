@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.content.Intent;
+import android.os.Bundle;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
@@ -409,8 +410,8 @@ public class MessagingTests {
                     Messaging.handleNotificationResponse(
                             mockIntent, true, mockActionId, mockCallback);
 
-                    // verify
-                    verify(mockIntent, times(2)).getStringExtra(anyString());
+                    // verify (3 calls: messageId, adobe_xdm, _xdm fallback)
+                    verify(mockIntent, times(3)).getStringExtra(anyString());
 
                     // verify no event captured
                     assertEquals(0, eventCaptor.getAllValues().size());
@@ -1378,6 +1379,18 @@ public class MessagingTests {
         Messaging.setPushNotificationListener(null);
     }
 
+    private void stubMockIntentWithExtras(final Map<String, String> data) {
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            when(mockIntent.getStringExtra(entry.getKey())).thenReturn(entry.getValue());
+        }
+        final Bundle mockBundle = mock(Bundle.class);
+        when(mockBundle.keySet()).thenReturn(data.keySet());
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            when(mockBundle.get(entry.getKey())).thenReturn(entry.getValue());
+        }
+        when(mockIntent.getExtras()).thenReturn(mockBundle);
+    }
+
     @Test
     public void test_pushListener_onNotificationOpened_bodyTap() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -1390,13 +1403,14 @@ public class MessagingTests {
                     final PushNotificationListener listener = mock(PushNotificationListener.class);
                     Messaging.setPushNotificationListener(listener);
 
-                    Intent intent = new Intent();
-                    intent.putExtra("messageId", "msg-123");
-                    intent.putExtra("adobe_xdm", "{\"test\":\"xdm\"}");
-                    intent.putExtra("adb_title", "Test Title");
-                    intent.putExtra("custom_key", "custom_value");
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-123");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Test Title");
+                    data.put("custom_key", "custom_value");
+                    stubMockIntentWithExtras(data);
 
-                    Messaging.handleNotificationResponse(intent, true, null);
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
 
                     ArgumentCaptor<MessagingPushPayload> payloadCaptor =
                             ArgumentCaptor.forClass(MessagingPushPayload.class);
@@ -1424,12 +1438,13 @@ public class MessagingTests {
                     final PushNotificationListener listener = mock(PushNotificationListener.class);
                     Messaging.setPushNotificationListener(listener);
 
-                    Intent intent = new Intent();
-                    intent.putExtra("messageId", "msg-456");
-                    intent.putExtra("adobe_xdm", "{\"test\":\"xdm\"}");
-                    intent.putExtra("adb_title", "Test Title");
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-456");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Test Title");
+                    stubMockIntentWithExtras(data);
 
-                    Messaging.handleNotificationResponse(intent, true, "Accept");
+                    Messaging.handleNotificationResponse(mockIntent, true, "Accept");
 
                     verify(listener, times(1)).onNotificationOpened(any(), eq("Accept"));
                     verify(listener, times(0)).onNotificationDismissed(any());
@@ -1448,12 +1463,13 @@ public class MessagingTests {
                     final PushNotificationListener listener = mock(PushNotificationListener.class);
                     Messaging.setPushNotificationListener(listener);
 
-                    Intent intent = new Intent();
-                    intent.putExtra("messageId", "msg-789");
-                    intent.putExtra("adobe_xdm", "{\"test\":\"xdm\"}");
-                    intent.putExtra("adb_title", "Dismissed Notification");
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-789");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Dismissed Notification");
+                    stubMockIntentWithExtras(data);
 
-                    Messaging.handleNotificationResponse(intent, false, "Dismiss");
+                    Messaging.handleNotificationResponse(mockIntent, false, "Dismiss");
 
                     ArgumentCaptor<MessagingPushPayload> payloadCaptor =
                             ArgumentCaptor.forClass(MessagingPushPayload.class);
@@ -1477,11 +1493,11 @@ public class MessagingTests {
                 () -> {
                     Messaging.setPushNotificationListener(null);
 
-                    Intent intent = new Intent();
-                    intent.putExtra("messageId", "msg-000");
-                    intent.putExtra("adobe_xdm", "{\"test\":\"xdm\"}");
+                    when(mockIntent.getStringExtra("messageId")).thenReturn("msg-000");
+                    when(mockIntent.getStringExtra("adobe_xdm"))
+                            .thenReturn("{\"test\":\"xdm\"}");
 
-                    Messaging.handleNotificationResponse(intent, true, null);
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
 
                     // should not throw; tracking event should still be dispatched
                     assertNotNull(eventCaptor.getValue());
@@ -1501,11 +1517,11 @@ public class MessagingTests {
                     Messaging.setPushNotificationListener(listener);
                     Messaging.setPushNotificationListener(null);
 
-                    Intent intent = new Intent();
-                    intent.putExtra("messageId", "msg-unset");
-                    intent.putExtra("adobe_xdm", "{\"test\":\"xdm\"}");
+                    when(mockIntent.getStringExtra("messageId")).thenReturn("msg-unset");
+                    when(mockIntent.getStringExtra("adobe_xdm"))
+                            .thenReturn("{\"test\":\"xdm\"}");
 
-                    Messaging.handleNotificationResponse(intent, true, null);
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
 
                     verifyNoInteractions(listener);
                 });
@@ -1526,11 +1542,11 @@ public class MessagingTests {
                             .when(listener)
                             .onNotificationOpened(any(), any());
 
-                    Intent intent = new Intent();
-                    intent.putExtra("messageId", "msg-crash");
-                    intent.putExtra("adobe_xdm", "{\"test\":\"xdm\"}");
+                    when(mockIntent.getStringExtra("messageId")).thenReturn("msg-crash");
+                    when(mockIntent.getStringExtra("adobe_xdm"))
+                            .thenReturn("{\"test\":\"xdm\"}");
 
-                    Messaging.handleNotificationResponse(intent, true, null);
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
 
                     // tracking event should still be dispatched despite listener throwing
                     assertNotNull(eventCaptor.getValue());
@@ -1552,15 +1568,16 @@ public class MessagingTests {
                     final PushNotificationListener listener = mock(PushNotificationListener.class);
                     Messaging.setPushNotificationListener(listener);
 
-                    Intent intent = new Intent();
-                    intent.putExtra("messageId", "msg-custom");
-                    intent.putExtra("adobe_xdm", "{\"test\":\"xdm\"}");
-                    intent.putExtra("adb_title", "Title");
-                    intent.putExtra("adb_body", "Body");
-                    intent.putExtra("screen", "offers");
-                    intent.putExtra("campaign_id", "camp-42");
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-custom");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Title");
+                    data.put("adb_body", "Body");
+                    data.put("screen", "offers");
+                    data.put("campaign_id", "camp-42");
+                    stubMockIntentWithExtras(data);
 
-                    Messaging.handleNotificationResponse(intent, true, null);
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
 
                     ArgumentCaptor<MessagingPushPayload> payloadCaptor =
                             ArgumentCaptor.forClass(MessagingPushPayload.class);
