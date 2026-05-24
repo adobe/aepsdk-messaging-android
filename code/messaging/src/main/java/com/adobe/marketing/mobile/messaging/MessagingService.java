@@ -152,6 +152,12 @@ public class MessagingService extends FirebaseMessagingService {
         }
         final Application application = (Application) context.getApplicationContext();
 
+        // Prime ServiceProvider with the Application instance so the data store service has a
+        // valid context. Required before readCachedAppId() — otherwise NamedCollection creation
+        // fails with "ApplicationContext is null". setApplication is idempotent; the subsequent
+        // MobileCore.initialize call will see it as already-set and short-circuit internally.
+        MobileCore.setApplication(application);
+
         // Read the appId persisted by a previous successful MobileCore.configureWithAppID call.
         // If none exists, the host app has never configured the SDK and there's nothing to
         // bootstrap from. configureWithAppID writes to the same NamedCollection / key via
