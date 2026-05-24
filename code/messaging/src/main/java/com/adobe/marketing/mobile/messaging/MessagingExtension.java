@@ -43,6 +43,26 @@ import org.json.JSONObject;
 public final class MessagingExtension extends Extension {
     private static final String SELF_TAG = "MessagingExtension";
 
+    /**
+     * Flag indicating whether this extension has been registered with the EventHub in the current
+     * process. Used by {@link MessagingService#handleRemoteMessage} to detect an un-initialized SDK
+     * state and trigger self-init when a killed-state push arrives before the host app's foreground
+     * initialization completes.
+     *
+     * <p>Flipped to {@code true} in {@link #onRegistered()} and back to {@code false} in {@link
+     * #onUnregistered()}. Volatile because it is read from threads other than the EventHub executor
+     * (specifically, the FCM service thread).
+     */
+    private static volatile boolean registered = false;
+
+    /**
+     * @return {@code true} if {@link MessagingExtension} is currently registered with Core's
+     *     EventHub in this process, {@code false} otherwise.
+     */
+    public static boolean isRegistered() {
+        return registered;
+    }
+
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
@@ -141,6 +161,7 @@ public final class MessagingExtension extends Extension {
     @Override
     protected void onRegistered() {
         super.onRegistered();
+        registered = true;
         getApi().registerEventListener(
                         EventType.GENERIC_IDENTITY,
                         EventSource.REQUEST_CONTENT,
@@ -203,7 +224,9 @@ public final class MessagingExtension extends Extension {
     }
 
     @Override
-    protected void onUnregistered() {}
+    protected void onUnregistered() {
+        registered = false;
+    }
 
     @Override
     public boolean readyForEvent(@NonNull final Event event) {
@@ -396,6 +419,32 @@ public final class MessagingExtension extends Extension {
         } else if (InternalMessagingUtils.isGenericIdentityResetEvent(eventToProcess)) {
             // handle the reset identities event
             handleResetIdentitiesEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isPushNotificationReceivedEvent(eventToProcess)) {
+            // handle push notification received tracking event
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Processing push notification received tracking event.");
+            final Map<String, Object> receivedConfigSharedState =
+                    getSharedState(
+                            MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
+                            eventToProcess);
+            final String receivedDatasetId =
+                    DataReader.optString(
+                            receivedConfigSharedState,
+                            MessagingConstants.SharedState.Configuration
+                                    .EXPERIENCE_EVENT_DATASET_ID,
+                            "");
+            if (StringUtils.isNullOrEmpty(receivedDatasetId)) {
+                Log.warning(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Unable to track push notification received, experience event dataset id is"
+                                + " empty. Check the messaging launch extension to add the"
+                                + " experience event dataset.");
+                return;
+            }
+            handleTrackingInfo(eventToProcess, receivedDatasetId);
         } else if (InternalMessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState =

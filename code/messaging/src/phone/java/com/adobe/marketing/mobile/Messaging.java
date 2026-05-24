@@ -29,8 +29,10 @@ import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,6 +48,7 @@ public final class Messaging {
     private static final String EVENT_SOURCE_NOTIFICATION = "com.adobe.eventSource.notification";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT =
             "Push notification interaction event";
+    private static final String PUSH_NOTIFICATION_RECEIVED_EVENT = "Push notification received";
     private static final String UPDATE_PROPOSITIONS = "Update propositions";
     private static final String GET_PROPOSITIONS = "Get propositions";
     private static final String REFRESH_MESSAGES = "Refresh in-app messages";
@@ -68,6 +71,25 @@ public final class Messaging {
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
     private static final String RESPONSE_ERROR = "responseerror";
     private static final String SCOPE = "scope";
+    private static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
+    private static final String EVENT_TYPE_PUSH_TRACKING_RECEIVED = "pushTracking.receive";
+
+    // Bounded in-memory cache to deduplicate push receive events.
+    // addPushTrackingDetails() is called once per intent (content + delete), so the same
+    // messageId would trigger two events for a single notification without this guard.
+    private static final int MAX_DEDUP_CACHE_SIZE = 10;
+
+    @SuppressWarnings("serial")
+    private static final Set<String> recentlyTrackedMessageIds =
+            Collections.synchronizedSet(
+                    Collections.newSetFromMap(
+                            new LinkedHashMap<String, Boolean>() {
+                                @Override
+                                protected boolean removeEldestEntry(
+                                        final Map.Entry<String, Boolean> eldest) {
+                                    return size() > MAX_DEDUP_CACHE_SIZE;
+                                }
+                            }));
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
@@ -136,7 +158,65 @@ public final class Messaging {
                             + " or empty");
         }
 
+        // Track push received once per messageId. This method is called once for the content
+        // intent and once for the delete intent for the same notification, so the dedup cache
+        // ensures the receive event is dispatched only on the first call.
+        handlePushReceived(messageId, data);
+
         return true;
+    }
+
+    /**
+     * Dispatches a push notification received event to track that a push notification was
+     * displayed. This is called internally by both the SDK-handled path ({@link
+     * MessagingService#handleRemoteMessage}) and the client-handled path ({@link
+     * #addPushTrackingDetails}).
+     *
+     * @param messageId {@link String} the Firebase message ID from {@code
+     *     RemoteMessage#getMessageId()}
+     * @param data {@link Map} the data payload from {@code RemoteMessage#getData()}
+     */
+    public static void handlePushReceived(
+            @NonNull final String messageId, @NonNull final Map<String, String> data) {
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.warning(
+                    LOG_TAG,
+                    CLASS_NAME,
+                    "Failed to track push notification received, messageId is null or empty.");
+            return;
+        }
+        if (MapUtils.isNullOrEmpty(data)) {
+            Log.warning(
+                    LOG_TAG,
+                    CLASS_NAME,
+                    "Failed to track push notification received, data map is null or empty.");
+            return;
+        }
+
+        // Deduplicate: skip if we already fired the receive event for this messageId
+        if (!recentlyTrackedMessageIds.add(messageId)) {
+            Log.trace(
+                    LOG_TAG,
+                    CLASS_NAME,
+                    "Push notification received event already tracked for messageId: %s, skipping.",
+                    messageId);
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.put(TRACK_INFO_KEY_ADOBE_XDM, data.get(_XDM));
+        eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_RECEIVED);
+        eventData.put(PUSH_NOTIFICATION_RECEIVED, true);
+
+        final Event pushReceivedEvent =
+                new Event.Builder(
+                                PUSH_NOTIFICATION_RECEIVED_EVENT,
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+        MobileCore.dispatchEvent(pushReceivedEvent);
     }
 
     /**

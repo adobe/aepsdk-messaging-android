@@ -197,6 +197,7 @@ public final class MessagingConstants {
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
             static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
 
             private Messaging() {}
 
