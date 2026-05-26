@@ -26,8 +26,6 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class is the entry point for all push notifications received from Firebase.
@@ -43,22 +41,26 @@ public class MessagingService extends FirebaseMessagingService {
     // key name written by ConfigurationExtension.configureWithAppID).
     private static final String CONFIG_DATASTORE = "AdobeMobile_ConfigState";
     private static final String CONFIG_KEY_APP_ID = "config.appID";
-    private static final long SELF_INIT_TIMEOUT_SECONDS = 5;
     private static volatile boolean selfInitTried = false;
 
     @Override
     public void onNewToken(final @NonNull String token) {
         super.onNewToken(token);
-        android.util.Log.d("Akhil", "New Token is  " + token);
-
+        Log.debug(
+                MessagingPushConstants.LOG_TAG,
+                SELF_TAG,
+                "onNewToken: received new FCM registration token; forwarding to MobileCore.");
         MobileCore.setPushIdentifier(token);
     }
 
     @Override
     public void onMessageReceived(final @NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        android.util.Log.d(
-                "Akhil", "Akhil onMessageReceived in getting triggered (SDK MessagingService)");
+        Log.debug(
+                MessagingPushConstants.LOG_TAG,
+                SELF_TAG,
+                "onMessageReceived: received remote message from FCM; delegating to"
+                        + " handleRemoteMessage.");
         handleRemoteMessage(this, remoteMessage);
     }
 
@@ -73,38 +75,50 @@ public class MessagingService extends FirebaseMessagingService {
             return false;
         }
 
-        // If the host app has not yet registered the Messaging extension (e.g., the customer
-        // initialized in MainActivity rather than Application.onCreate, or a killed-state push
-        // arrived before customer init could complete), attempt to bootstrap the SDK from the
-        // cached appId in persistence so the push receive event isn't lost.
-        if (!MessagingExtension.isRegistered()) {
+        // RemoteMessage#getMessageId() is declared @Nullable by Firebase. Bail out before any
+        // downstream code that dereferences it (hashCode for notification id, dedup key, etc.).
+        final String messageId = remoteMessage.getMessageId();
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.warning(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "handleRemoteMessage: messageId is null or empty; skipping.");
+            return false;
+        }
+
+        // Build and display the notification synchronously — this must happen while the FCM
+        // wakelock is active so the user sees the notification immediately. Self-init and the
+        // receive-tracking dispatch run independently below.
+        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
+        final Notification notification = MessagingPushBuilder.build(payload, context);
+        NotificationManagerCompat.from(context).notify(messageId.hashCode(), notification);
+
+        // Push receive tracking dispatch. If the Messaging extension is already registered,
+        // fire immediately. Otherwise, bootstrap the SDK from the cached appId and fire the
+        // dispatch from the initialize completion callback — this avoids blocking the FCM
+        // service thread on a latch and guarantees extensions are registered before dispatch.
+        if (MessagingExtension.isRegistered()) {
+            Messaging.handlePushReceived(messageId, remoteMessage.getData());
+        } else {
             Log.debug(
                     MessagingPushConstants.LOG_TAG,
                     SELF_TAG,
                     "Messaging extension is not registered. Attempting self-init from cached"
-                            + " configuration.");
-            selfInit(context);
+                            + " configuration before dispatching push receive event.");
+            selfInit(
+                    context,
+                    () -> Messaging.handlePushReceived(messageId, remoteMessage.getData()));
         }
-
-        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
-        final Notification notification = MessagingPushBuilder.build(payload, context);
-
-        // display notification
-        final NotificationManagerCompat notificationManager =
-                NotificationManagerCompat.from(context);
-        notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
-
-        // track push notification received
-        Messaging.handlePushReceived(remoteMessage.getMessageId(), remoteMessage.getData());
         return true;
     }
 
     /**
      * Bootstraps the AEP SDK from the persisted {@code appId} when the host app has not yet
-     * registered the Messaging extension. This protects push receive tracking against the
-     * cold-start race where {@link FirebaseMessagingService#onMessageReceived} fires before
-     * customer-code initialization (in {@code Application.onCreate} or {@code
-     * MainActivity.onCreate}) has completed.
+     * registered the Messaging extension, and runs {@code onInitComplete} once registration is
+     * confirmed via the {@link MobileCore#initialize} completion callback. This protects push
+     * receive tracking against the cold-start race where {@link
+     * FirebaseMessagingService#onMessageReceived} fires before customer-code initialization (in
+     * {@code Application.onCreate} or {@code MainActivity.onCreate}) has completed.
      *
      * <p>Behavior:
      *
@@ -115,19 +129,19 @@ public class MessagingService extends FirebaseMessagingService {
      *   <li>Delegates to {@link MobileCore#initialize(Application, InitOptions,
      *       com.adobe.marketing.mobile.AdobeCallback)}, which auto-discovers all AEP extensions on
      *       the classpath and applies the cached configuration.
-     *   <li>Blocks the FCM service thread on a {@link CountDownLatch} bounded by {@value
-     *       #SELF_INIT_TIMEOUT_SECONDS} seconds so the call cannot run beyond the FCM wakelock
-     *       budget.
-     *   <li>Runs at most once per process.
+     *   <li>Invokes {@code onInitComplete} from the initialize completion callback — the FCM
+     *       service thread is not blocked while initialization runs.
+     *   <li>Runs at most once per process. Subsequent calls fire {@code onInitComplete}
+     *       immediately so deferred push-receive dispatches still execute.
      * </ul>
      *
      * <p>Lifecycle auto-tracking is disabled for this code path. We are running on the FCM service
      * thread with no Activity context; firing lifecycle events from a non-foreground bootstrap is
      * not desired.
      *
-     * <p>Returns silently (with a warning log) if no cached {@code appId} is found — that is the
-     * first-ever-launch case where the host app has never configured the SDK, and there is nothing
-     * to bootstrap from.
+     * <p>Returns silently (with a warning log, without firing {@code onInitComplete}) if no cached
+     * {@code appId} is found — that is the first-ever-launch case where the host app has never
+     * configured the SDK, and there is nothing to bootstrap from.
      *
      * <p>Idempotency: {@link MobileCore#initialize} and its underlying primitives ({@code
      * setApplication}, per-extension registration) are individually idempotent. It is safe for the
@@ -136,9 +150,16 @@ public class MessagingService extends FirebaseMessagingService {
      *
      * @param context the {@link Context} from FCM's {@code onMessageReceived}. Must have a non-null
      *     {@link Application} as its application context.
+     * @param onInitComplete callback invoked once {@code MobileCore.initialize} reports completion
+     *     (or immediately, if self-init was already attempted in this process).
      */
-    private static synchronized void selfInit(final @NonNull Context context) {
+    private static synchronized void selfInit(
+            final @NonNull Context context, final @NonNull Runnable onInitComplete) {
         if (selfInitTried) {
+            // Self-init was already attempted in this process. Whether extensions actually
+            // registered or not, the deferred action should still run so the push-receive
+            // event isn't silently dropped.
+            onInitComplete.run();
             return;
         }
         selfInitTried = true;
@@ -181,34 +202,17 @@ public class MessagingService extends FirebaseMessagingService {
         final InitOptions options = InitOptions.configureWithAppID(cachedAppId);
         options.setLifecycleAutomaticTrackingEnabled(false);
 
-        final CountDownLatch latch = new CountDownLatch(1);
-        try {
-            MobileCore.initialize(application, options, ignored -> latch.countDown());
-        } catch (final RuntimeException e) {
-            Log.warning(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Self-init: MobileCore.initialize threw an exception: " + e.getMessage());
-            return;
-        }
-
-        try {
-            final boolean completed = latch.await(SELF_INIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            if (!completed) {
-                Log.warning(
-                        MessagingPushConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Self-init: MobileCore.initialize did not complete within "
-                                + SELF_INIT_TIMEOUT_SECONDS
-                                + "s; proceeding without confirmed registration.");
-            }
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            Log.warning(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Self-init: interrupted while waiting for initialize callback.");
-        }
+        MobileCore.initialize(
+                application,
+                options,
+                ignored -> {
+                    Log.debug(
+                            MessagingPushConstants.LOG_TAG,
+                            SELF_TAG,
+                            "Self-init: MobileCore.initialize completed; running deferred"
+                                    + " push-receive dispatch.");
+                    onInitComplete.run();
+                });
     }
 
     /**
@@ -217,7 +221,8 @@ public class MessagingService extends FirebaseMessagingService {
      *
      * @return the persisted appId, or {@code null} if not present or unreadable.
      */
-    @androidx.annotation.Nullable private static String readCachedAppId() {
+    @androidx.annotation.Nullable
+    private static String readCachedAppId() {
         try {
             final NamedCollection store =
                     ServiceProvider.getInstance()

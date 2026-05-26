@@ -59,7 +59,7 @@ public final class MessagingExtension extends Extension {
      * @return {@code true} if {@link MessagingExtension} is currently registered with Core's
      *     EventHub in this process, {@code false} otherwise.
      */
-    public static boolean isRegistered() {
+    static boolean isRegistered() {
         return registered;
     }
 
