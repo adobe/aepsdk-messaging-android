@@ -1368,4 +1368,172 @@ public class MessagingTests {
                     assertNull(eventCaptor.getValue());
                 });
     }
+
+    // ========================================================================================
+    // handlePushReceived
+    // ========================================================================================
+
+    /**
+     * Reset the dedup LRU between handlePushReceived tests so cached messageIds from earlier
+     * tests don't silently drop new dispatches.
+     */
+    private void resetDedupCache() throws Exception {
+        final java.lang.reflect.Field f =
+                Messaging.class.getDeclaredField("recentlyTrackedMessageIds");
+        f.setAccessible(true);
+        ((java.util.Set<String>) f.get(null)).clear();
+    }
+
+    @Test
+    public void test_handlePushReceived_validParams_dispatchesPushReceivedEvent() throws Exception {
+        resetDedupCache();
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{\"cjm\":{}}");
+                    data.put("adb_title", "Hello");
+
+                    Messaging.handlePushReceived("test-msg-id", data);
+
+                    final Event dispatched = eventCaptor.getValue();
+                    Assert.assertNotNull(dispatched);
+                    assertEquals("Push notification received", dispatched.getName());
+                    assertEquals(EventType.MESSAGING, dispatched.getType());
+                    assertEquals(EventSource.REQUEST_CONTENT, dispatched.getSource());
+                    assertEquals(
+                            "test-msg-id", dispatched.getEventData().get("messageId"));
+                    assertEquals(
+                            "pushTracking.receive",
+                            dispatched.getEventData().get("eventType"));
+                    assertEquals(true, dispatched.getEventData().get("pushnotificationreceived"));
+                    assertEquals(
+                            "{\"cjm\":{}}", dispatched.getEventData().get("adobe_xdm"));
+                });
+    }
+
+    /**
+     * Helper: returns the number of times MobileCore.dispatchEvent was called inside the captor
+     * passed to runWithMockedMobileCore. Mockito's ArgumentCaptor stores all captured values in
+     * a list — getAllValues().size() is the call count.
+     */
+    private int dispatchCount(final ArgumentCaptor<Event> captor) {
+        try {
+            return captor.getAllValues().size();
+        } catch (final Exception e) {
+            return 0;
+        }
+    }
+
+    @Test
+    public void test_handlePushReceived_nullMessageId_doesNotDispatch() throws Exception {
+        resetDedupCache();
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("k", "v");
+
+                    Messaging.handlePushReceived(null, data);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_handlePushReceived_emptyMessageId_doesNotDispatch() throws Exception {
+        resetDedupCache();
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("k", "v");
+
+                    Messaging.handlePushReceived("", data);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_handlePushReceived_nullData_doesNotDispatch() throws Exception {
+        resetDedupCache();
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    Messaging.handlePushReceived("test-msg-id", null);
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_handlePushReceived_emptyData_doesNotDispatch() throws Exception {
+        resetDedupCache();
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    Messaging.handlePushReceived("test-msg-id", new HashMap<>());
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_handlePushReceived_sameMessageIdTwice_dedupsToSingleDispatch()
+            throws Exception {
+        resetDedupCache();
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{}");
+
+                    // Simulates the content-intent + delete-intent dual call from manual
+                    // tracking — addPushTrackingDetails is invoked twice for the same push.
+                    Messaging.handlePushReceived("dup-msg-id", data);
+                    Messaging.handlePushReceived("dup-msg-id", data);
+
+                    // Only ONE dispatch — the LRU cache absorbs the second call.
+                    assertEquals(1, dispatchCount(eventCaptor));
+                    assertEquals(
+                            "dup-msg-id",
+                            eventCaptor.getValue().getEventData().get("messageId"));
+                });
+    }
+
+    @Test
+    public void test_handlePushReceived_differentMessageIds_dispatchesBoth() throws Exception {
+        resetDedupCache();
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{}");
+
+                    Messaging.handlePushReceived("msg-A", data);
+                    Messaging.handlePushReceived("msg-B", data);
+
+                    // Both fire because messageIds differ.
+                    assertEquals(2, dispatchCount(eventCaptor));
+                    assertEquals(
+                            "msg-A",
+                            eventCaptor.getAllValues().get(0).getEventData().get("messageId"));
+                    assertEquals(
+                            "msg-B",
+                            eventCaptor.getAllValues().get(1).getEventData().get("messageId"));
+                });
+    }
 }

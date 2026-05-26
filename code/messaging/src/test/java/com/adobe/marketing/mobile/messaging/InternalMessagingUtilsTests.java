@@ -1964,4 +1964,99 @@ public class InternalMessagingUtilsTests {
             return null;
         }
     }
+
+    // =====================================================================
+    // isPushNotificationReceivedEvent
+    // =====================================================================
+
+    @org.junit.Test
+    public void testIsPushNotificationReceivedEvent_returnTrue_validEvent() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(
+                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+        final Event event =
+                new Event.Builder(
+                                "Push notification received",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertTrue(InternalMessagingUtils.isPushNotificationReceivedEvent(event));
+    }
+
+    @org.junit.Test
+    public void testIsPushNotificationReceivedEvent_returnFalse_nullEvent() {
+        assertFalse(InternalMessagingUtils.isPushNotificationReceivedEvent(null));
+    }
+
+    @org.junit.Test
+    public void testIsPushNotificationReceivedEvent_returnFalse_nullEventData() {
+        final Event event =
+                new Event.Builder(
+                                "Push notification received",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .build();
+        assertFalse(InternalMessagingUtils.isPushNotificationReceivedEvent(event));
+    }
+
+    @org.junit.Test
+    public void testIsPushNotificationReceivedEvent_returnFalse_wrongEventType() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(
+                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+        final Event event =
+                new Event.Builder(
+                                "Push notification received",
+                                EventType.EDGE,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertFalse(InternalMessagingUtils.isPushNotificationReceivedEvent(event));
+    }
+
+    @org.junit.Test
+    public void testIsPushNotificationReceivedEvent_returnFalse_wrongEventSource() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(
+                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+        final Event event =
+                new Event.Builder(
+                                "Push notification received",
+                                EventType.MESSAGING,
+                                EventSource.RESPONSE_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertFalse(InternalMessagingUtils.isPushNotificationReceivedEvent(event));
+    }
+
+    @org.junit.Test
+    public void
+            testIsPushNotificationReceivedEvent_returnFalse_pushNotificationReceivedFlagFalse() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(
+                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, false);
+        final Event event =
+                new Event.Builder(
+                                "Push notification received",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertFalse(InternalMessagingUtils.isPushNotificationReceivedEvent(event));
+    }
+
+    @org.junit.Test
+    public void testIsPushNotificationReceivedEvent_returnFalse_keyMissingFromEventData() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put("someOtherKey", "value");
+        final Event event =
+                new Event.Builder(
+                                "Some other messaging event",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertFalse(InternalMessagingUtils.isPushNotificationReceivedEvent(event));
+    }
 }
