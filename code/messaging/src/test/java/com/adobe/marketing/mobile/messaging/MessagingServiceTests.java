@@ -200,7 +200,7 @@ public class MessagingServiceTests {
     public void test_handleRemoteMessage_callsOnNotificationReceived() {
         // setup
         final PushNotificationListener listener = Mockito.mock(PushNotificationListener.class);
-        PushNotificationEventManager.setListener(listener);
+        PushCallbackHandler.setListener(listener);
         when(remoteMessage.getData())
                 .thenReturn(
                         new HashMap<String, String>() {
@@ -226,13 +226,13 @@ public class MessagingServiceTests {
         assertEquals("custom_value", payload.getData().get("custom_key"));
 
         // cleanup
-        PushNotificationEventManager.setListener(null);
+        PushCallbackHandler.setListener(null);
     }
 
     @Test
     public void test_handleRemoteMessage_noListenerNoCrash() {
         // setup
-        PushNotificationEventManager.setListener(null);
+        PushCallbackHandler.setListener(null);
         when(remoteMessage.getData())
                 .thenReturn(
                         new HashMap<String, String>() {
@@ -256,7 +256,7 @@ public class MessagingServiceTests {
         Mockito.doThrow(new RuntimeException("listener crash"))
                 .when(listener)
                 .onNotificationReceived(any());
-        PushNotificationEventManager.setListener(listener);
+        PushCallbackHandler.setListener(listener);
         when(remoteMessage.getData())
                 .thenReturn(
                         new HashMap<String, String>() {
@@ -277,6 +277,6 @@ public class MessagingServiceTests {
         assertEquals("Push Notification Displayed", eventCaptor.getValue().getName());
 
         // cleanup
-        PushNotificationEventManager.setListener(null);
+        PushCallbackHandler.setListener(null);
     }
 }

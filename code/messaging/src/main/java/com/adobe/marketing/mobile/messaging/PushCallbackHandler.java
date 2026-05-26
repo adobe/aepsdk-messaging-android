@@ -23,7 +23,7 @@ import com.adobe.marketing.mobile.services.Log;
  * callbacks (received, opened, dismissed). Keeps all listener-related logic in one place, separate
  * from the public API facade in {@code Messaging}.
  */
-public final class PushNotificationEventManager {
+public final class PushCallbackHandler {
 
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "PushNotificationEventManager";
@@ -32,14 +32,10 @@ public final class PushNotificationEventManager {
 
     private static volatile PushNotificationListener listener;
 
-    private PushNotificationEventManager() {}
+    private PushCallbackHandler() {}
 
     public static void setListener(@Nullable final PushNotificationListener newListener) {
         listener = newListener;
-    }
-
-    @Nullable public static PushNotificationListener getListener() {
-        return listener;
     }
 
     /**

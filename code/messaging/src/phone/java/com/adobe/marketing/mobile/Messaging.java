@@ -19,7 +19,7 @@ import com.adobe.marketing.mobile.messaging.IamRefreshHandler;
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.MessagingUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
-import com.adobe.marketing.mobile.messaging.PushNotificationEventManager;
+import com.adobe.marketing.mobile.messaging.PushCallbackHandler;
 import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.messaging.Surface;
 import com.adobe.marketing.mobile.services.Log;
@@ -274,7 +274,7 @@ public final class Messaging {
             eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
 
-        PushNotificationEventManager.notifyInteraction(intent, customActionId);
+        PushCallbackHandler.notifyInteraction(intent, customActionId);
 
         final Event messagingEvent =
                 new Event.Builder(
@@ -582,6 +582,6 @@ public final class Messaging {
      */
     public static void setPushNotificationListener(
             @Nullable final PushNotificationListener listener) {
-        PushNotificationEventManager.setListener(listener);
+        PushCallbackHandler.setListener(listener);
     }
 }
