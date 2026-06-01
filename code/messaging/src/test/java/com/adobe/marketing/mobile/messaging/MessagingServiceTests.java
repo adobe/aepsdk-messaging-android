@@ -32,6 +32,7 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.PushNotificationListener;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.HashMap;
 import org.junit.After;
@@ -189,5 +190,93 @@ public class MessagingServiceTests {
 
         // verify
         assertFalse(isHandled);
+    }
+
+    // ========================================================================================
+    // PushNotificationListener - onNotificationReceived
+    // ========================================================================================
+
+    @Test
+    public void test_handleRemoteMessage_callsOnNotificationReceived() {
+        // setup
+        final PushNotificationListener listener = Mockito.mock(PushNotificationListener.class);
+        PushCallbackHandler.setListener(listener);
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Test Title");
+                                put("custom_key", "custom_value");
+                            }
+                        });
+
+        // test
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify
+        assertTrue(isHandled);
+        ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                ArgumentCaptor.forClass(MessagingPushPayload.class);
+        verify(listener, times(1)).onNotificationReceived(payloadCaptor.capture());
+
+        MessagingPushPayload payload = payloadCaptor.getValue();
+        assertNotNull(payload);
+        assertEquals("Test Title", payload.getTitle());
+        assertEquals("custom_value", payload.getData().get("custom_key"));
+
+        // cleanup
+        PushCallbackHandler.setListener(null);
+    }
+
+    @Test
+    public void test_handleRemoteMessage_noListenerNoCrash() {
+        // setup
+        PushCallbackHandler.setListener(null);
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Test Title");
+                            }
+                        });
+
+        // test — should not throw
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify
+        assertTrue(isHandled);
+    }
+
+    @Test
+    public void test_handleRemoteMessage_listenerExceptionDoesNotPreventEvent() {
+        // setup
+        final PushNotificationListener listener = Mockito.mock(PushNotificationListener.class);
+        Mockito.doThrow(new RuntimeException("listener crash"))
+                .when(listener)
+                .onNotificationReceived(any());
+        PushCallbackHandler.setListener(listener);
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Test Title");
+                            }
+                        });
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+        // test — should not throw despite listener crashing
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify notification was still displayed and event dispatched
+        assertTrue(isHandled);
+        mobileCore.verify(() -> MobileCore.dispatchEvent(eventCaptor.capture()));
+        assertNotNull(eventCaptor.getValue());
+        assertEquals("Push Notification Displayed", eventCaptor.getValue().getName());
+
+        // cleanup
+        PushCallbackHandler.setListener(null);
     }
 }

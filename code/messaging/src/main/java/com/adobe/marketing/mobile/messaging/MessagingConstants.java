@@ -426,6 +426,14 @@ public final class MessagingConstants {
     }
 
     public final class Push {
+        public class TrackingKeys {
+            public static final String MESSAGE_ID = "messageId";
+            public static final String GOOGLE_MESSAGE_ID = "google.message_id";
+            public static final String ACTION_DISMISS = "Dismiss";
+
+            private TrackingKeys() {}
+        }
+
         public class PayloadKeys {
             public static final String TITLE = "adb_title";
             public static final String BODY = "adb_body";

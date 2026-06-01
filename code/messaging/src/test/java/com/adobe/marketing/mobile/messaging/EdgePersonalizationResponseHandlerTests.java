@@ -56,6 +56,7 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import java.io.File;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -143,10 +144,28 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockPresentableMessageMapper);
         reset(mockInternalMessage);
         reset(mockAdobeCallback);
+        ContentCardMapper.getInstance().clear();
 
         if (cacheDir.exists()) {
             cacheDir.delete();
         }
+    }
+
+    /**
+     * Pre-populates ContentCardMapper with a mock ContentCardSchemaData entry keyed by the given
+     * activity ID, so tests can verify removal behaviour. Uses a separate unique ID to ensure the
+     * mapper is keyed by activityId, not uniqueId.
+     */
+    private void seedContentCardMapper(String activityId) {
+        ContentCardSchemaData schemaData = mock(ContentCardSchemaData.class);
+        PropositionItem propItem = mock(PropositionItem.class);
+        Proposition prop = mock(Proposition.class);
+        schemaData.parent = propItem;
+        propItem.propositionReference = new SoftReference<>(prop);
+        when(propItem.getProposition()).thenReturn(prop);
+        when(prop.getUniqueId()).thenReturn("uniqueId_" + activityId);
+        when(prop.getActivityId()).thenReturn(activityId);
+        ContentCardMapper.getInstance().storeContentCardSchemaData(schemaData);
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -1385,10 +1404,11 @@ public class EdgePersonalizationResponseHandlerTests {
                         assertEquals(3, rulesListCaptor.getAllValues().get(0).size());
                         assertEquals(15, rulesListCaptor.getAllValues().get(1).size());
 
-                        // verify parsed rules replaced in feed rules engine for both responses
-                        verify(mockContentCardRulesEngine, times(1))
+                        // verify content card rules engine synced for both responses
+                        verify(mockContentCardRulesEngine, times(2))
                                 .replaceRules(contentCardRulesListCaptor.capture());
-                        assertEquals(4, contentCardRulesListCaptor.getAllValues().get(0).size());
+                        assertEquals(0, contentCardRulesListCaptor.getAllValues().get(0).size());
+                        assertEquals(4, contentCardRulesListCaptor.getAllValues().get(1).size());
                         List<LaunchRule> eventHistoryRules = new ArrayList<>();
                         List<LaunchRule> inAppRules = new ArrayList<>();
                         for (LaunchRule launchRule : rulesListCaptor.getAllValues().get(1)) {
@@ -1475,11 +1495,14 @@ public class EdgePersonalizationResponseHandlerTests {
                         // test
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
-                        // verify in-app rules engine not called
-                        verifyNoInteractions(mockMessagingRulesEngine);
-
-                        // verify feed rules engine not called
-                        verifyNoInteractions(mockContentCardRulesEngine);
+                        // verify rules engines synced with empty rules (code-based propositions
+                        // produce no rules)
+                        verify(mockMessagingRulesEngine, times(1))
+                                .replaceRules(rulesListCaptor.capture());
+                        assertEquals(0, rulesListCaptor.getValue().size());
+                        verify(mockContentCardRulesEngine, times(1))
+                                .replaceRules(contentCardRulesListCaptor.capture());
+                        assertEquals(0, contentCardRulesListCaptor.getValue().size());
 
                         // verify received propositions event is dispatched
                         ArgumentCaptor<Event> dispatchEventArgumentCaptor =
@@ -1537,11 +1560,13 @@ public class EdgePersonalizationResponseHandlerTests {
                         // test
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
-                        // verify rules not replaced in in-app rules engine
-                        verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
-
-                        // verify rules not replaced in feed rules engine
-                        verify(mockContentCardRulesEngine, times(0)).replaceRules(anyList());
+                        // verify rules engines synced with empty rules
+                        verify(mockMessagingRulesEngine, times(1))
+                                .replaceRules(rulesListCaptor.capture());
+                        assertEquals(0, rulesListCaptor.getValue().size());
+                        verify(mockContentCardRulesEngine, times(1))
+                                .replaceRules(contentCardRulesListCaptor.capture());
+                        assertEquals(0, contentCardRulesListCaptor.getValue().size());
 
                         // verify received propositions event not dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -1640,11 +1665,14 @@ public class EdgePersonalizationResponseHandlerTests {
                         // test
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
-                        // verify rules not replaced in in-app rules engine
-                        verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
-
-                        // verify rules not replaced in feed rules engine
-                        verify(mockContentCardRulesEngine, times(0)).replaceRules(anyList());
+                        // verify rules engines synced with empty rules (invalid payload produces no
+                        // parseable rules)
+                        verify(mockMessagingRulesEngine, times(1))
+                                .replaceRules(rulesListCaptor.capture());
+                        assertEquals(0, rulesListCaptor.getValue().size());
+                        verify(mockContentCardRulesEngine, times(1))
+                                .replaceRules(contentCardRulesListCaptor.capture());
+                        assertEquals(0, contentCardRulesListCaptor.getValue().size());
 
                         // verify received propositions event not dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -2825,6 +2853,431 @@ public class EdgePersonalizationResponseHandlerTests {
                                 qualifiedContentCardsBySurface.get(feedSurface);
                         assertEquals(propositions, qualifiedContentCardsList);
                     }
+                });
+    }
+
+    // ========================================================================================
+    // removeOrReplaceContentCards
+    // ========================================================================================
+    @Test
+    public void test_removeOrReplaceContentCards_EvictsAllRequestedSurfaces_WhenNoQualifiedCards() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup: pre-populate contentCardsBySurface with two surfaces
+                    Surface surfaceA = new Surface("feed1");
+                    Surface surfaceB = new Surface("feed2");
+
+                    MessageTestConfig configA = new MessageTestConfig();
+                    configA.count = 2;
+                    List<Proposition> propositionsA =
+                            MessagingTestUtils.generateQualifiedContentCards(configA);
+                    MessageTestConfig configB = new MessageTestConfig();
+                    configB.count = 1;
+                    List<Proposition> propositionsB =
+                            MessagingTestUtils.generateQualifiedContentCards(configB);
+
+                    Map<Surface, List<Proposition>> contentCards = new HashMap<>();
+                    contentCards.put(surfaceA, propositionsA);
+                    contentCards.put(surfaceB, propositionsB);
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                            contentCards);
+                    assertEquals(
+                            2,
+                            edgePersonalizationResponseHandler
+                                    .getQualifiedContentCardsBySurface()
+                                    .size());
+
+                    // mock evaluate to return null (no qualified content cards)
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class))).thenReturn(null);
+
+                    Event testEvent = mock(Event.class);
+                    List<Surface> requestedSurfaces = new ArrayList<>();
+                    requestedSurfaces.add(surfaceA);
+                    requestedSurfaces.add(surfaceB);
+
+                    // test
+                    edgePersonalizationResponseHandler.removeOrReplaceContentCards(
+                            testEvent, requestedSurfaces);
+
+                    // verify all requested surfaces are evicted
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.getQualifiedContentCardsBySurface();
+                    assertEquals(0, result.size());
+                });
+    }
+
+    @Test
+    public void
+            test_removeOrReplaceContentCards_OnlyEvictsRequestedSurfaces_PreservesUnrequested() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup: pre-populate contentCardsBySurface with three surfaces
+                    Surface surfaceA = new Surface("feed1");
+                    Surface surfaceB = new Surface("feed2");
+                    Surface surfaceC = new Surface("feed3");
+
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Proposition> propositionsA =
+                            MessagingTestUtils.generateQualifiedContentCards(config);
+                    List<Proposition> propositionsB =
+                            MessagingTestUtils.generateQualifiedContentCards(config);
+                    List<Proposition> propositionsC =
+                            MessagingTestUtils.generateQualifiedContentCards(config);
+
+                    Map<Surface, List<Proposition>> contentCards = new HashMap<>();
+                    contentCards.put(surfaceA, propositionsA);
+                    contentCards.put(surfaceB, propositionsB);
+                    contentCards.put(surfaceC, propositionsC);
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                            contentCards);
+                    assertEquals(
+                            3,
+                            edgePersonalizationResponseHandler
+                                    .getQualifiedContentCardsBySurface()
+                                    .size());
+
+                    // mock evaluate to return null (no qualified content cards)
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class))).thenReturn(null);
+
+                    Event testEvent = mock(Event.class);
+                    // request only A and B — not C
+                    List<Surface> requestedSurfaces = new ArrayList<>();
+                    requestedSurfaces.add(surfaceA);
+                    requestedSurfaces.add(surfaceB);
+
+                    // test
+                    edgePersonalizationResponseHandler.removeOrReplaceContentCards(
+                            testEvent, requestedSurfaces);
+
+                    // verify A and B are evicted, C is preserved
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.getQualifiedContentCardsBySurface();
+                    assertEquals(1, result.size());
+                    assertNotNull(result.get(surfaceC));
+                    assertNull(result.get(surfaceA));
+                    assertNull(result.get(surfaceB));
+                });
+    }
+
+    @Test
+    public void
+            test_removeOrReplaceContentCards_ReplacesPropositionsForQualifiedSurface_AndEvictsAbsentSurface() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup: pre-populate contentCardsBySurface with two surfaces
+                    Surface surfaceA = new Surface("feed1");
+                    Surface surfaceB = new Surface("feed2");
+
+                    MessageTestConfig configA = new MessageTestConfig();
+                    configA.count = 2;
+                    List<Proposition> oldPropositionsA =
+                            MessagingTestUtils.generateQualifiedContentCards(configA);
+                    MessageTestConfig configB = new MessageTestConfig();
+                    configB.count = 1;
+                    List<Proposition> oldPropositionsB =
+                            MessagingTestUtils.generateQualifiedContentCards(configB);
+
+                    Map<Surface, List<Proposition>> contentCards = new HashMap<>();
+                    contentCards.put(surfaceA, oldPropositionsA);
+                    contentCards.put(surfaceB, oldPropositionsB);
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                            contentCards);
+                    assertEquals(2, oldPropositionsA.size());
+                    assertEquals(1, oldPropositionsB.size());
+
+                    // populate propositionInfo via reflection so
+                    // getPropositionsFromContentCardRulesEngine
+                    // can reconstruct propositions for items returned by evaluate()
+                    try {
+                        Map<String, Object> activity = new HashMap<>();
+                        activity.put("id", "newActivityId");
+                        Map<String, Object> scopeDetails = new HashMap<>();
+                        scopeDetails.put("activity", activity);
+                        scopeDetails.put("correlationID", "testCorrelationId");
+
+                        Map<String, Object> infoMap = new HashMap<>();
+                        infoMap.put("id", "newPropositionId");
+                        infoMap.put("scope", surfaceA.getUri());
+                        infoMap.put("scopeDetails", scopeDetails);
+                        PropositionInfo info = PropositionInfo.create(infoMap);
+
+                        java.lang.reflect.Field propositionInfoField =
+                                EdgePersonalizationResponseHandler.class.getDeclaredField(
+                                        "propositionInfo");
+                        propositionInfoField.setAccessible(true);
+                        @SuppressWarnings("unchecked")
+                        Map<String, PropositionInfo> propositionInfoMap =
+                                (Map<String, PropositionInfo>)
+                                        propositionInfoField.get(
+                                                edgePersonalizationResponseHandler);
+                        propositionInfoMap.put("183639c4-cb37-458e-a8ef-4e130d767ebf", info);
+                    } catch (Exception e) {
+                        fail("Failed to set propositionInfo via reflection: " + e.getMessage());
+                    }
+
+                    // mock evaluate to return 1 qualified item for surfaceA only
+                    Map<Surface, List<PropositionItem>> evaluateResult = new HashMap<>();
+                    evaluateResult.put(
+                            surfaceA, MessagingTestUtils.createMessagingPropositionItemList(1));
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class)))
+                            .thenReturn(evaluateResult);
+
+                    Event testEvent = mock(Event.class);
+                    List<Surface> requestedSurfaces = new ArrayList<>();
+                    requestedSurfaces.add(surfaceA);
+                    requestedSurfaces.add(surfaceB);
+
+                    // test
+                    edgePersonalizationResponseHandler.removeOrReplaceContentCards(
+                            testEvent, requestedSurfaces);
+
+                    // verify surfaceA has new proposition (replaced, not merged)
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.getQualifiedContentCardsBySurface();
+                    assertEquals(1, result.size());
+
+                    List<Proposition> resultA = result.get(surfaceA);
+                    assertNotNull(resultA);
+                    assertEquals(1, resultA.size());
+                    assertEquals("newPropositionId", resultA.get(0).getUniqueId());
+
+                    // verify surfaceB is evicted
+                    assertNull(result.get(surfaceB));
+                });
+    }
+
+    // ========================================================================================
+    // addOrReplaceContentCards (incremental — should NOT evict)
+    // ========================================================================================
+    @Test
+    public void test_addOrReplaceContentCards_DoesNotEvictSurfaces_WhenNoQualifiedCards() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup: pre-populate contentCardsBySurface with two surfaces
+                    Surface surfaceA = new Surface("feed1");
+                    Surface surfaceB = new Surface("feed2");
+
+                    MessageTestConfig configA = new MessageTestConfig();
+                    configA.count = 2;
+                    List<Proposition> propositionsA =
+                            MessagingTestUtils.generateQualifiedContentCards(configA);
+                    MessageTestConfig configB = new MessageTestConfig();
+                    configB.count = 1;
+                    List<Proposition> propositionsB =
+                            MessagingTestUtils.generateQualifiedContentCards(configB);
+
+                    Map<Surface, List<Proposition>> contentCards = new HashMap<>();
+                    contentCards.put(surfaceA, propositionsA);
+                    contentCards.put(surfaceB, propositionsB);
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                            contentCards);
+                    assertEquals(
+                            2,
+                            edgePersonalizationResponseHandler
+                                    .getQualifiedContentCardsBySurface()
+                                    .size());
+
+                    // mock evaluate to return null (no qualified content cards)
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class))).thenReturn(null);
+
+                    Event testEvent = mock(Event.class);
+
+                    // test
+                    edgePersonalizationResponseHandler.addOrReplaceContentCards(testEvent);
+
+                    // verify all surfaces are preserved (additive behavior does not evict)
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.getQualifiedContentCardsBySurface();
+                    assertEquals(2, result.size());
+                    assertEquals(propositionsA, result.get(surfaceA));
+                    assertEquals(propositionsB, result.get(surfaceB));
+                });
+    }
+
+    // ========================================================================================
+    // removeOrReplaceContentCards — ContentCardMapper cleanup
+    // ========================================================================================
+    @Test
+    public void
+            test_removeOrReplaceContentCards_ClearsContentCardMapperEntries_WhenSurfaceEvicted() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surfaceA = new Surface("feed1");
+
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Proposition> propositionsA =
+                            MessagingTestUtils.generateQualifiedContentCards(config);
+                    String activityId = propositionsA.get(0).getActivityId();
+
+                    Map<Surface, List<Proposition>> contentCards = new HashMap<>();
+                    contentCards.put(surfaceA, propositionsA);
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                            contentCards);
+
+                    // pre-populate ContentCardMapper with an entry keyed by activityId
+                    seedContentCardMapper(activityId);
+                    assertNotNull(
+                            ContentCardMapper.getInstance().getContentCardSchemaData(activityId));
+
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class))).thenReturn(null);
+
+                    Event testEvent = mock(Event.class);
+                    List<Surface> requestedSurfaces = new ArrayList<>();
+                    requestedSurfaces.add(surfaceA);
+
+                    // test
+                    edgePersonalizationResponseHandler.removeOrReplaceContentCards(
+                            testEvent, requestedSurfaces);
+
+                    // verify surface evicted from cache
+                    assertNull(
+                            edgePersonalizationResponseHandler
+                                    .getQualifiedContentCardsBySurface()
+                                    .get(surfaceA));
+                    // verify ContentCardMapper entry was removed
+                    assertNull(
+                            ContentCardMapper.getInstance().getContentCardSchemaData(activityId));
+                });
+    }
+
+    @Test
+    public void
+            test_removeOrReplaceContentCards_RemovesOldAndStoresNewContentCardMapperEntries_OnReplacement() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surfaceA = new Surface("feed1");
+
+                    MessageTestConfig configOld = new MessageTestConfig();
+                    configOld.count = 1;
+                    List<Proposition> oldPropositions =
+                            MessagingTestUtils.generateQualifiedContentCards(configOld);
+                    String oldActivityId = oldPropositions.get(0).getActivityId();
+
+                    Map<Surface, List<Proposition>> contentCards = new HashMap<>();
+                    contentCards.put(surfaceA, oldPropositions);
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                            contentCards);
+
+                    // pre-populate ContentCardMapper with an entry keyed by activityId
+                    seedContentCardMapper(oldActivityId);
+                    assertNotNull(
+                            ContentCardMapper.getInstance()
+                                    .getContentCardSchemaData(oldActivityId));
+
+                    // set up propositionInfo so getPropositionsFromContentCardRulesEngine can
+                    // reconstruct propositions from evaluate() results
+                    String newPropositionId = "newPropositionId";
+                    String newActivityId = "newActivityId";
+                    try {
+                        Map<String, Object> activity = new HashMap<>();
+                        activity.put("id", newActivityId);
+                        Map<String, Object> scopeDetails = new HashMap<>();
+                        scopeDetails.put("activity", activity);
+                        scopeDetails.put("correlationID", "testCorrelationId");
+
+                        Map<String, Object> infoMap = new HashMap<>();
+                        infoMap.put("id", newPropositionId);
+                        infoMap.put("scope", surfaceA.getUri());
+                        infoMap.put("scopeDetails", scopeDetails);
+                        PropositionInfo info = PropositionInfo.create(infoMap);
+
+                        java.lang.reflect.Field propositionInfoField =
+                                EdgePersonalizationResponseHandler.class.getDeclaredField(
+                                        "propositionInfo");
+                        propositionInfoField.setAccessible(true);
+                        @SuppressWarnings("unchecked")
+                        Map<String, PropositionInfo> propositionInfoMap =
+                                (Map<String, PropositionInfo>)
+                                        propositionInfoField.get(
+                                                edgePersonalizationResponseHandler);
+                        propositionInfoMap.put("183639c4-cb37-458e-a8ef-4e130d767ebf", info);
+                    } catch (Exception e) {
+                        fail("Failed to set propositionInfo via reflection: " + e.getMessage());
+                    }
+
+                    Map<Surface, List<PropositionItem>> evaluateResult = new HashMap<>();
+                    evaluateResult.put(
+                            surfaceA, MessagingTestUtils.createMessagingPropositionItemList(1));
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class)))
+                            .thenReturn(evaluateResult);
+
+                    Event testEvent = mock(Event.class);
+                    List<Surface> requestedSurfaces = new ArrayList<>();
+                    requestedSurfaces.add(surfaceA);
+
+                    // test
+                    edgePersonalizationResponseHandler.removeOrReplaceContentCards(
+                            testEvent, requestedSurfaces);
+
+                    // verify old proposition's ContentCardMapper entry was removed
+                    assertNull(
+                            ContentCardMapper.getInstance()
+                                    .getContentCardSchemaData(oldActivityId));
+                    // verify new proposition is stored in ContentCardMapper (keyed by activityId)
+                    assertNotNull(
+                            ContentCardMapper.getInstance()
+                                    .getContentCardSchemaData(newActivityId));
+                });
+    }
+
+    // ========================================================================================
+    // removeOrReplaceContentCards — edge cases
+    // ========================================================================================
+    @Test
+    public void test_removeOrReplaceContentCards_NoOp_WhenRequestedSurfacesEmpty() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surfaceA = new Surface("feed1");
+
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Proposition> propositionsA =
+                            MessagingTestUtils.generateQualifiedContentCards(config);
+
+                    Map<Surface, List<Proposition>> contentCards = new HashMap<>();
+                    contentCards.put(surfaceA, propositionsA);
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                            contentCards);
+
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class))).thenReturn(null);
+
+                    Event testEvent = mock(Event.class);
+                    List<Surface> requestedSurfaces = new ArrayList<>();
+
+                    // test with empty requested surfaces
+                    edgePersonalizationResponseHandler.removeOrReplaceContentCards(
+                            testEvent, requestedSurfaces);
+
+                    // verify cache is unchanged
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.getQualifiedContentCardsBySurface();
+                    assertEquals(1, result.size());
+                    assertNotNull(result.get(surfaceA));
+                });
+    }
+
+    @Test
+    public void test_removeOrReplaceContentCards_NoError_WhenRequestedSurfaceNeverCached() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surfaceA = new Surface("feed1");
+
+                    when(mockContentCardRulesEngine.evaluate(any(Event.class))).thenReturn(null);
+
+                    Event testEvent = mock(Event.class);
+                    List<Surface> requestedSurfaces = new ArrayList<>();
+                    requestedSurfaces.add(surfaceA);
+
+                    // test — surfaceA was never in the cache
+                    edgePersonalizationResponseHandler.removeOrReplaceContentCards(
+                            testEvent, requestedSurfaces);
+
+                    // verify cache remains empty, no exceptions thrown
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.getQualifiedContentCardsBySurface();
+                    assertEquals(0, result.size());
                 });
     }
 }

@@ -66,6 +66,8 @@ public class MessagingService extends FirebaseMessagingService {
                 NotificationManagerCompat.from(context);
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
+        PushCallbackHandler.notifyReceived(payload);
+
         // dispatch Push notification displayed event
         final HashMap<String, Object> notificationData = new HashMap<>(remoteMessage.getData());
         final Event pushNotificationReceivedEvent =
@@ -86,7 +88,7 @@ public class MessagingService extends FirebaseMessagingService {
      * @param remoteMessage the message received from Firebase
      * @return true if the remote message originated from Adobe Journey Optimizer, false otherwise
      */
-    private static boolean isAJONotification(final @NonNull RemoteMessage remoteMessage) {
+    public static boolean isAJONotification(final @NonNull RemoteMessage remoteMessage) {
         // TODO: Use the newly introduced key "ajo_type" to identify Adobe push notifications.
         return remoteMessage.getData().containsKey(XDM_KEY)
                 || remoteMessage.getData().containsKey(MessagingConstants.Push.PayloadKeys.TITLE);

@@ -26,6 +26,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".ContentCardsTestActivity"
+            android:exported="false"
+            android:label="@string/title_activity_content_cards_test"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
             android:name=".ScrollingFeedActivity"
             android:exported="false"
             android:label="@string/title_activity_message_feed"

@@ -89,6 +89,7 @@ class ContentCardMapper private constructor() {
         return inboxPropositionItemMap[inboxId]
     }
 
+    @JvmName("clear")
     @VisibleForTesting
     internal fun clear() {
         contentCardSchemaDataMap.clear()
