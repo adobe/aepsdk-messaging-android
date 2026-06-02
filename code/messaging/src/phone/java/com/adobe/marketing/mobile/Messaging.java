@@ -158,19 +158,27 @@ public final class Messaging {
                             + " or empty");
         }
 
-        // Track push received once per messageId. This method is called once for the content
-        // intent and once for the delete intent for the same notification, so the dedup cache
-        // ensures the receive event is dispatched only on the first call.
-        handlePushReceived(messageId, data);
-
         return true;
     }
 
     /**
-     * Dispatches a push notification received event to track that a push notification was
-     * displayed. This is called internally by both the SDK-handled path ({@link
-     * MessagingService#handleRemoteMessage}) and the client-handled path ({@link
-     * #addPushTrackingDetails}).
+     * Dispatches a push notification received event ({@code pushTracking.receive}) to Adobe
+     * Experience Edge, recording that the push notification was delivered to the device.
+     *
+     * <p>This API covers two delivery paths:
+     *
+     * <ul>
+     *   <li><b>SDK-handled path:</b> called automatically by {@link
+     *       MessagingService#handleRemoteMessage} — no customer action needed.
+     *   <li><b>Customer-handled path:</b> when the customer builds and displays the notification
+     *       themselves (without delegating to {@link MessagingService}), they should call this
+     *       method explicitly from their {@code FirebaseMessagingService#onMessageReceived}
+     *       implementation to ensure push receive tracking is recorded.
+     * </ul>
+     *
+     * <p>A bounded in-memory dedup cache (cap 10, keyed on {@code messageId}) ensures the receive
+     * event is dispatched exactly once per notification per process, even if this method is called
+     * multiple times for the same message.
      *
      * @param messageId {@link String} the Firebase message ID from {@code
      *     RemoteMessage#getMessageId()}
