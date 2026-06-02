@@ -20,16 +20,22 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
  *
  * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal class SmallImageTemplateEventHandler(private val callback: ContentCardUIEventListener?) :
-    MessagingEventHandler<SmallImageTemplate, SmallImageCardUIState>(
-        callback
-    ) {
+internal class SmallImageTemplateEventHandler(
+    callback: ContentCardUIEventListener?
+) : MessagingEventHandler<SmallImageTemplate, SmallImageCardUIState>(callback) {
     override fun getNewState(event: UIEvent<SmallImageTemplate, SmallImageCardUIState>): SmallImageCardUIState {
         val currentState = event.aepUi.getState()
         return when (event) {
             is UIEvent.Dismiss -> currentState.copy(dismissed = true)
             is UIEvent.Display -> currentState.copy(displayed = true)
-            else -> currentState
+            is UIEvent.Interact -> {
+                if (currentState.read != null) {
+                    ContentCardSchemaDataUtils.setReadStatus(event.aepUi.getTemplate().id, true)
+                    currentState.copy(read = true)
+                } else {
+                    currentState
+                }
+            }
         }
     }
 }

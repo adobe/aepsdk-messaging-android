@@ -113,5 +113,37 @@ internal class AepStyleValidator {
             assertEquals(expectedStyle?.horizontalAlignment, style?.horizontalAlignment)
             assertEquals(expectedStyle?.verticalArrangement, style?.verticalArrangement)
         }
+
+        /**
+         * Validates that the given lazy row style is identical to the expected lazy row style.
+         *
+         * @param expectedStyle The expected lazy row style.
+         * @param style The lazy row style to be validated.
+         */
+        fun validateLazyRowStyle(expectedStyle: AepLazyRowStyle?, style: AepLazyRowStyle?) {
+            assertEquals(expectedStyle?.modifier, style?.modifier)
+            assertEquals(expectedStyle?.contentPadding, style?.contentPadding)
+            assertEquals(expectedStyle?.reverseLayout, style?.reverseLayout)
+            assertEquals(expectedStyle?.horizontalArrangement, style?.horizontalArrangement)
+            assertEquals(expectedStyle?.verticalAlignment, style?.verticalAlignment)
+            assertEquals(expectedStyle?.flingBehavior, style?.flingBehavior)
+            assertEquals(expectedStyle?.userScrollEnabled, style?.userScrollEnabled)
+        }
+
+        /**
+         * Validates that the given lazy column style is identical to the expected lazy column style.
+         *
+         * @param expectedStyle The expected lazy column style.
+         * @param style The lazy column style to be validated.
+         */
+        fun validateLazyColumnStyle(expectedStyle: AepLazyColumnStyle?, style: AepLazyColumnStyle?) {
+            assertEquals(expectedStyle?.modifier, style?.modifier)
+            assertEquals(expectedStyle?.contentPadding, style?.contentPadding)
+            assertEquals(expectedStyle?.reverseLayout, style?.reverseLayout)
+            assertEquals(expectedStyle?.verticalArrangement, style?.verticalArrangement)
+            assertEquals(expectedStyle?.horizontalAlignment, style?.horizontalAlignment)
+            assertEquals(expectedStyle?.flingBehavior, style?.flingBehavior)
+            assertEquals(expectedStyle?.userScrollEnabled, style?.userScrollEnabled)
+        }
     }
 }

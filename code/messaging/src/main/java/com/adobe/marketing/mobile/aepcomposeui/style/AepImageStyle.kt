@@ -19,12 +19,12 @@ import androidx.compose.ui.layout.ContentScale
 /**
  * Class representing the style for an AepImage composable.
  *
- * @param modifier The modifier for the image.
- * @param contentDescription The content description for the image.
- * @param alignment The alignment for the image.
- * @param contentScale The content scale for the image.
- * @param alpha The alpha value for the image.
- * @param colorFilter The color filter for the image.
+ * @property modifier The modifier for the image.
+ * @property contentDescription The content description for the image.
+ * @property alignment The alignment for the image.
+ * @property contentScale The content scale for the image.
+ * @property alpha The alpha value for the image.
+ * @property colorFilter The color filter for the image.
  */
 class AepImageStyle(
     var modifier: Modifier? = null,

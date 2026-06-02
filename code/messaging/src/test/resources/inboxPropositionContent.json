@@ -1,0 +1,20 @@
+{
+    "content": {
+        "heading": {
+            "content": "Trending Now Inbox"
+        },
+        "layout": {
+            "orientation": "horizontal"
+        },
+        "capacity": 10,
+        "emptyStateSettings": {
+            "message": {
+                "content": "Check back soon!"
+            }
+        },
+        "isUnreadEnabled": true
+    },
+    "meta": {
+        "metaKey": "metaValue"
+    }
+}

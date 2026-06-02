@@ -17,6 +17,15 @@
     <string name="title_activity_message_feed">Message Feed Activity</string>
     <string name="title_activity_single_feed">Single Feed Activity</string>
     <string name="title_activity_code_based">Code Based Experience Activity</string>
+    <string name="title_activity_content_cards_test">Content cards (test)</string>
+    <string name="content_cards_surfaces_label">Surfaces (comma-separated paths)</string>
+    <string name="content_cards_surfaces_hint">card/ms, card/ms2</string>
+    <string name="content_cards_refresh">Refresh messages</string>
+    <string name="content_cards_trigger_action_label">Trigger action (for qualification)</string>
+    <string name="content_cards_trigger_action_hint">Action name from your AJO rule</string>
+    <string name="content_cards_send_action">Send action</string>
+    <string name="content_cards_get_content">Get content</string>
+    <string name="content_cards_results_label">Content cards</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
 

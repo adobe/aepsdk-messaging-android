@@ -18,8 +18,10 @@ package com.adobe.marketing.mobile.aepcomposeui.state
  *
  * @property dismissed Indicates whether the card has been dismissed.
  * @property displayed Indicates whether the card is currently displayed.
+ * @property read Indicates whether the card has been read.
  */
 open class AepCardUIState(
     open val dismissed: Boolean,
-    open val displayed: Boolean
+    open val displayed: Boolean,
+    open val read: Boolean?
 )

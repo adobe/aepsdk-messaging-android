@@ -12,6 +12,8 @@
 package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
@@ -20,15 +22,20 @@ import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepInboxLayout
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.services.Log
+import com.adobe.marketing.mobile.services.NamedCollection
+import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.util.DataReader
 
 /**
@@ -38,7 +45,10 @@ import com.adobe.marketing.mobile.util.DataReader
  * the corresponding UI templates like [SmallImageTemplate], [LargeImageTemplate], [ImageOnlyTemplate].
  */
 internal object ContentCardSchemaDataUtils {
-    const val SELF_TAG = "ContentCardSchemaDataUtils"
+    private const val SELF_TAG = "ContentCardSchemaDataUtils"
+    private const val READ_STATE_NAMED_COLLECTION = "MessagingReadStateCollection"
+    private val readStateStoreCollection: NamedCollection?
+        get() = ServiceProvider.getInstance().dataStoreService?.getNamedCollection(READ_STATE_NAMED_COLLECTION)
 
     /**
      * Provides an [AepUI] instance from the given [AepUITemplate].
@@ -46,16 +56,31 @@ internal object ContentCardSchemaDataUtils {
      * @param uiTemplate The template to convert into a UI component.
      * @return An instance of [AepUI] representing the given template or null in case of unsupported template type.
      */
-    internal fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
+    internal fun getAepUI(uiTemplate: AepUITemplate, isRead: Boolean? = null): AepUI<*, *>? {
         return when (uiTemplate) {
             is SmallImageTemplate -> {
-                SmallImageUI(uiTemplate, SmallImageCardUIState())
+                SmallImageUI(
+                    uiTemplate,
+                    SmallImageCardUIState(
+                        read = isRead
+                    )
+                )
             }
             is LargeImageTemplate -> {
-                LargeImageUI(uiTemplate, LargeImageCardUIState())
+                LargeImageUI(
+                    uiTemplate,
+                    LargeImageCardUIState(
+                        read = isRead
+                    )
+                )
             }
             is ImageOnlyTemplate -> {
-                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
+                ImageOnlyUI(
+                    uiTemplate,
+                    ImageOnlyCardUIState(
+                        read = isRead
+                    )
+                )
             }
             else -> {
                 Log.error(
@@ -69,16 +94,23 @@ internal object ContentCardSchemaDataUtils {
     }
 
     /**
+     * Returns a new [AepUI] instance with the same template and state as [ui].
+     * Used so that [kotlinx.coroutines.flow.StateFlow] sees a distinct value and emits when state was updated in place.
+     */
+    internal fun copyAepUI(ui: AepUI<*, *>): AepUI<*, *> = when (ui) {
+        is SmallImageUI -> SmallImageUI(ui.getTemplate(), ui.getState())
+        is LargeImageUI -> LargeImageUI(ui.getTemplate(), ui.getState())
+        is ImageOnlyUI -> ImageOnlyUI(ui.getTemplate(), ui.getState())
+    }
+
+    /**
      * Builds an [AepUITemplate] from a given [Proposition].
      *
      * @param proposition The proposition containing the content card data.
      * @return The built [AepUITemplate] or null if the proposition is not a content card or parsing fails.
      */
     internal fun buildTemplate(proposition: Proposition): AepUITemplate? {
-
         if (!isContentCard(proposition)) return null
-
-        if (proposition.items.size <= 0) return null
 
         val propositionItem = proposition.items[0]
 
@@ -100,7 +132,7 @@ internal object ContentCardSchemaDataUtils {
             val contentMap =
                 contentCardSchemaData.content as? Map<String, Any>
                     ?: throw IllegalArgumentException("Content map is null")
-            val id = contentCardSchemaData.parent.proposition.uniqueId
+            val id = contentCardSchemaData.parent.proposition.getActivityId()
 
             val metaAdobeObject =
                 contentCardSchemaData.meta?.get(MessagingConstants.ContentCard.UIKeys.ADOBE)
@@ -410,5 +442,260 @@ internal object ContentCardSchemaDataUtils {
             )
         }
         return actionUrl
+    }
+
+    /**
+     * Creates an instance of [InboxTemplate] from a map of key-value pairs.
+     *
+     * @param proposition The proposition containing the inbox data.
+     * @return An instance of [InboxTemplate] or null if required fields are missing or invalid.
+     */
+    internal fun createInboxTemplate(proposition: Proposition): InboxTemplate? {
+        if (!isInbox(proposition)) {
+            return null
+        }
+
+        val contentMap = proposition.items[0].inboxSchemaData?.content
+        val inboxId = proposition.activityId
+        if (contentMap.isNullOrEmpty()) {
+            Log.error(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Failed to create inbox template for id: $inboxId, content map is null or empty for Inbox."
+            )
+            return null
+        }
+        val heading = createAepText(contentMap, MessagingConstants.Inbox.UIKeys.HEADING, inboxId)
+        val layout = createAepInboxLayout(contentMap, inboxId)
+        val capacity = DataReader.optInt(
+            contentMap,
+            MessagingConstants.Inbox.UIKeys.CAPACITY,
+            -1
+        )
+        if (heading == null || heading.content.isEmpty()) {
+            Log.error(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Failed to create inbox template for id: $inboxId, heading is missing or empty."
+            )
+            return null
+        }
+        if (layout == null) {
+            Log.error(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Failed to create inbox template for id: $inboxId, layout is missing or invalid."
+            )
+            return null
+        }
+        if (capacity <= 0) {
+            Log.error(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Failed to create inbox template for id: $inboxId, capacity is missing or invalid."
+            )
+            return null
+        }
+        val emptyStateSettings = DataReader.optTypedMap(
+            Any::class.java,
+            contentMap,
+            MessagingConstants.Inbox.UIKeys.EMPTY_STATE_SETTINGS,
+            emptyMap()
+        )
+        val unreadIndicator = DataReader.optTypedMap(
+            Any::class.java,
+            contentMap,
+            MessagingConstants.Inbox.UIKeys.UNREAD_INDICATOR,
+            emptyMap()
+        )
+        val unreadBg = DataReader.optTypedMap(
+            Any::class.java,
+            unreadIndicator,
+            MessagingConstants.Inbox.UIKeys.UNREAD_BG,
+            emptyMap()
+        )
+        return InboxTemplate(
+            id = inboxId,
+            heading = heading,
+            layout = layout,
+            capacity = capacity,
+            emptyMessage = createAepText(
+                emptyStateSettings,
+                MessagingConstants.Inbox.UIKeys.MESSAGE,
+                inboxId
+            ),
+            emptyImage = createAepImage(emptyStateSettings, inboxId),
+            isUnreadEnabled = DataReader.optBoolean(
+                contentMap,
+                MessagingConstants.Inbox.UIKeys.IS_UNREAD_ENABLED,
+                false
+            ),
+            unreadBgColor = createAepColor(
+                DataReader.optStringMap(
+                    unreadBg,
+                    MessagingConstants.Inbox.UIKeys.CLR,
+                    emptyMap()
+                ),
+                inboxId
+            ),
+            unreadIcon = createAepImage(
+                DataReader.optTypedMap(
+                    Any::class.java,
+                    unreadIndicator,
+                    MessagingConstants.Inbox.UIKeys.UNREAD_ICON,
+                    emptyMap()
+                ),
+                inboxId
+            ),
+            unreadIconAlignment = createAlignment(
+                DataReader.optString(
+                    unreadIndicator,
+                    MessagingConstants.Inbox.UIKeys.PLACEMENT,
+                    null
+                )
+            )
+        )
+    }
+
+    /**
+     * Creates an instance of [AepInboxLayout] from a map of key-value pairs.
+     *
+     * @param contentMap The map containing the inbox data.
+     * @param inboxId The unique identifier for the inbox.
+     * @return An instance of [AepInboxLayout] or null if the layout is missing or invalid.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createAepInboxLayout(
+        contentMap: Map<String, Any>,
+        inboxId: String
+    ): AepInboxLayout? {
+        val layoutMap = DataReader.optTypedMap(
+            Any::class.java,
+            contentMap,
+            MessagingConstants.Inbox.UIKeys.LAYOUT,
+            null
+        )
+        if (layoutMap.isNullOrEmpty() || layoutMap[MessagingConstants.Inbox.UIKeys.ORIENTATION] == null) {
+            Log.trace(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Layout is null in inbox with id $inboxId"
+            )
+            return null
+        }
+        return AepInboxLayout.from(
+            DataReader.optString(
+                layoutMap,
+                MessagingConstants.Inbox.UIKeys.ORIENTATION,
+                null
+            )
+        )
+    }
+
+    /**
+     * Creates an instance of [AepColor] from a map of key-value pairs.
+     *
+     * @param contentMap The map containing the inbox data.
+     * @param colorKey The key for the color in the map.
+     * @param inboxId The unique identifier for the inbox.
+     * @return An instance of [AepColor] or null if the light color is missing or invalid.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createAepColor(
+        contentMap: Map<String, Any>,
+        inboxId: String
+    ): AepColor? {
+        val lightColor =
+            DataReader.optString(contentMap, MessagingConstants.Inbox.UIKeys.LIGHT, null)
+                ?.toComposeColor()
+        if (lightColor == null) {
+            Log.trace(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Light color is null or invalid in inbox with id $inboxId"
+            )
+            return null
+        }
+        val darkColor = DataReader.optString(contentMap, MessagingConstants.Inbox.UIKeys.DARK, null)
+            ?.toComposeColor()
+        return AepColor(lightColor, darkColor)
+    }
+
+    /**
+     * Checks if the given [Proposition] is represents inbox.
+     *
+     * @param proposition The proposition to check.
+     * @return `true` if the proposition represents an inbox, `false` otherwise.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun isInbox(proposition: Proposition): Boolean {
+        return proposition.items.isNotEmpty() &&
+            proposition.items[0]?.schema == SchemaType.INBOX
+    }
+
+    /**
+     * Creates an instance of [Alignment] from a string value.
+     *
+     * @param alignment The string representation of the alignment.
+     * @return An instance of [Alignment] or null if the alignment is invalid.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createAlignment(alignment: String?): Alignment? {
+        return when (alignment?.lowercase()) {
+            MessagingConstants.Inbox.UIKeys.TOP_LEFT -> Alignment.TopStart
+            MessagingConstants.Inbox.UIKeys.TOP_RIGHT -> Alignment.TopEnd
+            MessagingConstants.Inbox.UIKeys.BOTTOM_LEFT -> Alignment.BottomStart
+            MessagingConstants.Inbox.UIKeys.BOTTOM_RIGHT -> Alignment.BottomEnd
+            else -> null
+        }
+    }
+
+    /**
+     * Sets the read status for a content card activity ID.
+     *
+     * @param activityId The activity ID of the content card proposition.
+     * @param isRead The read status to set (true for read, false for unread).
+     */
+    internal fun setReadStatus(activityId: String, isRead: Boolean) {
+        readStateStoreCollection?.setBoolean(activityId, isRead)
+    }
+
+    /**
+     * Retrieves the read status for a content card based on the proposition's activity ID.
+     *
+     * @param activityId The activity ID of the content card proposition.
+     * @return The read status (true for read, false for unread) or null if not set.
+     */
+    internal fun getReadStatus(activityId: String): Boolean? {
+        return readStateStoreCollection?.getBoolean(activityId, false)
+    }
+}
+
+/**
+ * Parses a hex color string in `#RRGGBBAA` format into a Compose [Color].
+ *
+ * @return The parsed [Color], or null if the string is not a valid 6- or 8-digit hex color.
+ */
+internal fun String.toComposeColor(): Color? {
+    val hex = removePrefix("#")
+    return try {
+        when (hex.length) {
+            6 -> {
+                val r = hex.substring(0, 2).toInt(16)
+                val g = hex.substring(2, 4).toInt(16)
+                val b = hex.substring(4, 6).toInt(16)
+                Color(r, g, b)
+            }
+            8 -> {
+                val r = hex.substring(0, 2).toInt(16)
+                val g = hex.substring(2, 4).toInt(16)
+                val b = hex.substring(4, 6).toInt(16)
+                val a = hex.substring(6, 8).toInt(16)
+                Color(r, g, b, a)
+            }
+            else -> null
+        }
+    } catch (e: NumberFormatException) {
+        null
     }
 }

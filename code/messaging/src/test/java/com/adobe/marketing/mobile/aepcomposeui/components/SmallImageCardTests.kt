@@ -43,7 +43,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.test.core.app.ApplicationProvider
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
@@ -62,37 +61,26 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
-import com.adobe.marketing.mobile.messaging.MessagingTestUtils
+import com.adobe.marketing.mobile.messaging.ContentCardImageManager
 import com.adobe.marketing.mobile.messaging.R
-import com.adobe.marketing.mobile.services.NetworkCallback
-import com.adobe.marketing.mobile.services.Networking
-import com.adobe.marketing.mobile.services.ServiceProvider
-import com.adobe.marketing.mobile.services.caching.CacheService
 import com.example.compose.TestTheme
 import com.github.takahirom.roborazzi.captureRoboImage
+import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.MockedStatic
-import org.mockito.Mockito
-import org.mockito.Mockito.any
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.whenever
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowLog
-import java.net.HttpURLConnection
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -145,40 +133,37 @@ class SmallImageCardComposableTests(
         }
     }
 
-    @Mock
-    private lateinit var mockNetworkService: Networking
-
-    @Mock
-    private lateinit var mockServiceProvider: ServiceProvider
-
-    private lateinit var mockedStaticServiceProvider: MockedStatic<ServiceProvider>
+    private lateinit var mockLightBitmap: android.graphics.Bitmap
+    private lateinit var mockDarkBitmap: android.graphics.Bitmap
 
     @Before
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
-        mockedStaticServiceProvider = mockStatic(ServiceProvider::class.java)
-        mockedStaticServiceProvider.`when`<Any> { ServiceProvider.getInstance() }.thenReturn(mockServiceProvider)
-        `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
-
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val mockBitmap = BitmapFactory.decodeResource(context.resources, android.R.drawable.ic_menu_report_image)
-
-        val simulatedResponse = MessagingTestUtils.simulateNetworkResponse(HttpURLConnection.HTTP_OK, MessagingTestUtils.bitmapToInputStream(mockBitmap), emptyMap())
-        `when`(mockNetworkService.connectAsync(any(), any())).thenAnswer {
-            val callback = it.getArgument<NetworkCallback>(1)
-            callback.call(simulatedResponse)
-        }
+        MockKAnnotations.init(this)
+        mockLightBitmap = BitmapFactory.decodeResource(
+            RuntimeEnvironment.getApplication().resources,
+            android.R.drawable.ic_menu_report_image
+        )
+        mockDarkBitmap = BitmapFactory.decodeResource(
+            RuntimeEnvironment.getApplication().resources,
+            android.R.drawable.ic_menu_info_details
+        )
     }
 
     @After
     fun tearDown() {
-        mockedStaticServiceProvider.close()
+        unmockkAll()
     }
 
     @Test
     fun `Test SmallImageCard with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<android.graphics.Bitmap>) -> Unit>().invoke(Result.success(mockLightBitmap))
+        }
 
         // test
         setComposeContent(
@@ -200,6 +185,12 @@ class SmallImageCardComposableTests(
     fun `Test SmallImageCard with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<android.graphics.Bitmap>) -> Unit>().invoke(Result.success(mockDarkBitmap))
+        }
 
         // test
         setComposeContent(
@@ -223,6 +214,12 @@ class SmallImageCardComposableTests(
     fun `Test custom style is applied to enabled SmallImageCard`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<android.graphics.Bitmap>) -> Unit>().invoke(Result.success(mockLightBitmap))
+        }
 
         // test
         setComposeContent(
@@ -244,6 +241,12 @@ class SmallImageCardComposableTests(
     fun `Test custom style is applied to disabled SmallImageCard`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<android.graphics.Bitmap>) -> Unit>().invoke(Result.success(mockLightBitmap))
+        }
 
         // test
         setComposeContent(
@@ -265,12 +268,18 @@ class SmallImageCardComposableTests(
     fun `Test custom style is applied to enabled SmallImageCard in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<android.graphics.Bitmap>) -> Unit>().invoke(Result.success(mockDarkBitmap))
+        }
 
         // test
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            TestTheme(useDarkTheme = false) {
+            TestTheme(useDarkTheme = true) {
                 SmallImageCard(
                     ui = mockSmallImageUI,
                     style = mockCustomSmallImageUIStyle(enabled = true),
@@ -288,12 +297,18 @@ class SmallImageCardComposableTests(
     fun `Test custom style is applied to disabled SmallImageCard in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<android.graphics.Bitmap>) -> Unit>().invoke(Result.success(mockDarkBitmap))
+        }
 
         // test
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            TestTheme(useDarkTheme = false) {
+            TestTheme(useDarkTheme = true) {
                 SmallImageCard(
                     ui = mockSmallImageUI,
                     style = mockCustomSmallImageUIStyle(enabled = false),
@@ -437,56 +452,45 @@ class SmallImageCardBehaviorTests {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    @Mock
     private lateinit var mockAepUIEventObserver: AepUIEventObserver
-
-    @Mock
-    private lateinit var mockCacheService: CacheService
-    @Mock
-    private lateinit var mockServiceProvider: ServiceProvider
-    private lateinit var mockedStaticServiceProvider: MockedStatic<ServiceProvider>
-
-    @Mock
-    private lateinit var mockNetworkService: Networking
+    private lateinit var mockBitmap: android.graphics.Bitmap
+    private val capturedEvents = mutableListOf<UIEvent<*, *>>()
 
     @Before
     fun setUp() {
         ShadowLog.clear()
         ShadowLog.setupLogging()
+        capturedEvents.clear()
 
-        MockitoAnnotations.openMocks(this)
-        mockedStaticServiceProvider = mockStatic(ServiceProvider::class.java)
-        mockedStaticServiceProvider.`when`<Any> { ServiceProvider.getInstance() }.thenReturn(mockServiceProvider)
-
-        whenever(
-            mockCacheService.set(
-                org.mockito.kotlin.any(),
-                org.mockito.kotlin.any(),
-                org.mockito.kotlin.any()
-            )
-        ).thenReturn(false)
-
-        `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
-
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val mockBitmap = BitmapFactory.decodeResource(context.resources, android.R.drawable.ic_menu_report_image)
-
-        val simulatedResponse = MessagingTestUtils.simulateNetworkResponse(HttpURLConnection.HTTP_OK, MessagingTestUtils.bitmapToInputStream(mockBitmap), emptyMap())
-        `when`(mockNetworkService.connectAsync(any(), any())).thenAnswer {
-            val callback = it.getArgument<NetworkCallback>(1)
-            callback.call(simulatedResponse)
+        MockKAnnotations.init(this)
+        mockAepUIEventObserver = mockk(relaxed = true)
+        every { mockAepUIEventObserver.onEvent(any()) } answers {
+            capturedEvents.add(firstArg())
         }
+        mockBitmap = BitmapFactory.decodeResource(
+            RuntimeEnvironment.getApplication().resources,
+            android.R.drawable.ic_menu_report_image
+        )
     }
 
     @After
     fun tearDown() {
-        mockedStaticServiceProvider.close()
-        Mockito.validateMockitoUsage()
+        unmockkAll()
+    }
+
+    private fun setupImageMocking() {
+        mockkObject(ContentCardImageManager)
+        every {
+            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
+        } answers {
+            thirdArg<(Result<android.graphics.Bitmap>) -> Unit>().invoke(Result.success(mockBitmap))
+        }
     }
 
     @Test
     fun `Test SmallImageCard card click behavior`() {
         // setup
+        setupImageMocking()
         composeTestRule.setContent {
             SmallImageCard(
                 ui = mockSmallImageUI,
@@ -499,15 +503,14 @@ class SmallImageCardBehaviorTests {
         composeTestRule.onRoot().performClick()
 
         // verify
-        val uiEventArgumentCaptor = argumentCaptor<UIEvent<*, *>>()
-        verify(mockAepUIEventObserver, times(2)).onEvent(uiEventArgumentCaptor.capture())
+        assertEquals(2, capturedEvents.size)
 
-        val displayEvent = uiEventArgumentCaptor.allValues[0]
+        val displayEvent = capturedEvents[0]
         assertTrue(displayEvent is UIEvent.Display)
         assertTrue(displayEvent.aepUi is SmallImageUI)
         assertEquals("mockSmallImageCardId", (displayEvent.aepUi.getTemplate() as SmallImageTemplate).id)
 
-        val interactEvent = uiEventArgumentCaptor.allValues[1]
+        val interactEvent = capturedEvents[1]
         assertTrue(interactEvent is UIEvent.Interact)
         assertTrue(interactEvent.aepUi is SmallImageUI)
         assertTrue(interactEvent.action is UIAction.Click)
@@ -519,6 +522,7 @@ class SmallImageCardBehaviorTests {
     @Test
     fun `Test SmallImageCard image click behavior`() {
         // setup
+        setupImageMocking()
         composeTestRule.setContent {
             SmallImageCard(
                 ui = mockSmallImageUI,
@@ -538,15 +542,14 @@ class SmallImageCardBehaviorTests {
         composeTestRule.onNodeWithTag("test_image", true).performClick()
 
         // verify
-        val uiEventArgumentCaptor = argumentCaptor<UIEvent<*, *>>()
-        verify(mockAepUIEventObserver, times(2)).onEvent(uiEventArgumentCaptor.capture())
+        assertEquals(2, capturedEvents.size)
 
-        val displayEvent = uiEventArgumentCaptor.allValues[0]
+        val displayEvent = capturedEvents[0]
         assertTrue(displayEvent is UIEvent.Display)
         assertTrue(displayEvent.aepUi is SmallImageUI)
         assertEquals("mockSmallImageCardId", (displayEvent.aepUi.getTemplate() as SmallImageTemplate).id)
 
-        val interactEvent = uiEventArgumentCaptor.allValues[1]
+        val interactEvent = capturedEvents[1]
         assertTrue(interactEvent is UIEvent.Interact)
         assertTrue(interactEvent.aepUi is SmallImageUI)
         assertTrue(interactEvent.action is UIAction.Click)
@@ -558,6 +561,7 @@ class SmallImageCardBehaviorTests {
     @Test
     fun `Test SmallImageCard card button click behavior`() {
         // setup
+        setupImageMocking()
         composeTestRule.setContent {
             SmallImageCard(
                 ui = mockSmallImageUI,
@@ -570,15 +574,14 @@ class SmallImageCardBehaviorTests {
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         // verify
-        val uiEventArgumentCaptor = argumentCaptor<UIEvent<*, *>>()
-        verify(mockAepUIEventObserver, times(2)).onEvent(uiEventArgumentCaptor.capture())
+        assertEquals(2, capturedEvents.size)
 
-        val displayEvent = uiEventArgumentCaptor.allValues[0]
+        val displayEvent = capturedEvents[0]
         assertTrue(displayEvent is UIEvent.Display)
         assertTrue(displayEvent.aepUi is SmallImageUI)
         assertEquals("mockSmallImageCardId", (displayEvent.aepUi.getTemplate() as SmallImageTemplate).id)
 
-        val interactEvent = uiEventArgumentCaptor.allValues[1]
+        val interactEvent = capturedEvents[1]
         assertTrue(interactEvent is UIEvent.Interact)
         assertTrue(interactEvent.aepUi is SmallImageUI)
         assertTrue(interactEvent.action is UIAction.Click)
@@ -590,6 +593,7 @@ class SmallImageCardBehaviorTests {
     @Test
     fun `Test SmallImageCard card dismiss click behavior`() {
         // setup
+        setupImageMocking()
         composeTestRule.setContent {
             SmallImageCard(
                 ui = mockSmallImageUI,
@@ -610,15 +614,14 @@ class SmallImageCardBehaviorTests {
         composeTestRule.onNodeWithTag("dismiss_button").performClick()
 
         // verify
-        val uiEventArgumentCaptor = argumentCaptor<UIEvent<*, *>>()
-        verify(mockAepUIEventObserver, times(2)).onEvent(uiEventArgumentCaptor.capture())
+        assertEquals(2, capturedEvents.size)
 
-        val displayEvent = uiEventArgumentCaptor.allValues[0]
+        val displayEvent = capturedEvents[0]
         assertTrue(displayEvent is UIEvent.Display)
         assertTrue(displayEvent.aepUi is SmallImageUI)
         assertEquals("mockSmallImageCardId", (displayEvent.aepUi.getTemplate() as SmallImageTemplate).id)
 
-        val dismissEvent = uiEventArgumentCaptor.allValues[1]
+        val dismissEvent = capturedEvents[1]
         assertTrue(dismissEvent is UIEvent.Dismiss)
         assertTrue(dismissEvent.aepUi is SmallImageUI)
         assertEquals("mockSmallImageCardId", (dismissEvent.aepUi.getTemplate() as SmallImageTemplate).id)
@@ -627,6 +630,7 @@ class SmallImageCardBehaviorTests {
     @Test
     fun `Test SmallImageCard card dismiss click behavior with clickable provided through custom style`() {
         // setup
+        setupImageMocking()
         val customDismissClickLogMsg = "Custom dismiss button clickable called"
         composeTestRule.setContent {
             SmallImageCard(
@@ -651,10 +655,9 @@ class SmallImageCardBehaviorTests {
         composeTestRule.onNodeWithTag("dismiss_button").performClick()
 
         // verify
-        val uiEventArgumentCaptor = argumentCaptor<UIEvent<*, *>>()
-        verify(mockAepUIEventObserver, times(2)).onEvent(uiEventArgumentCaptor.capture())
+        assertEquals(2, capturedEvents.size)
 
-        val displayEvent = uiEventArgumentCaptor.allValues[0]
+        val displayEvent = capturedEvents[0]
         assertTrue(displayEvent is UIEvent.Display)
         assertTrue(displayEvent.aepUi is SmallImageUI)
         assertEquals("mockSmallImageCardId", (displayEvent.aepUi.getTemplate() as SmallImageTemplate).id)
@@ -664,7 +667,7 @@ class SmallImageCardBehaviorTests {
         val logMessageFound = logItems.any { it.tag == "SmallImageCardTests" && it.msg == customDismissClickLogMsg }
         assertFalse(logMessageFound, "Log message $customDismissClickLogMsg not found")
 
-        val dismissEvent = uiEventArgumentCaptor.allValues[1]
+        val dismissEvent = capturedEvents[1]
         assertTrue(dismissEvent is UIEvent.Dismiss)
         assertTrue(dismissEvent.aepUi is SmallImageUI)
         assertEquals("mockSmallImageCardId", (dismissEvent.aepUi.getTemplate() as SmallImageTemplate).id)

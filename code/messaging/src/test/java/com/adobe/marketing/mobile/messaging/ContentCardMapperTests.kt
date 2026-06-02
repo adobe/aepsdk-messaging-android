@@ -40,7 +40,7 @@ class ContentCardMapperTests {
         mockContentCardSchemaData.parent = mockPropositionItem
         mockPropositionItem.propositionReference = SoftReference(mockProposition)
         `when`(mockPropositionItem.proposition).thenReturn(mockProposition)
-        `when`(mockProposition.uniqueId).thenReturn("uniqueId")
+        `when`(mockProposition.activityId).thenReturn("uniqueActivityId")
     }
 
     @AfterTest
@@ -54,7 +54,7 @@ class ContentCardMapperTests {
         val mapper = ContentCardMapper.instance
         mapper.storeContentCardSchemaData(mockContentCardSchemaData)
 
-        val result = mapper.getContentCardSchemaData("uniqueId")
+        val result = mapper.getContentCardSchemaData("uniqueActivityId")
         assertEquals(mockContentCardSchemaData, result)
     }
 
@@ -84,16 +84,80 @@ class ContentCardMapperTests {
 
         mapper.storeContentCardSchemaData(mockContentCardSchemaData)
 
-        assertNull(mapper.getContentCardSchemaData("uniqueId"))
+        assertNull(mapper.getContentCardSchemaData("uniqueActivityId"))
     }
 
     @Test
     fun `Remove content card schema data with valid id`() {
         val mapper = ContentCardMapper.instance
         mapper.storeContentCardSchemaData(mockContentCardSchemaData)
-        val result = mapper.getContentCardSchemaData("uniqueId")
+        val result = mapper.getContentCardSchemaData("uniqueActivityId")
         assertEquals(mockContentCardSchemaData, result)
-        mapper.removeContentCardSchemaData("uniqueId")
-        assertNull(mapper.getContentCardSchemaData("uniqueId"))
+        mapper.removeContentCardSchemaData("uniqueActivityId")
+        assertNull(mapper.getContentCardSchemaData("uniqueActivityId"))
+    }
+
+    @Test
+    fun `Store inbox proposition item successfully`() {
+        val mapper = ContentCardMapper.instance
+        mapper.storeInboxPropositionItem("inboxId123", mockPropositionItem)
+
+        val result = mapper.getInboxPropositionItem("inboxId123")
+        assertEquals(mockPropositionItem, result)
+    }
+
+    @Test
+    fun `Store inbox proposition item with empty id does nothing`() {
+        val mapper = ContentCardMapper.instance
+        mapper.storeInboxPropositionItem("", mockPropositionItem)
+
+        val result = mapper.getInboxPropositionItem("")
+        assertNull(result)
+    }
+
+    @Test
+    fun `Store inbox proposition item replaces previous item for same id`() {
+        val mapper = ContentCardMapper.instance
+        val firstItem = mock(PropositionItem::class.java)
+        val secondItem = mock(PropositionItem::class.java)
+
+        mapper.storeInboxPropositionItem("inboxId123", firstItem)
+        mapper.storeInboxPropositionItem("inboxId123", secondItem)
+
+        val result = mapper.getInboxPropositionItem("inboxId123")
+        assertEquals(secondItem, result)
+    }
+
+    @Test
+    fun `Store multiple inbox proposition items with different ids`() {
+        val mapper = ContentCardMapper.instance
+        val firstItem = mock(PropositionItem::class.java)
+        val secondItem = mock(PropositionItem::class.java)
+
+        mapper.storeInboxPropositionItem("inboxId1", firstItem)
+        mapper.storeInboxPropositionItem("inboxId2", secondItem)
+
+        val result1 = mapper.getInboxPropositionItem("inboxId1")
+        val result2 = mapper.getInboxPropositionItem("inboxId2")
+
+        assertEquals(firstItem, result1)
+        assertEquals(secondItem, result2)
+    }
+
+    @Test
+    fun `Get inbox proposition item returns null when not stored`() {
+        val mapper = ContentCardMapper.instance
+
+        val result = mapper.getInboxPropositionItem("nonExistentId")
+        assertNull(result)
+    }
+
+    @Test
+    fun `Get inbox proposition item returns null for empty id`() {
+        val mapper = ContentCardMapper.instance
+        mapper.storeInboxPropositionItem("inboxId123", mockPropositionItem)
+
+        val result = mapper.getInboxPropositionItem("")
+        assertNull(result)
     }
 }
