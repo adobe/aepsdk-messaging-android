@@ -1972,8 +1972,7 @@ public class InternalMessagingUtilsTests {
     @org.junit.Test
     public void testIsPushNotificationReceivedEvent_returnTrue_validEvent() {
         final Map<String, Object> data = new HashMap<>();
-        data.put(
-                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+        data.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
         final Event event =
                 new Event.Builder(
                                 "Push notification received",
@@ -2003,8 +2002,7 @@ public class InternalMessagingUtilsTests {
     @org.junit.Test
     public void testIsPushNotificationReceivedEvent_returnFalse_wrongEventType() {
         final Map<String, Object> data = new HashMap<>();
-        data.put(
-                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+        data.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
         final Event event =
                 new Event.Builder(
                                 "Push notification received",
@@ -2018,8 +2016,7 @@ public class InternalMessagingUtilsTests {
     @org.junit.Test
     public void testIsPushNotificationReceivedEvent_returnFalse_wrongEventSource() {
         final Map<String, Object> data = new HashMap<>();
-        data.put(
-                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+        data.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
         final Event event =
                 new Event.Builder(
                                 "Push notification received",
@@ -2034,8 +2031,7 @@ public class InternalMessagingUtilsTests {
     public void
             testIsPushNotificationReceivedEvent_returnFalse_pushNotificationReceivedFlagFalse() {
         final Map<String, Object> data = new HashMap<>();
-        data.put(
-                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, false);
+        data.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, false);
         final Event event =
                 new Event.Builder(
                                 "Push notification received",

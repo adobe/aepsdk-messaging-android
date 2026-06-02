@@ -131,8 +131,8 @@ public class MessagingService extends FirebaseMessagingService {
      *       the classpath and applies the cached configuration.
      *   <li>Invokes {@code onInitComplete} from the initialize completion callback — the FCM
      *       service thread is not blocked while initialization runs.
-     *   <li>Runs at most once per process. Subsequent calls fire {@code onInitComplete}
-     *       immediately so deferred push-receive dispatches still execute.
+     *   <li>Runs at most once per process. Subsequent calls fire {@code onInitComplete} immediately
+     *       so deferred push-receive dispatches still execute.
      * </ul>
      *
      * <p>Lifecycle auto-tracking is disabled for this code path. We are running on the FCM service
@@ -221,8 +221,7 @@ public class MessagingService extends FirebaseMessagingService {
      *
      * @return the persisted appId, or {@code null} if not present or unreadable.
      */
-    @androidx.annotation.Nullable
-    private static String readCachedAppId() {
+    @androidx.annotation.Nullable private static String readCachedAppId() {
         try {
             final NamedCollection store =
                     ServiceProvider.getInstance()

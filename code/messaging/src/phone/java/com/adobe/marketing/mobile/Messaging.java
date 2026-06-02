@@ -75,8 +75,8 @@ public final class Messaging {
     private static final String EVENT_TYPE_PUSH_TRACKING_RECEIVED = "pushTracking.receive";
 
     // Bounded in-memory cache to deduplicate push receive events.
-    // addPushTrackingDetails() is called once per intent (content + delete), so the same
-    // messageId would trigger two events for a single notification without this guard.
+    // Guards against multiple handlePushReceived calls for the same messageId within a process
+    // lifetime — e.g. FCM at-least-once burst delivery after a FLAG_STOPPED window clears.
     private static final int MAX_DEDUP_CACHE_SIZE = 10;
 
     @SuppressWarnings("serial")

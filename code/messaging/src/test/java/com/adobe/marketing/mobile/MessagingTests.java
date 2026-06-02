@@ -1374,8 +1374,8 @@ public class MessagingTests {
     // ========================================================================================
 
     /**
-     * Reset the dedup LRU between handlePushReceived tests so cached messageIds from earlier
-     * tests don't silently drop new dispatches.
+     * Reset the dedup LRU between handlePushReceived tests so cached messageIds from earlier tests
+     * don't silently drop new dispatches.
      */
     private void resetDedupCache() throws Exception {
         final java.lang.reflect.Field f =
@@ -1403,21 +1403,18 @@ public class MessagingTests {
                     assertEquals("Push notification received", dispatched.getName());
                     assertEquals(EventType.MESSAGING, dispatched.getType());
                     assertEquals(EventSource.REQUEST_CONTENT, dispatched.getSource());
+                    assertEquals("test-msg-id", dispatched.getEventData().get("messageId"));
                     assertEquals(
-                            "test-msg-id", dispatched.getEventData().get("messageId"));
-                    assertEquals(
-                            "pushTracking.receive",
-                            dispatched.getEventData().get("eventType"));
+                            "pushTracking.receive", dispatched.getEventData().get("eventType"));
                     assertEquals(true, dispatched.getEventData().get("pushnotificationreceived"));
-                    assertEquals(
-                            "{\"cjm\":{}}", dispatched.getEventData().get("adobe_xdm"));
+                    assertEquals("{\"cjm\":{}}", dispatched.getEventData().get("adobe_xdm"));
                 });
     }
 
     /**
      * Helper: returns the number of times MobileCore.dispatchEvent was called inside the captor
-     * passed to runWithMockedMobileCore. Mockito's ArgumentCaptor stores all captured values in
-     * a list — getAllValues().size() is the call count.
+     * passed to runWithMockedMobileCore. Mockito's ArgumentCaptor stores all captured values in a
+     * list — getAllValues().size() is the call count.
      */
     private int dispatchCount(final ArgumentCaptor<Event> captor) {
         try {
@@ -1507,8 +1504,7 @@ public class MessagingTests {
                     // Only ONE dispatch — the LRU cache absorbs the second call.
                     assertEquals(1, dispatchCount(eventCaptor));
                     assertEquals(
-                            "dup-msg-id",
-                            eventCaptor.getValue().getEventData().get("messageId"));
+                            "dup-msg-id", eventCaptor.getValue().getEventData().get("messageId"));
                 });
     }
 

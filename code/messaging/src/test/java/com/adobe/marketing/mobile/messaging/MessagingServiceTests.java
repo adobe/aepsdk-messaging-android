@@ -148,8 +148,8 @@ public class MessagingServiceTests {
      * clean slate. Required because {@code MessagingService.selfInitTried} and {@code
      * MessagingExtension.registered} persist across tests in the same JVM run.
      */
-    private static void resetStaticField(final Class<?> clazz, final String name, final Object value)
-            throws Exception {
+    private static void resetStaticField(
+            final Class<?> clazz, final String name, final Object value) throws Exception {
         final Field f = clazz.getDeclaredField(name);
         f.setAccessible(true);
         f.set(null, value);
@@ -283,8 +283,7 @@ public class MessagingServiceTests {
         assertEquals("Push notification received", dispatched.getName());
         assertEquals("test-message-id", dispatched.getEventData().get("messageId"));
         assertEquals(true, dispatched.getEventData().get("pushnotificationreceived"));
-        assertEquals(
-                "pushTracking.receive", dispatched.getEventData().get("eventType"));
+        assertEquals("pushTracking.receive", dispatched.getEventData().get("eventType"));
 
         // MobileCore.initialize must NOT be called because the extension is already registered.
         mobileCore.verify(
@@ -315,9 +314,7 @@ public class MessagingServiceTests {
         mobileCore.verify(
                 () ->
                         MobileCore.initialize(
-                                eq(application),
-                                any(InitOptions.class),
-                                callbackCaptor.capture()));
+                                eq(application), any(InitOptions.class), callbackCaptor.capture()));
 
         // The dispatch is deferred — no Edge event fires until the initialize callback runs.
         mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), never());
