@@ -33,6 +33,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.Assurance
 import com.adobe.marketing.mobile.messaging.MessagingUtils
 import com.adobe.marketing.mobile.messaging.NotificationInteractionReceiver
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
@@ -42,9 +43,12 @@ import com.adobe.marketing.mobile.services.ui.Presentable
 import com.adobe.marketing.mobile.services.ui.PresentationDelegate
 import com.adobe.marketing.mobile.services.ui.PresentationListener
 import com.adobe.marketing.mobile.util.StringUtils
+import com.adobe.marketing.mobile.messaging.MessagingService
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.launch
+import java.util.UUID
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
@@ -272,14 +276,24 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // handle Assurance deep link
+        intent?.data?.let { Assurance.startSession(it.toString()) }
+
         // Request push permissions for Android 33
         askNotificationPermission()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.data?.let { Assurance.startSession(it.toString()) }
     }
 
     private fun setupButtonClickListeners() {
         binding.btnGetLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
+
+        binding.btnTestAjoBasic.setOnClickListener { showAjoBasicPicker() }
 
         binding.btnTriggerFullscreenIAM.setOnClickListener {
             val trigger = binding.editText.text.toString()
@@ -331,6 +345,38 @@ class MainActivity : ComponentActivity() {
         binding.btnResetIdentities.setOnClickListener {
             MobileCore.resetIdentities()
         }
+    }
+
+    private fun showAjoBasicPicker() {
+        val files = assets.list("ajo_basic")?.toList().orEmpty()
+        if (files.isEmpty()) {
+            Toast.makeText(this, "No ajo_basic assets found", Toast.LENGTH_SHORT).show()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Select AJO Basic payload")
+            .setItems(files.toTypedArray()) { _, i -> fireAjoBasicPush("ajo_basic/${files[i]}") }
+            .show()
+    }
+
+    private fun fireAjoBasicPush(assetPath: String) {
+        // 1. Load the JSON asset into the same flat Map<String,String> FCM would deliver.
+        val json = assets.open(assetPath).bufferedReader().use { it.readText() }
+        val obj = JSONObject(json)
+        val data = HashMap<String, String>()
+        obj.keys().forEach { key -> data[key] = obj.getString(key) }
+
+        // 2. Build a RemoteMessage exactly as FCM delivers it.
+        //    setMessageId is required — handleRemoteMessage calls getMessageId().hashCode().
+        val remoteMessage = RemoteMessage.Builder("messagingsample@gcm.googleapis.com")
+            .setMessageId(UUID.randomUUID().toString())
+            .setData(data)
+            .build()
+
+        // 3. Run the real integration path:
+        //    isAJONotification → adb_template_type fork → NotificationBuilder → display + XDM event.
+        val handled = MessagingService.handleRemoteMessage(this, remoteMessage)
+        Toast.makeText(this, if (handled) "AJO push handled ✓" else "Not handled — check logs", Toast.LENGTH_SHORT).show()
     }
 
     private suspend fun getRegToken(): String {

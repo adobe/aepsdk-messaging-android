@@ -20,7 +20,10 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationBuilder;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationConstructionFailedException;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.HashMap;
@@ -58,8 +61,33 @@ public class MessagingService extends FirebaseMessagingService {
             return false;
         }
 
-        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
-        final Notification notification = MessagingPushBuilder.build(payload, context);
+        final Notification notification;
+        final String templateType =
+                remoteMessage.getData().get(MessagingConstants.Push.PayloadKeys.TEMPLATE_TYPE);
+
+        if (!StringUtils.isNullOrEmpty(templateType)) {
+            // AJO template payload -> delegate rendering to the UI notificationbuilder library
+            try {
+                notification =
+                        NotificationBuilder.constructNotificationBuilder(
+                                        remoteMessage.getData(),
+                                        MessagingPushTrackerActivity.class,
+                                        NotificationInteractionReceiver.class)
+                                .build();
+            } catch (final NotificationConstructionFailedException | IllegalArgumentException e) {
+                Log.warning(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Failed to build templated notification, ignoring the push message. Error:"
+                                + " %s",
+                        e.getLocalizedMessage());
+                return false;
+            }
+        } else {
+            // existing AJO push flow - untouched
+            final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
+            notification = MessagingPushBuilder.build(payload, context);
+        }
 
         // display notification
         final NotificationManagerCompat notificationManager =
