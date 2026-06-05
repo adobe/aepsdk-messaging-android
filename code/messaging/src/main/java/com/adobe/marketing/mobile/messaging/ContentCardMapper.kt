@@ -12,13 +12,13 @@
 package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
-import com.adobe.marketing.mobile.util.StringUtils
 
 /**
- * Class to store a mapping between valid [ContentCardSchemaData] and unique proposition id's.
+ * Class to store a mapping between valid [ContentCardSchemaData] and unique activity id's.
  */
 class ContentCardMapper private constructor() {
     private val contentCardSchemaDataMap: MutableMap<String, ContentCardSchemaData> = HashMap()
+    private val inboxPropositionItemMap: MutableMap<String, PropositionItem> = HashMap()
 
     companion object {
         @JvmStatic
@@ -26,20 +26,20 @@ class ContentCardMapper private constructor() {
     }
 
     /**
-     * Returns the [ContentCardSchemaData] for the given proposition id.
+     * Returns the [ContentCardSchemaData] for the given activity id.
      *
-     * @param propositionId the proposition id to retrieve the [ContentCardSchemaData] for
-     * @return the [ContentCardSchemaData] for the given proposition id, or null if not found
+     * @param activityId to retrieve the [ContentCardSchemaData] for
+     * @return the [ContentCardSchemaData] for the given activity id, or null if not found
      */
-    fun getContentCardSchemaData(propositionId: String): ContentCardSchemaData? {
-        if (StringUtils.isNullOrEmpty(propositionId)) {
+    fun getContentCardSchemaData(activityId: String): ContentCardSchemaData? {
+        if (activityId.isEmpty()) {
             return null
         }
-        return contentCardSchemaDataMap[propositionId]
+        return contentCardSchemaDataMap[activityId]
     }
 
     /**
-     * Stores the [ContentCardSchemaData] for the given proposition id.
+     * Stores the [ContentCardSchemaData] for the given activity id.
      *
      * @param contentCardSchemaData the [ContentCardSchemaData] to store
      */
@@ -48,22 +48,51 @@ class ContentCardMapper private constructor() {
         if (contentCardSchemaData.parent.propositionReference == null) {
             return
         }
-        contentCardSchemaDataMap[contentCardSchemaData.parent.proposition.uniqueId] =
+        contentCardSchemaDataMap[contentCardSchemaData.parent.proposition.activityId] =
             contentCardSchemaData
     }
 
     /**
-     * Removes the [ContentCardSchemaData] for the given proposition id.
+     * Removes the [ContentCardSchemaData] for the given activity id.
      *
-     * @param propositionId the proposition id to remove the [ContentCardSchemaData] for
+     * @param activityId to remove the [ContentCardSchemaData] for
      */
     @JvmName("removeContentCardSchemaData")
-    internal fun removeContentCardSchemaData(propositionId: String) {
-        contentCardSchemaDataMap.remove(propositionId)
+    internal fun removeContentCardSchemaData(activityId: String) {
+        contentCardSchemaDataMap.remove(activityId)
     }
 
+    /**
+     * Stores the inbox [PropositionItem] for later display tracking, keyed by the inbox activity ID.
+     *
+     * @param inboxId the inbox activity ID (from InboxTemplate.id)
+     * @param propositionItem the inbox [PropositionItem] to store
+     */
+    @JvmName("storeInboxPropositionItem")
+    internal fun storeInboxPropositionItem(inboxId: String, propositionItem: PropositionItem) {
+        if (inboxId.isEmpty()) {
+            return
+        }
+        inboxPropositionItemMap[inboxId] = propositionItem
+    }
+
+    /**
+     * Returns the stored inbox [PropositionItem] for the given inbox ID, if available.
+     *
+     * @param inboxId the inbox activity ID (from InboxTemplate.id)
+     * @return the inbox [PropositionItem], or null if not stored
+     */
+    internal fun getInboxPropositionItem(inboxId: String): PropositionItem? {
+        if (inboxId.isEmpty()) {
+            return null
+        }
+        return inboxPropositionItemMap[inboxId]
+    }
+
+    @JvmName("clear")
     @VisibleForTesting
     internal fun clear() {
         contentCardSchemaDataMap.clear()
+        inboxPropositionItemMap.clear()
     }
 }

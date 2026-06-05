@@ -22,6 +22,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider
 /**
  * Base interaction handler for messaging events.
  * This class is responsible for handling the display, dismiss and interact events for a content card proposition.
+ * State updates for the content flow are performed by [ContentCardEventObserver] via [ContentCardUIProvider.onEvent].
  *
  * @param T The type of the template associated with the UI component.
  * @param S The type of the state associated with the UI component.
@@ -39,17 +40,17 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
      * Delegates the logic for interact event handling to [onInteractEvent]
      * which can be overridden by subclasses to perform template specific logic.
      *
-     * @param event the event to handle
-     * @param propositionId the id of the proposition
+     * @param event the event to handle (activity id is derived from [event.aepUi.getTemplate].id)
      */
-    internal fun onEvent(event: UIEvent<T, S>, propositionId: String) {
+    internal fun onEvent(event: UIEvent<T, S>) {
         val ui = event.aepUi
+        val activityId = event.aepUi.getTemplate().id
         when (event) {
             is UIEvent.Display -> {
                 Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "${event.aepUi.getTemplate().getType()} with id $propositionId is displayed"
+                    "${event.aepUi.getTemplate().getType()} with id $activityId is displayed"
                 )
 
                 // UIEvent.Display can be called multiple times on configuration changes
@@ -71,14 +72,14 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
 
                 ui.updateState(getNewState(event))
 
-                track(propositionId, null, MessagingEdgeEventType.DISPLAY)
+                track(activityId, null, MessagingEdgeEventType.DISPLAY)
                 callback?.onDisplay(event.aepUi)
             }
             is UIEvent.Dismiss -> {
                 Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "${event.aepUi.getTemplate().getType()} with id $propositionId is dismissed"
+                    "${event.aepUi.getTemplate().getType()} with id $activityId is dismissed"
                 )
 
                 // UIEvent.Dismiss can be called multiple times on multiple dismiss actions
@@ -99,7 +100,7 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
 
                 ui.updateState(getNewState(event))
 
-                track(propositionId, null, MessagingEdgeEventType.DISMISS)
+                track(activityId, null, MessagingEdgeEventType.DISMISS)
                 callback?.onDismiss(event.aepUi)
             }
 
@@ -107,10 +108,10 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
                 Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "${event.aepUi.getTemplate().getType()} with id $propositionId is interacted"
+                    "${event.aepUi.getTemplate().getType()} with id $activityId is interacted"
                 )
 
-                onInteractEvent(event, propositionId)
+                onInteractEvent(event)
             }
         }
     }
@@ -129,15 +130,17 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
      * Performs the logic for interact events.
      * This method can be overridden by subclasses to perform template specific logic.
      *
-     * @param event the interact event to handle
-     * @param propositionId the id of the proposition
+     * @param event the interact event to handle (activity id is derived from [event.aepUi.getTemplate].id)
      */
-    internal open fun onInteractEvent(event: UIEvent.Interact<T, S>, propositionId: String) {
+    internal open fun onInteractEvent(event: UIEvent.Interact<T, S>) {
+        val activityId = event.aepUi.getTemplate().id
         val templateType = event.aepUi.getTemplate().getType()
         when (event.action) {
             is UIAction.Click -> {
+                val ui = event.aepUi
+                ui.updateState(getNewState(event))
                 val urlHandled =
-                    callback?.onInteract(event.aepUi, event.action.id, event.action.actionUrl)
+                    callback?.onInteract(ui, event.action.id, event.action.actionUrl)
 
                 // Open the URL if available and not handled by the listener
                 if (urlHandled != true && !event.action.actionUrl.isNullOrEmpty()) {
@@ -154,13 +157,13 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
                     SELF_TAG,
                     "$templateType ${event.action.id} clicked"
                 )
-                track(propositionId, event.action.id, MessagingEdgeEventType.INTERACT)
+                track(activityId, event.action.id, MessagingEdgeEventType.INTERACT)
             }
         }
     }
 
-    internal fun track(propositionId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
-        val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaData(propositionId)
+    internal fun track(activityId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
+        val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaData(activityId)
         contentCardSchemaData?.track(interaction, eventType)
     }
 }

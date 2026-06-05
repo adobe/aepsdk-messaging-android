@@ -105,6 +105,18 @@ public class SchemaTypeTests {
     }
 
     @Test
+    public void getValue_setsValueCorrectly_forInbox() {
+        // setup
+        int expectedValue = 10;
+
+        // test
+        SchemaType schemaType = SchemaType.INBOX;
+
+        // verify
+        assertEquals(expectedValue, schemaType.getValue());
+    }
+
+    @Test
     public void getValue_setsValueCorrectly_forNativeAlert() {
         // setup
         int expectedValue = 6;
@@ -225,6 +237,18 @@ public class SchemaTypeTests {
     }
 
     @Test
+    public void toString_returnsCorrectString_forInbox() {
+        // setup
+        SchemaType schemaType = SchemaType.INBOX;
+
+        // test
+        String result = schemaType.toString();
+
+        // verify
+        assertEquals(MessagingTestConstants.SchemaValues.SCHEMA_INBOX, result);
+    }
+
+    @Test
     public void toString_returnsCorrectString_forNativeAlert() {
         // setup
         SchemaType schemaType = SchemaType.NATIVE_ALERT;
@@ -342,6 +366,18 @@ public class SchemaTypeTests {
 
         // verify
         assertEquals(SchemaType.EVENT_HISTORY_OPERATION, schemaType);
+    }
+
+    @Test
+    public void fromString_returnsCorrectEnum_forInbox() {
+        // setup
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_INBOX;
+
+        // test
+        SchemaType schemaType = SchemaType.fromString(typeString);
+
+        // verify
+        assertEquals(SchemaType.INBOX, schemaType);
     }
 
     @Test

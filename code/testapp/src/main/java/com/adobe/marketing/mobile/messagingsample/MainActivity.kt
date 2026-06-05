@@ -297,6 +297,10 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(this, ScrollingFeedActivity::class.java))
         }
 
+        binding.btnDetailpage.setOnClickListener {
+            startActivity(Intent(this, ContentCardsTestActivity::class.java))
+        }
+
         binding.btnCheckCodeBased.setOnClickListener {
             startActivity(Intent(this, CodeBasedExperienceActivity::class.java))
         }

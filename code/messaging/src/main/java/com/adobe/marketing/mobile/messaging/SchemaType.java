@@ -27,7 +27,8 @@ public enum SchemaType {
     NATIVE_ALERT(6),
     DEFAULT_CONTENT(7),
     CONTENT_CARD(8),
-    EVENT_HISTORY_OPERATION(9);
+    EVENT_HISTORY_OPERATION(9),
+    INBOX(10);
 
     private final int value;
 
@@ -60,6 +61,8 @@ public enum SchemaType {
                 return MessagingConstants.SchemaValues.SCHEMA_CONTENT_CARD;
             case EVENT_HISTORY_OPERATION:
                 return MessagingConstants.SchemaValues.SCHEMA_EVENT_HISTORY_OPERATION;
+            case INBOX:
+                return MessagingConstants.SchemaValues.SCHEMA_INBOX;
             default:
                 return "";
         }
@@ -97,6 +100,9 @@ public enum SchemaType {
                 break;
             case MessagingConstants.SchemaValues.SCHEMA_EVENT_HISTORY_OPERATION:
                 schemaType = SchemaType.EVENT_HISTORY_OPERATION;
+                break;
+            case MessagingConstants.SchemaValues.SCHEMA_INBOX:
+                schemaType = SchemaType.INBOX;
                 break;
             default:
                 schemaType = SchemaType.UNKNOWN;

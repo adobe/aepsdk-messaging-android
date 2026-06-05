@@ -17,9 +17,9 @@ import androidx.compose.ui.graphics.Color
 /**
  * Class representing the style for an AepIcon composable.
  *
- * @param modifier The modifier for the icon.
- * @param contentDescription The content description for the icon.
- * @param tint The tint color for the icon.
+ * @property modifier The modifier for the icon.
+ * @property contentDescription The content description for the icon.
+ * @property tint The tint color for the icon.
  *
  */
 class AepIconStyle(

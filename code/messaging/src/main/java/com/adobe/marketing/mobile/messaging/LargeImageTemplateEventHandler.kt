@@ -20,16 +20,21 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
  *
  * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal class LargeImageTemplateEventHandler(private val callback: ContentCardUIEventListener?) :
-    MessagingEventHandler<LargeImageTemplate, LargeImageCardUIState>(
-        callback
-    ) {
+internal class LargeImageTemplateEventHandler(
+    callback: ContentCardUIEventListener?
+) : MessagingEventHandler<LargeImageTemplate, LargeImageCardUIState>(callback) {
     override fun getNewState(event: UIEvent<LargeImageTemplate, LargeImageCardUIState>): LargeImageCardUIState {
         val currentState = event.aepUi.getState()
         return when (event) {
             is UIEvent.Dismiss -> currentState.copy(dismissed = true)
             is UIEvent.Display -> currentState.copy(displayed = true)
-            else -> currentState
+            is UIEvent.Interact ->
+                if (currentState.read != null) {
+                    ContentCardSchemaDataUtils.setReadStatus(event.aepUi.getTemplate().id, true)
+                    currentState.copy(read = true)
+                } else {
+                    currentState
+                }
         }
     }
 }

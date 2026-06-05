@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
@@ -64,7 +65,7 @@ class ContentCardObserverTests {
 
         observer.onEvent(event)
         val expectedEvent = UIEvent.Display(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent)
     }
 
     @Test
@@ -76,7 +77,7 @@ class ContentCardObserverTests {
         observer.onEvent(event)
 
         val expectedEvent = UIEvent.Dismiss(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent)
     }
 
     @Test
@@ -89,6 +90,20 @@ class ContentCardObserverTests {
         observer.onEvent(event)
 
         val expectedEvent = UIEvent.Interact(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>, UIAction.Click(id = "button1", actionUrl = "http://example.com"))
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent)
+    }
+
+    @Test
+    fun `Content card event observer calls provider uiEventObserver onEvent when provider is set`() {
+        val callback = mock(ContentCardUIEventListener::class.java)
+        val provider = mock(ContentCardUIProvider::class.java)
+        val mockUiEventObserver = mock(AepUIEventObserver::class.java)
+        `when`(provider.uiEventObserver).thenReturn(mockUiEventObserver)
+        val observer = ContentCardEventObserver(callback, provider)
+        val event = UIEvent.Display(mockAepUI)
+
+        observer.onEvent(event)
+
+        verify(mockUiEventObserver, times(1)).onEvent(event)
     }
 }

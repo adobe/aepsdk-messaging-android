@@ -322,7 +322,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
         messagingRulesEngine.processEvent(event);
-        edgePersonalizationResponseHandler.updateQualifiedContentCardsForEvent(event);
+        edgePersonalizationResponseHandler.addOrReplaceContentCards(event);
     }
 
     /**

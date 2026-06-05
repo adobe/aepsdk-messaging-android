@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
  * Extension function to get the meta data for the given [AepUI].
@@ -21,10 +20,5 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
  */
 
 fun AepUI<*, *>.getMeta(): Map<String, Any>? {
-    return when (val template = this.getTemplate()) {
-        is SmallImageTemplate ->
-            ContentCardMapper.instance.getContentCardSchemaData(template.id)?.meta
-
-        else -> null
-    }
+    return ContentCardMapper.instance.getContentCardSchemaData(this.getTemplate().id)?.meta
 }
