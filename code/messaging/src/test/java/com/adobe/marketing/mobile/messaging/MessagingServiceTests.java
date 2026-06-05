@@ -17,6 +17,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mockStatic;
@@ -33,7 +34,6 @@ import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
-import com.adobe.marketing.mobile.InitOptions;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.NamedCollection;
@@ -287,8 +287,7 @@ public class MessagingServiceTests {
 
         // MobileCore.initialize must NOT be called because the extension is already registered.
         mobileCore.verify(
-                () -> MobileCore.initialize(any(Application.class), any(InitOptions.class), any()),
-                never());
+                () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
     }
 
     // =====================================================================
@@ -314,7 +313,7 @@ public class MessagingServiceTests {
         mobileCore.verify(
                 () ->
                         MobileCore.initialize(
-                                eq(application), any(InitOptions.class), callbackCaptor.capture()));
+                                eq(application), anyString(), callbackCaptor.capture()));
 
         // The dispatch is deferred — no Edge event fires until the initialize callback runs.
         mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), never());
@@ -341,8 +340,7 @@ public class MessagingServiceTests {
 
         // MobileCore.initialize must not be called.
         mobileCore.verify(
-                () -> MobileCore.initialize(any(Application.class), any(InitOptions.class), any()),
-                never());
+                () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
 
         // No dispatch — the receive event is dropped (deliberately, since there's nothing to
         // bootstrap from).
@@ -359,8 +357,7 @@ public class MessagingServiceTests {
         assertTrue(handled);
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
         mobileCore.verify(
-                () -> MobileCore.initialize(any(Application.class), any(InitOptions.class), any()),
-                never());
+                () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
     }
 
     @Test
@@ -376,8 +373,7 @@ public class MessagingServiceTests {
         // Self-init does not call setApplication or initialize.
         mobileCore.verify(() -> MobileCore.setApplication(any(Application.class)), never());
         mobileCore.verify(
-                () -> MobileCore.initialize(any(Application.class), any(InitOptions.class), any()),
-                never());
+                () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
     }
 
     @Test
@@ -391,9 +387,7 @@ public class MessagingServiceTests {
         mobileCore.verify(
                 () ->
                         MobileCore.initialize(
-                                eq(application),
-                                any(InitOptions.class),
-                                firstCallbackCaptor.capture()));
+                                eq(application), anyString(), firstCallbackCaptor.capture()));
         firstCallbackCaptor.getValue().call(null);
         mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), times(1));
 
@@ -405,8 +399,7 @@ public class MessagingServiceTests {
 
         // initialize was only called once across both pushes.
         mobileCore.verify(
-                () -> MobileCore.initialize(any(Application.class), any(InitOptions.class), any()),
-                times(1));
+                () -> MobileCore.initialize(any(Application.class), anyString(), any()), times(1));
         // dispatchEvent fires for both pushes.
         mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), times(2));
     }

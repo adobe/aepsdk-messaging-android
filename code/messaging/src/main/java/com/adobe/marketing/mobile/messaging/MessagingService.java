@@ -16,7 +16,6 @@ import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
-import com.adobe.marketing.mobile.InitOptions;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
@@ -126,18 +125,21 @@ public class MessagingService extends FirebaseMessagingService {
      *   <li>Reads the {@code appId} cached by a prior successful {@link
      *       MobileCore#configureWithAppID(String)} call, via {@link
      *       ServiceProvider#getDataStoreService()}.
-     *   <li>Delegates to {@link MobileCore#initialize(Application, InitOptions,
+     *   <li>Delegates to {@link MobileCore#initialize(Application, String,
      *       com.adobe.marketing.mobile.AdobeCallback)}, which auto-discovers all AEP extensions on
-     *       the classpath and applies the cached configuration.
+     *       the classpath and applies the cached configuration with platform-default initialization
+     *       options.
      *   <li>Invokes {@code onInitComplete} from the initialize completion callback — the FCM
      *       service thread is not blocked while initialization runs.
      *   <li>Runs at most once per process. Subsequent calls fire {@code onInitComplete} immediately
      *       so deferred push-receive dispatches still execute.
      * </ul>
      *
-     * <p>Lifecycle auto-tracking is disabled for this code path. We are running on the FCM service
-     * thread with no Activity context; firing lifecycle events from a non-foreground bootstrap is
-     * not desired.
+     * <p>Self-init uses platform-default initialization (equivalent to {@code
+     * MobileCore.initialize(app, appId)}), which leaves automatic lifecycle tracking enabled. Under
+     * Core's once-per-process initialize contract, only the first {@link MobileCore#initialize}
+     * call's options are honored, so customers who need non-default options must initialize from
+     * {@code Application.onCreate} (before any cold-start push can trigger self-init).
      *
      * <p>Returns silently (with a warning log, without firing {@code onInitComplete}) if no cached
      * {@code appId} is found — that is the first-ever-launch case where the host app has never
@@ -197,14 +199,15 @@ public class MessagingService extends FirebaseMessagingService {
                 SELF_TAG,
                 "Self-init: cached appId found, calling MobileCore.initialize.");
 
-        // Disable automatic lifecycle tracking — we're on the FCM service thread, not in an
-        // Activity context. Lifecycle events should be driven by the host app's foreground init.
-        final InitOptions options = InitOptions.configureWithAppID(cachedAppId);
-        options.setLifecycleAutomaticTrackingEnabled(false);
-
+        // Use Core's default-configuration overload — equivalent to what the simple
+        // MobileCore.initialize(app, appId) API gives a host app. This intentionally avoids
+        // touching InitOptions: Core once-per-process initialize contract, only
+        // the first call's options take effect, so any non-default we set here could not later
+        // be overridden by the host app. Defaults keep automatic lifecycle tracking enabled,
+        // matching the most common host-app expectation.
         MobileCore.initialize(
                 application,
-                options,
+                cachedAppId,
                 ignored -> {
                     Log.debug(
                             MessagingPushConstants.LOG_TAG,
