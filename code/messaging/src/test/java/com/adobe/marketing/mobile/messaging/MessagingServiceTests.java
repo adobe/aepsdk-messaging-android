@@ -252,8 +252,7 @@ public class MessagingServiceTests {
                             () ->
                                     NotificationBuilder.constructNotificationBuilder(
                                             any(Map.class), any(), any()))
-                    .thenThrow(
-                            new NotificationConstructionFailedException("construction failed"));
+                    .thenThrow(new NotificationConstructionFailedException("construction failed"));
 
             // test
             boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
