@@ -21,7 +21,10 @@ import com.adobe.marketing.mobile.Lifecycle
 import com.adobe.marketing.mobile.edge.identity.Identity
 
 class MessagingApplication : Application() {
-    private val ENVIRONMENT_FILE_ID = "staging/1b50a869c4a2/8d83ca76a48a/launch-98809790b968-development"
+    private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
+    private val ASSURANCE_SESSION_ID = ""
+    private val STAGING_APP_ID = "staging/1b50a869c4a2/bcd1a623883f/launch-e44d085fc760-development"
+    private val STAGING = true
 
     override fun onCreate() {
         super.onCreate()
@@ -30,15 +33,21 @@ class MessagingApplication : Application() {
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
         val extensions = listOf(Messaging.EXTENSION, Identity.EXTENSION, Lifecycle.EXTENSION, Edge.EXTENSION, Assurance.EXTENSION)
         MobileCore.registerExtensions(extensions) {
-            MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
-            MobileCore.updateConfiguration(
-                hashMapOf("edge.environment" to "int") as Map<String, Any>)
+            // Necessary property id which has the edge configuration id needed by aep sdk
+            if (STAGING) {
+                MobileCore.configureWithAppID(STAGING_APP_ID)
+                MobileCore.updateConfiguration(
+                    hashMapOf("edge.environment" to "int") as Map<String, Any>)
+            } else {
+                MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
+            }
             MobileCore.lifecycleStart(null)
 
             val configMap = mapOf(
-                "messaging.optimizePushSync" to false
+                "messaging.optimizePushSync" to true
             )
             MobileCore.updateConfiguration(configMap)
         }
+        // Assurance.startSession(ASSURANCE_SESSION_ID)
     }
 }
