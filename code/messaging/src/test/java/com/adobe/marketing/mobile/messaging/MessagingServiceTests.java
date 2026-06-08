@@ -377,7 +377,8 @@ public class MessagingServiceTests {
     }
 
     @Test
-    public void test_handleRemoteMessage_extensionNotRegistered_nullNamedCollection_dropsDispatch() {
+    public void
+            test_handleRemoteMessage_extensionNotRegistered_nullNamedCollection_dropsDispatch() {
         when(serviceProvider.getDataStoreService())
                 .thenReturn(
                         new com.adobe.marketing.mobile.services.DataStoring() {

@@ -2021,7 +2021,8 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_processEvent_pushNotificationReceivedEvent_whenDatasetIdEmpty_doesNotDispatch() {
+    public void
+            test_processEvent_pushNotificationReceivedEvent_whenDatasetIdEmpty_doesNotDispatch() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockConfigData.getValue())
@@ -2808,8 +2809,7 @@ public class MessagingExtensionTests {
         eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
         eventData.put(TRACK_INFO_KEY_EVENT_TYPE, eventType);
         eventData.put(TRACK_INFO_KEY_ADOBE_XDM, adobeXdm);
-        eventData.put(
-                MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
 
         return new Event.Builder(
                         "mock_push_received_event",
