@@ -256,8 +256,7 @@ public class MessagingPublicAPITests {
                 getDispatchedEventsWith(
                         MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
-        final Map<String, Object> messagingEventData =
-                messagingRequestEvents.get(0).getEventData();
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
         assertEquals(
                 messageId,
                 messagingEventData.get(
