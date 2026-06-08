@@ -171,6 +171,14 @@ public final class MessagingExtension extends Extension {
         // register listener for handling debug events
         getApi().registerEventListener(EventType.SYSTEM, EventSource.DEBUG, this::handleDebugEvent);
 
+        // Re-sync persisted tokens when AEPEdgeConsent signals that collect-consent has
+        // newly transitioned to "y". Transition detection lives in the Consent SDK now —
+        // Messaging only reacts to the flag.
+        getApi().registerEventListener(
+                        EventType.CONSENT,
+                        EventSource.RESPONSE_CONTENT,
+                        this::handleEdgeConsentResponse);
+
         // Handler function called for each queued event. If the queued event is a get propositions
         // event, process it
         // otherwise if it is an Edge event to update propositions, process it only if it is
@@ -484,7 +492,70 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        dispatchPushTokenSyncEdgeEvent(pushToken, event);
+        dispatchPushTokenSyncEdgeEvent(pushToken, event, false);
+    }
+
+    /**
+     * Triggers a token re-sync when AEPEdgeConsent signals that {@code consents.collect.val} just
+     * transitioned to {@code "y"} from a non-{@code "y"} value.
+     *
+     * <p>Transition detection lives inside AEPEdgeConsent now (which owns consent state), not
+     * Messaging. Messaging simply consumes the {@code collectConsentResyncRequired} boolean on the
+     * {@code CONSENT_PREFERENCES_UPDATED} event payload. When that flag is {@code true}, any data
+     * Messaging persisted under the assumption that consent was granted (push token, future
+     * per-token-type stores) may have been silently dropped at Edge and should be re-dispatched.
+     *
+     * @param event the {@link Event} of type CONSENT / source RESPONSE_CONTENT
+     */
+    void handleEdgeConsentResponse(final Event event) {
+        final boolean collectConsentResyncRequired =
+                DataReader.optBoolean(
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.Consent.COLLECT_CONSENT_RESYNC_REQUIRED,
+                        false);
+        if (!collectConsentResyncRequired) {
+            return;
+        }
+        dispatchPersistedTokenResync(event);
+    }
+
+    /**
+     * Orchestrator invoked when AEPEdgeConsent signals a collect-consent transition. Calls one
+     * helper per token type Messaging persists. Today the only token type is the push token; new
+     * token types plug in as one new helper method + one new call site.
+     *
+     * @param triggerEvent the consent event that triggered the re-sync
+     */
+    private void dispatchPersistedTokenResync(final Event triggerEvent) {
+        resyncPushToken(triggerEvent);
+        // future per-token-type re-sync helpers go here (e.g. live activity tokens, when added)
+    }
+
+    /**
+     * Re-syncs the persisted push token by re-dispatching a {@code GENERIC_IDENTITY /
+     * REQUEST_CONTENT} event so the normal {@code handlePushToken → dispatchPushTokenSyncEdgeEvent}
+     * path runs again under the now-granted consent.
+     *
+     * <p>The persisted token and the in-process sync-timestamp tracker are cleared first so {@code
+     * shouldSyncPushToken}'s same-token guard does not block the re-flow — the SDK has no
+     * acknowledgement from Edge that the previous sync landed, so on a consent-grant we must assume
+     * the worst and force the re-dispatch.
+     *
+     * @param triggerEvent the consent event that triggered the re-sync (used as the parent for the
+     *     re-dispatched generic-identity event)
+     */
+    private void resyncPushToken(final Event triggerEvent) {
+        final String persistedToken = InternalMessagingUtils.getPushTokenFromPersistence();
+        if (StringUtils.isNullOrEmpty(persistedToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Unable to re-sync the push token. Persisted Push token is unavailable for the"
+                            + " user.");
+            return;
+        }
+        // Defeat the same-token guard so the re-flow actually dispatches an Edge event.
+        dispatchPushTokenSyncEdgeEvent(persistedToken, triggerEvent, true);
     }
 
     /**
@@ -511,7 +582,8 @@ public final class MessagingExtension extends Extension {
      * @param pushToken {@link String} containing the push token
      * @param event {@link Event} containing the event that triggered this method
      */
-    private void dispatchPushTokenSyncEdgeEvent(final String pushToken, final Event event) {
+    private void dispatchPushTokenSyncEdgeEvent(
+            final String pushToken, final Event event, final boolean isResync) {
         final Map<String, Object> edgeIdentitySharedState =
                 getXDMSharedState(
                         MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
@@ -535,9 +607,14 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
         getApi().createSharedState(messagingSharedState, event);
 
+        String eventName =
+                isResync
+                        ? MessagingConstants.EventName.PUSH_IDENTIFIER_RESYNC_EVENT
+                        : MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT;
+
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
-                MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
+                eventName,
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 eventData,

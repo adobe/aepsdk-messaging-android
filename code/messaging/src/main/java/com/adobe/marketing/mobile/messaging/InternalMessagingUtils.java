@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -695,7 +694,11 @@ class InternalMessagingUtils {
         return updatedMap;
     }
 
-    @VisibleForTesting
+    /**
+     * Resets the in-process timestamp tracking the last push-token sync. Called by the
+     * consent-granted re-sync path so {@link #shouldSyncPushToken} cannot dismiss the re-flow on
+     * the optimization-off code path. Also useful in tests.
+     */
     static void resetPushTokenSyncTimestamp() {
         lastPushTokenSyncTimestamp = 0;
     }

@@ -227,7 +227,7 @@ public class MessagingExtensionTests {
                     // test
                     messagingExtension.onRegistered();
 
-                    // verify 7 listeners are registered
+                    // verify 8 listeners are registered (CONSENT/RESPONSE_CONTENT added in Phase 5)
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.GENERIC_IDENTITY),
@@ -263,6 +263,9 @@ public class MessagingExtensionTests {
                                     eq(EventType.MESSAGING),
                                     eq(EventSource.CONTENT_COMPLETE),
                                     any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.CONSENT), eq(EventSource.RESPONSE_CONTENT), any());
 
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
@@ -297,7 +300,7 @@ public class MessagingExtensionTests {
                     // test
                     messagingExtension.onRegistered();
 
-                    // verify 7 listeners are registered
+                    // verify 8 listeners are registered (CONSENT/RESPONSE_CONTENT added in Phase 5)
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.GENERIC_IDENTITY),
@@ -333,6 +336,9 @@ public class MessagingExtensionTests {
                                     eq(EventType.MESSAGING),
                                     eq(EventSource.CONTENT_COMPLETE),
                                     any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.CONSENT), eq(EventSource.RESPONSE_CONTENT), any());
 
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
@@ -2693,6 +2699,144 @@ public class MessagingExtensionTests {
                                     ((Map<String, Object>) eventDataMap.get("data"))
                                             .get("pushNotificationDetails");
                     assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
+                });
+    }
+
+    // ========================================================================================
+    // handleEdgeConsentResponse — `collectConsentResyncRequired` flag tests
+    //
+    // Transition detection lives in AEPEdgeConsent now. Messaging just checks the
+    // boolean flag on the event payload — present and true => resync; otherwise no-op.
+    // ========================================================================================
+
+    /** Flag present and {@code true} with a persisted push token → resync event is dispatched. */
+    @Test
+    public void test_handleEdgeConsentResponse_flagPresent_dispatchesResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // Persisted token "validToken" → returned by the named collection
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            true);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    ArgumentCaptor<Event> dispatchedCaptor = ArgumentCaptor.forClass(Event.class);
+                    verify(mockExtensionApi, times(1)).dispatch(dispatchedCaptor.capture());
+                    Event resyncEvent = dispatchedCaptor.getValue();
+                    assertEquals(
+                            MessagingConstants.EventName.PUSH_IDENTIFIER_RESYNC_EVENT,
+                            resyncEvent.getName());
+                    assertEquals(EventType.GENERIC_IDENTITY, resyncEvent.getType());
+                    assertEquals(EventSource.REQUEST_CONTENT, resyncEvent.getSource());
+                    assertEquals(
+                            "validToken",
+                            resyncEvent
+                                    .getEventData()
+                                    .get(
+                                            MessagingConstants.EventDataKeys.Identity
+                                                    .PUSH_IDENTIFIER));
+
+                    // Persisted token cleared so shouldSyncPushToken's same-token guard won't
+                    // block.
+                    verify(mockNamedCollection, times(1))
+                            .remove(
+                                    MessagingConstants.NamedCollectionKeys.Messaging
+                                            .PUSH_IDENTIFIER);
+                });
+    }
+
+    /**
+     * Flag missing from the event payload (steady-state CONSENT_PREFERENCES_UPDATED with no
+     * transition) → Messaging stays silent.
+     */
+    @Test
+    public void test_handleEdgeConsentResponse_flagAbsent_doesNotResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(new HashMap<>())
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    /** Flag explicitly {@code false} → Messaging stays silent. */
+    @Test
+    public void test_handleEdgeConsentResponse_flagFalse_doesNotResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            false);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    /**
+     * Flag present and {@code true} but no persisted push token → orchestrator runs but the {@code
+     * resyncPushToken} helper finds nothing to dispatch.
+     */
+    @Test
+    public void test_handleEdgeConsentResponse_flagPresentButNoPushIdentifier_doesNotDispatch() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // No persisted token
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn(null);
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            true);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
                 });
     }
 
