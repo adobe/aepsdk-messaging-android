@@ -240,6 +240,106 @@ public class MessagingPublicAPITests {
     }
 
     // --------------------------------------------------------------------------------------------
+    // Tests for Messaging.handlePushReceived API
+    // --------------------------------------------------------------------------------------------
+
+    @Test
+    public void testHandlePushReceived() throws InterruptedException {
+        final String messageId = "mockMessageId";
+        final Map<String, String> data = getPushReceivedData();
+        final String expectedMessagingEventData =
+                "{messageId=mockMessageId, adobe_xdm={\n"
+                    + "            cjm ={\n"
+                    + "              _experience= {\n"
+                    + "                customerJourneyManagement= {\n"
+                    + "                  messageExecution= {\n"
+                    + "                    messageExecutionID= 16-Sept-postman, \n"
+                    + "                    messageID= 567, \n"
+                    + "                    journeyVersionID= some-journeyVersionId, \n"
+                    + "                    journeyVersionInstanceID= someJourneyVersionInstanceID\n"
+                    + "                  }\n"
+                    + "                }\n"
+                    + "              }\n"
+                    + "            }\n"
+                    + "          }, eventType=pushTracking.receive, pushnotificationreceived=true}";
+        final String expectedEdgeEventData =
+                "{xdm={pushNotificationTracking={pushProviderMessageID=mockMessageId,"
+                    + " pushProvider=fcm}, application={launches={value=0}},"
+                    + " eventType=pushTracking.receive,"
+                    + " _experience={customerJourneyManagement={pushChannelContext={platform=fcm},"
+                    + " messageExecution={messageExecutionID=16-Sept-postman,"
+                    + " journeyVersionInstanceID=someJourneyVersionInstanceID, messageID=567,"
+                    + " journeyVersionID=some-journeyVersionId},"
+                    + " messageProfile={channel={_id=https://ns.adobe.com/xdm/channels/push}}}}},"
+                    + " meta={collect={datasetId=somedatasetid}}}";
+
+        Messaging.handlePushReceived(messageId, data);
+
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(1, messagingRequestEvents.size());
+        assertEquals(
+                expectedMessagingEventData,
+                messagingRequestEvents.get(0).getEventData().toString());
+
+        final List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        assertEquals(1, edgeRequestEvents.size());
+        assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getEventData().toString());
+    }
+
+    @Test
+    public void testHandlePushReceived_nullMessageId() throws InterruptedException {
+        Messaging.handlePushReceived(null, getPushReceivedData());
+
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(0, messagingRequestEvents.size());
+
+        final List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        assertEquals(0, edgeRequestEvents.size());
+    }
+
+    @Test
+    public void testHandlePushReceived_nullData() throws InterruptedException {
+        Messaging.handlePushReceived("mockMessageId", null);
+
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(0, messagingRequestEvents.size());
+
+        final List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        assertEquals(0, edgeRequestEvents.size());
+    }
+
+    @Test
+    public void testHandlePushReceived_duplicateMessageId_dedups() throws Exception {
+        resetHandlePushReceivedDedupCache();
+        final Map<String, String> data = getPushReceivedData();
+
+        Messaging.handlePushReceived("mockMessageId", data);
+        Messaging.handlePushReceived("mockMessageId", data);
+
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(1, messagingRequestEvents.size());
+
+        final List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        assertEquals(1, edgeRequestEvents.size());
+    }
+
+    // --------------------------------------------------------------------------------------------
     // Tests for Messaging.handleNotificationResponse API
     // --------------------------------------------------------------------------------------------
     @Test
@@ -2422,6 +2522,34 @@ public class MessagingPublicAPITests {
                     + "            }\n"
                     + "          }");
         return intent;
+    }
+
+    private Map<String, String> getPushReceivedData() {
+        final Map<String, String> data = new HashMap<>();
+        data.put(
+                MessagingTestConstants.TrackingKeys._XDM,
+                "{\n"
+                    + "            cjm ={\n"
+                    + "              _experience= {\n"
+                    + "                customerJourneyManagement= {\n"
+                    + "                  messageExecution= {\n"
+                    + "                    messageExecutionID= 16-Sept-postman, \n"
+                    + "                    messageID= 567, \n"
+                    + "                    journeyVersionID= some-journeyVersionId, \n"
+                    + "                    journeyVersionInstanceID= someJourneyVersionInstanceID\n"
+                    + "                  }\n"
+                    + "                }\n"
+                    + "              }\n"
+                    + "            }\n"
+                    + "          }");
+        return data;
+    }
+
+    private void resetHandlePushReceivedDedupCache() throws Exception {
+        final java.lang.reflect.Field cacheField =
+                Messaging.class.getDeclaredField("recentlyTrackedMessageIds");
+        cacheField.setAccessible(true);
+        ((java.util.Set<String>) cacheField.get(null)).clear();
     }
 
     private void setMockNetworkResponseForPersonalizationRequests(final String responseFileName) {

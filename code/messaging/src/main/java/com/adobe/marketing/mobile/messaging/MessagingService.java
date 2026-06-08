@@ -112,48 +112,18 @@ public class MessagingService extends FirebaseMessagingService {
     }
 
     /**
-     * Bootstraps the AEP SDK from the persisted {@code appId} when the host app has not yet
-     * registered the Messaging extension, and runs {@code onInitComplete} once registration is
-     * confirmed via the {@link MobileCore#initialize} completion callback. This protects push
-     * receive tracking against the cold-start race where {@link
-     * FirebaseMessagingService#onMessageReceived} fires before customer-code initialization (in
-     * {@code Application.onCreate} or {@code MainActivity.onCreate}) has completed.
+     * Bootstraps the AEP SDK from a cached {@code appId} when the Messaging extension is not yet
+     * registered, then runs {@code onInitComplete} from the {@link MobileCore#initialize}
+     * completion callback. Used when a cold-start push arrives before the host app finishes
+     * initialization.
      *
-     * <p>Behavior:
+     * <p>Runs at most once per process. If no cached {@code appId} is available (first launch
+     * before any {@link MobileCore#configureWithAppID(String)} call), self-init is skipped and
+     * {@code onInitComplete} is not invoked.
      *
-     * <ul>
-     *   <li>Reads the {@code appId} cached by a prior successful {@link
-     *       MobileCore#configureWithAppID(String)} call, via {@link
-     *       ServiceProvider#getDataStoreService()}.
-     *   <li>Delegates to {@link MobileCore#initialize(Application, String,
-     *       com.adobe.marketing.mobile.AdobeCallback)}, which auto-discovers all AEP extensions on
-     *       the classpath and applies the cached configuration with platform-default initialization
-     *       options.
-     *   <li>Invokes {@code onInitComplete} from the initialize completion callback — the FCM
-     *       service thread is not blocked while initialization runs.
-     *   <li>Runs at most once per process. Subsequent calls fire {@code onInitComplete} immediately
-     *       so deferred push-receive dispatches still execute.
-     * </ul>
-     *
-     * <p>Self-init uses platform-default initialization (equivalent to {@code
-     * MobileCore.initialize(app, appId)}), which leaves automatic lifecycle tracking enabled. Under
-     * Core's once-per-process initialize contract, only the first {@link MobileCore#initialize}
-     * call's options are honored, so customers who need non-default options must initialize from
-     * {@code Application.onCreate} (before any cold-start push can trigger self-init).
-     *
-     * <p>Returns silently (with a warning log, without firing {@code onInitComplete}) if no cached
-     * {@code appId} is found — that is the first-ever-launch case where the host app has never
-     * configured the SDK, and there is nothing to bootstrap from.
-     *
-     * <p>Idempotency: {@link MobileCore#initialize} and its underlying primitives ({@code
-     * setApplication}, per-extension registration) are individually idempotent. It is safe for the
-     * host app to also call {@code MobileCore.initialize} later from {@code Application.onCreate};
-     * redundant registrations are short-circuited by the Core EventHub with no side effects.
-     *
-     * @param context the {@link Context} from FCM's {@code onMessageReceived}. Must have a non-null
-     *     {@link Application} as its application context.
-     * @param onInitComplete callback invoked once {@code MobileCore.initialize} reports completion
-     *     (or immediately, if self-init was already attempted in this process).
+     * @param context the {@link Context} from FCM's {@code onMessageReceived}
+     * @param onInitComplete callback invoked after initialization completes, or immediately if
+     *     self-init was already attempted in this process
      */
     private static synchronized void selfInit(
             final @NonNull Context context, final @NonNull Runnable onInitComplete) {

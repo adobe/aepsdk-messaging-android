@@ -49,7 +49,7 @@ Messaging extension uses `MessagingService` to receive, display and track push n
 
 #### Using your own FirebaseMessagingService
 
-If your application already registered a `FirebaseMessagingService` class, then you can use the following API to display and track push notifications originated from Adobe Journey Optimizer.
+If your application already registered a `FirebaseMessagingService` class, then you can use the following API to display and track push notifications originated from Adobe Journey Optimizer. When an Adobe Journey Optimizer push is handled, the Messaging extension automatically records a `pushTracking.receive` delivery event in addition to displaying the notification.
 
 ```java
 public class YourAppFirebaseMessagingService extends FirebaseMessagingService {

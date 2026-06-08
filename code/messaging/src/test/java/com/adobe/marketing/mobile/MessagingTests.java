@@ -1496,8 +1496,8 @@ public class MessagingTests {
                     final Map<String, String> data = new HashMap<>();
                     data.put(MessagingTestConstants.TrackingKeys._XDM, "{}");
 
-                    // Simulates the content-intent + delete-intent dual call from manual
-                    // tracking — addPushTrackingDetails is invoked twice for the same push.
+                    // Simulates FCM at-least-once delivery calling handlePushReceived twice
+                    // for the same messageId.
                     Messaging.handlePushReceived("dup-msg-id", data);
                     Messaging.handlePushReceived("dup-msg-id", data);
 

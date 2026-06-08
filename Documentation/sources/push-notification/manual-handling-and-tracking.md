@@ -90,8 +90,24 @@ public class YourAppFirebaseMessagingService extends FirebaseMessagingService {
         // Write your code to download and attach media to notification, if neccessary.
 
         notificationManager.notify(notificationId, notificationBuilder.build());
+
+        // Record that the push notification was delivered to the device.
+        final String messageId = remoteMessage.getMessageId();
+        if (messageId != null && !messageId.isEmpty()) {
+            Messaging.handlePushReceived(messageId, remoteMessage.getData());
+        }
     }
 }
+```
+
+## Tracking push notification delivery
+
+Call `Messaging.handlePushReceived(messageId, data)` from `onMessageReceived` after displaying the notification to record a `pushTracking.receive` experience event in Adobe Journey Optimizer. This indicates the notification was delivered to the device, independent of whether the user interacts with it.
+
+```java
+Messaging.handlePushReceived(
+    final String messageId, // messageId from RemoteMessage#getMessageId()
+    final Map<String, String> data) // data payload from RemoteMessage#getData()
 ```
 
 ## Tracking push notification interactions

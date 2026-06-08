@@ -60,6 +60,37 @@ To do this add the following code to `FirebaseMessagingService#onMessageReceived
 boolean update = addPushTrackingDetails(final Intent intent, final String messageId, final Map<String, String> data)
 ```
 
+### Recording push notification delivery
+
+When manually building and displaying push notifications, call `handlePushReceived` from `FirebaseMessagingService#onMessageReceived` to record that the notification was delivered to the device. This dispatches a `pushTracking.receive` experience event to Adobe Experience Edge.
+
+When using [automatic display and tracking](./push-notification/automatic-handling-and-tracking.md) via `MessagingService`, receive tracking is handled automatically and this API does not need to be called.
+
+```java
+/**
+ * messageId is the id of the push notification from RemoteMessage#getMessageId().
+ * data is the data payload from RemoteMessage#getData().
+ */
+Messaging.handlePushReceived(final String messageId, final Map<String, String> data)
+```
+
+#### Kotlin
+
+```kotlin
+remoteMessage.messageId?.let { messageId ->
+    Messaging.handlePushReceived(messageId, remoteMessage.data)
+}
+```
+
+#### Java
+
+```java
+final String messageId = remoteMessage.getMessageId();
+if (messageId != null && !messageId.isEmpty()) {
+    Messaging.handlePushReceived(messageId, remoteMessage.getData());
+}
+```
+
 ### Sending push notification interactions details 
 | Key               | dataType   | Description                                                                                                                    |
 |-------------------|------------|--------------------------------------------------------------------------------------------------------------------------------|

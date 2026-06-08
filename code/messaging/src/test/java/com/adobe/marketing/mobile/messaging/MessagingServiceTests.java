@@ -231,7 +231,7 @@ public class MessagingServiceTests {
     }
 
     // =====================================================================
-    // handleRemoteMessage — messageId null/empty guard (PR review #7)
+    // handleRemoteMessage — messageId null/empty guard
     // =====================================================================
 
     @Test
