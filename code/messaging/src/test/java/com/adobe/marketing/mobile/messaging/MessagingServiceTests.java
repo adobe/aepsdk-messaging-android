@@ -377,6 +377,47 @@ public class MessagingServiceTests {
     }
 
     @Test
+    public void test_handleRemoteMessage_extensionNotRegistered_nullNamedCollection_dropsDispatch() {
+        when(serviceProvider.getDataStoreService())
+                .thenReturn(
+                        new com.adobe.marketing.mobile.services.DataStoring() {
+                            @Override
+                            public NamedCollection getNamedCollection(final String name) {
+                                return null;
+                            }
+                        });
+
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        assertTrue(handled);
+        verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
+        mobileCore.verify(
+                () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
+        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), never());
+    }
+
+    @Test
+    public void
+            test_handleRemoteMessage_extensionNotRegistered_readCachedAppIdThrows_dropsDispatch() {
+        when(serviceProvider.getDataStoreService())
+                .thenReturn(
+                        new com.adobe.marketing.mobile.services.DataStoring() {
+                            @Override
+                            public NamedCollection getNamedCollection(final String name) {
+                                throw new RuntimeException("datastore unavailable");
+                            }
+                        });
+
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        assertTrue(handled);
+        verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
+        mobileCore.verify(
+                () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
+        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), never());
+    }
+
+    @Test
     public void test_handleRemoteMessage_selfInitTriedAlready_runsDeferredDispatchImmediately()
             throws Exception {
         // First call: cached appId present → self-init runs and flips selfInitTried to true.
