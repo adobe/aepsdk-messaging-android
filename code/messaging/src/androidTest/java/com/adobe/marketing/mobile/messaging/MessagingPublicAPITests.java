@@ -21,7 +21,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Intent;
+import android.os.Bundle;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import com.google.firebase.messaging.RemoteMessage;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Edge;
@@ -250,7 +252,7 @@ public class MessagingPublicAPITests {
         final String messageId = "mockReceiveMessageId";
         final Map<String, String> data = getPushReceivedData();
 
-        Messaging.handlePushReceived(messageId, data);
+        Messaging.handlePushReceived(buildRemoteMessage(messageId, data));
 
         final List<Event> messagingRequestEvents =
                 getDispatchedEventsWith(
@@ -289,7 +291,8 @@ public class MessagingPublicAPITests {
 
     @Test
     public void testHandlePushReceived_nullMessageId() throws InterruptedException {
-        Messaging.handlePushReceived(null, getPushReceivedData());
+        // RemoteMessage with no message_id set → getMessageId() returns null
+        Messaging.handlePushReceived(buildRemoteMessage(null, getPushReceivedData()));
 
         final List<Event> messagingRequestEvents =
                 getDispatchedEventsWith(
@@ -304,7 +307,8 @@ public class MessagingPublicAPITests {
 
     @Test
     public void testHandlePushReceived_nullData() throws InterruptedException {
-        Messaging.handlePushReceived("mockMessageId", null);
+        // RemoteMessage with messageId but no data keys → getData() returns empty map
+        Messaging.handlePushReceived(buildRemoteMessage("mockMessageId", null));
 
         final List<Event> messagingRequestEvents =
                 getDispatchedEventsWith(
@@ -323,8 +327,8 @@ public class MessagingPublicAPITests {
         final Map<String, String> data = getPushReceivedData();
         final String messageId = "mockDedupMessageId";
 
-        Messaging.handlePushReceived(messageId, data);
-        Messaging.handlePushReceived(messageId, data);
+        Messaging.handlePushReceived(buildRemoteMessage(messageId, data));
+        Messaging.handlePushReceived(buildRemoteMessage(messageId, data));
 
         final List<Event> messagingRequestEvents =
                 getDispatchedEventsWith(
@@ -2520,6 +2524,29 @@ public class MessagingPublicAPITests {
                     + "            }\n"
                     + "          }");
         return intent;
+    }
+
+    /**
+     * Builds a real {@link RemoteMessage} from a messageId and data map using the Bundle
+     * constructor exposed by Firebase. Reserved Firebase keys are excluded from {@link
+     * RemoteMessage#getData()}, so user data is stored directly as bundle extras.
+     *
+     * @param messageId value for {@code google.message_id}; pass {@code null} to omit it so that
+     *     {@link RemoteMessage#getMessageId()} returns {@code null}.
+     * @param data user data to embed; pass {@code null} or empty to produce an empty data map.
+     */
+    private RemoteMessage buildRemoteMessage(
+            final String messageId, final Map<String, String> data) {
+        final Bundle bundle = new Bundle();
+        if (messageId != null) {
+            bundle.putString("google.message_id", messageId);
+        }
+        if (data != null) {
+            for (final Map.Entry<String, String> entry : data.entrySet()) {
+                bundle.putString(entry.getKey(), entry.getValue());
+            }
+        }
+        return new RemoteMessage(bundle);
     }
 
     private Map<String, String> getPushReceivedData() {
