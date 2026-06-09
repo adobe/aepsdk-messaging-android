@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.content.Intent;
-import com.google.firebase.messaging.RemoteMessage;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
@@ -40,6 +39,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

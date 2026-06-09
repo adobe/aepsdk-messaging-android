@@ -175,8 +175,7 @@ public class MessagingService extends FirebaseMessagingService {
      *
      * @return the persisted appId, or {@code null} if not present or unreadable.
      */
-    @androidx.annotation.Nullable
-    private static String readCachedAppId() {
+    @androidx.annotation.Nullable private static String readCachedAppId() {
         try {
             final NamedCollection store =
                     ServiceProvider.getInstance()

@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile;
 
 import android.content.Intent;
-import com.google.firebase.messaging.RemoteMessage;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.messaging.CompletionHandler;
@@ -27,6 +26,7 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
+import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
