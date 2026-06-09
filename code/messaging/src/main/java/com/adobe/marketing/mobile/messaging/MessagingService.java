@@ -63,12 +63,6 @@ public class MessagingService extends FirebaseMessagingService {
 
         // Build and display the notification immediately while the FCM wakelock is active.
         handleRemoteMessage(this, remoteMessage);
-
-        // Bootstrap the SDK if this is a cold-start push, then record delivery. selfInit is a
-        // no-op after the first call (guarded by selfInitTried) and MobileCore fires its
-        // initialize callback even when already initialized, so this works correctly for both
-        // cold-start and warm-start pushes.
-        selfInit(this, () -> Messaging.handlePushReceived(remoteMessage));
     }
 
     public static boolean handleRemoteMessage(
@@ -89,6 +83,11 @@ public class MessagingService extends FirebaseMessagingService {
                 NotificationManagerCompat.from(context);
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
+        // Bootstrap the SDK if this is a cold-start push, then record delivery. selfInit is a
+        // no-op after the first call (guarded by selfInitTried) and MobileCore fires its
+        // initialize callback even when already initialized, so this works correctly for both
+        // cold-start and warm-start pushes.
+        selfInit(context, () -> Messaging.handlePushReceived(remoteMessage));
         return true;
     }
 

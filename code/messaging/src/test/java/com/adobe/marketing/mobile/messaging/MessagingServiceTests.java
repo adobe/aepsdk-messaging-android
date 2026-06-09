@@ -20,10 +20,8 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -96,6 +94,10 @@ public class MessagingServiceTests {
                                 put("adb_body", "Body");
                             }
                         });
+
+        // The Application instance is the same object returned from context.getApplicationContext()
+        // so the (context.getApplicationContext() instanceof Application) check in selfInit passes.
+        when(context.getApplicationContext()).thenReturn(application);
 
         // Mock NotificationManager — notify() is a no-op; we verify it was called with the
         // built notification.
@@ -228,18 +230,20 @@ public class MessagingServiceTests {
     }
 
     // =====================================================================
-    // onMessageReceived — warm path (selfInitTried already true)
+    // handleRemoteMessage — warm path (selfInitTried already true)
     // =====================================================================
 
     @Test
-    public void test_onMessageReceived_selfInitAlreadyTried_dispatchesImmediately()
+    public void test_handleRemoteMessage_selfInitAlreadyTried_dispatchesImmediately()
             throws Exception {
         // Simulate that self-init already ran in this process (SDK was initialized earlier).
         // selfInit's early-return path runs the callback synchronously without re-initializing.
         resetStaticField(MessagingService.class, "selfInitTried", true);
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
-        new MessagingService().onMessageReceived(remoteMessage);
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        assertTrue(handled);
 
         // Notification must be displayed.
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
@@ -261,22 +265,19 @@ public class MessagingServiceTests {
     }
 
     // =====================================================================
-    // onMessageReceived — cold path (first push, SDK not yet initialized → selfInit)
+    // handleRemoteMessage — cold path (first push, SDK not yet initialized → selfInit)
     // =====================================================================
 
     @Test
-    public void test_onMessageReceived_coldStart_cachedAppIdPresent_runsSelfInit() {
+    public void test_handleRemoteMessage_extensionNotRegistered_cachedAppIdPresent_runsSelfInit() {
         // Cached appId is present → self-init proceeds to MobileCore.initialize.
         when(namedCollection.getString(eq("config.appID"), any())).thenReturn("cached-app-id");
         final ArgumentCaptor<AdobeCallback<?>> callbackCaptor =
                 ArgumentCaptor.forClass(AdobeCallback.class);
 
-        // Use a spy so getApplicationContext() returns our mock Application and selfInit can
-        // proceed past the "is Application?" guard.
-        final MessagingService spyService = spy(new MessagingService());
-        doReturn(application).when(spyService).getApplicationContext();
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
-        spyService.onMessageReceived(remoteMessage);
+        assertTrue(handled);
 
         // Notification still displays — synchronous, independent of self-init.
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
@@ -299,15 +300,14 @@ public class MessagingServiceTests {
     }
 
     @Test
-    public void test_onMessageReceived_coldStart_noCachedAppId_dropsDispatch() {
+    public void test_handleRemoteMessage_extensionNotRegistered_noCachedAppId_dropsDispatch() {
         // No cached appId → self-init aborts before calling MobileCore.initialize, and the
         // deferred dispatch never fires.
         when(namedCollection.getString(eq("config.appID"), any())).thenReturn(null);
 
-        final MessagingService spyService = spy(new MessagingService());
-        doReturn(application).when(spyService).getApplicationContext();
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
-        spyService.onMessageReceived(remoteMessage);
+        assertTrue(handled);
 
         // Notification still displays even when there's no cached appId.
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
@@ -322,36 +322,37 @@ public class MessagingServiceTests {
     }
 
     @Test
-    public void test_onMessageReceived_coldStart_emptyCachedAppId_dropsDispatch() {
+    public void test_handleRemoteMessage_extensionNotRegistered_emptyCachedAppId_dropsDispatch() {
         // Empty string cached appId is treated the same as null.
         when(namedCollection.getString(eq("config.appID"), any())).thenReturn("");
 
-        final MessagingService spyService = spy(new MessagingService());
-        doReturn(application).when(spyService).getApplicationContext();
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
-        spyService.onMessageReceived(remoteMessage);
-
+        assertTrue(handled);
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
         mobileCore.verify(
                 () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
     }
 
     @Test
-    public void test_onMessageReceived_contextNotApplication_abortsSelfInit() {
-        // getApplicationContext() on a bare MessagingService in JVM unit tests returns null,
-        // which fails the "instanceof Application" check → selfInit aborts early.
-        new MessagingService().onMessageReceived(remoteMessage);
+    public void test_handleRemoteMessage_contextNotApplication_abortsSelfInit() {
+        // context.getApplicationContext() returns something that is NOT an Application instance.
+        when(context.getApplicationContext()).thenReturn(context);
 
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        assertTrue(handled);
         // Notification still displays.
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
-        // Self-init must not proceed to setApplication or initialize.
+        // Self-init does not call setApplication or initialize.
         mobileCore.verify(() -> MobileCore.setApplication(any(Application.class)), never());
         mobileCore.verify(
                 () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
     }
 
     @Test
-    public void test_onMessageReceived_nullNamedCollection_dropsDispatch() {
+    public void
+            test_handleRemoteMessage_extensionNotRegistered_nullNamedCollection_dropsDispatch() {
         when(serviceProvider.getDataStoreService())
                 .thenReturn(
                         new com.adobe.marketing.mobile.services.DataStoring() {
@@ -361,11 +362,9 @@ public class MessagingServiceTests {
                             }
                         });
 
-        final MessagingService spyService = spy(new MessagingService());
-        doReturn(application).when(spyService).getApplicationContext();
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
-        spyService.onMessageReceived(remoteMessage);
-
+        assertTrue(handled);
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
         mobileCore.verify(
                 () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
@@ -373,7 +372,8 @@ public class MessagingServiceTests {
     }
 
     @Test
-    public void test_onMessageReceived_readCachedAppIdThrows_dropsDispatch() {
+    public void
+            test_handleRemoteMessage_extensionNotRegistered_readCachedAppIdThrows_dropsDispatch() {
         when(serviceProvider.getDataStoreService())
                 .thenReturn(
                         new com.adobe.marketing.mobile.services.DataStoring() {
@@ -383,11 +383,9 @@ public class MessagingServiceTests {
                             }
                         });
 
-        final MessagingService spyService = spy(new MessagingService());
-        doReturn(application).when(spyService).getApplicationContext();
+        final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
-        spyService.onMessageReceived(remoteMessage);
-
+        assertTrue(handled);
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
         mobileCore.verify(
                 () -> MobileCore.initialize(any(Application.class), anyString(), any()), never());
@@ -395,16 +393,13 @@ public class MessagingServiceTests {
     }
 
     @Test
-    public void test_onMessageReceived_selfInitTriedAlready_runsDeferredDispatchImmediately() {
-        // First call: cold start with cached appId → self-init runs and flips selfInitTried.
+    public void test_handleRemoteMessage_selfInitTriedAlready_runsDeferredDispatchImmediately()
+            throws Exception {
+        // First call: cached appId present → self-init runs and flips selfInitTried to true.
         when(namedCollection.getString(eq("config.appID"), any())).thenReturn("cached-app-id");
         final ArgumentCaptor<AdobeCallback<?>> firstCallbackCaptor =
                 ArgumentCaptor.forClass(AdobeCallback.class);
-
-        final MessagingService spyService = spy(new MessagingService());
-        doReturn(application).when(spyService).getApplicationContext();
-
-        spyService.onMessageReceived(remoteMessage);
+        MessagingService.handleRemoteMessage(context, remoteMessage);
         mobileCore.verify(
                 () ->
                         MobileCore.initialize(
@@ -415,7 +410,7 @@ public class MessagingServiceTests {
         // Second call: selfInitTried is now true → callback runs immediately without calling
         // MobileCore.initialize a second time.
         when(remoteMessage.getMessageId()).thenReturn("test-message-id-2");
-        new MessagingService().onMessageReceived(remoteMessage);
+        MessagingService.handleRemoteMessage(context, remoteMessage);
 
         // initialize was only called once across both pushes.
         mobileCore.verify(
