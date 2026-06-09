@@ -1495,5 +1495,4 @@ public class MessagingTests {
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
-
 }

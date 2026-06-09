@@ -270,7 +270,10 @@ public final class Messaging {
                             + " configureWithAppID at least once before the SDK can self-init.");
             return;
         }
-        Log.debug(LOG_TAG, CLASS_NAME, "Self-init: cached appId found, calling MobileCore.initialize.");
+        Log.debug(
+                LOG_TAG,
+                CLASS_NAME,
+                "Self-init: cached appId found, calling MobileCore.initialize.");
 
         MobileCore.initialize(
                 application,
@@ -291,8 +294,7 @@ public final class Messaging {
      *
      * @return the persisted appId, or {@code null} if not present or unreadable.
      */
-    @androidx.annotation.Nullable
-    private static String readCachedAppId() {
+    @androidx.annotation.Nullable private static String readCachedAppId() {
         try {
             final NamedCollection store =
                     ServiceProvider.getInstance()
