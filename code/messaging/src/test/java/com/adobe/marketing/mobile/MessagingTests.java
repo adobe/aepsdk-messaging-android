@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
 import android.content.Intent;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils;
@@ -64,8 +65,19 @@ import org.mockito.stubbing.Answer;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingTests {
     @Mock Intent mockIntent;
+    @Mock Context mockContext;
     @Mock ServiceProvider mockServiceProvider;
     @Mock DeviceInforming mockDeviceInfoService;
+
+    @org.junit.Before
+    public void setUp() throws Exception {
+        // Pre-set selfInitTried=true so trackPushReceived tests hit the warm path and the
+        // dispatch callback runs synchronously — without needing a full Application/ServiceProvider
+        // mock chain for selfInit.
+        final java.lang.reflect.Field f = Messaging.class.getDeclaredField("selfInitTried");
+        f.setAccessible(true);
+        f.set(null, true);
+    }
 
     private void runWithMockedMobileCore(
             final ArgumentCaptor<Event> eventArgumentCaptor,
@@ -1371,23 +1383,11 @@ public class MessagingTests {
     }
 
     // ========================================================================================
-    // handlePushReceived
+    // trackPushReceived
     // ========================================================================================
 
-    /**
-     * Reset the dedup LRU between handlePushReceived tests so cached messageIds from earlier tests
-     * don't silently drop new dispatches.
-     */
-    private void resetDedupCache() throws Exception {
-        final java.lang.reflect.Field f =
-                Messaging.class.getDeclaredField("recentlyTrackedMessageIds");
-        f.setAccessible(true);
-        ((java.util.Set<String>) f.get(null)).clear();
-    }
-
     @Test
-    public void test_handlePushReceived_validParams_dispatchesPushReceivedEvent() throws Exception {
-        resetDedupCache();
+    public void test_trackPushReceived_validParams_dispatchesPushReceivedEvent() throws Exception {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(
                 eventCaptor,
@@ -1400,7 +1400,7 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
                     when(remoteMessage.getData()).thenReturn(data);
 
-                    Messaging.handlePushReceived(remoteMessage);
+                    Messaging.trackPushReceived(mockContext, remoteMessage);
 
                     final Event dispatched = eventCaptor.getValue();
                     Assert.assertNotNull(dispatched);
@@ -1429,8 +1429,7 @@ public class MessagingTests {
     }
 
     @Test
-    public void test_handlePushReceived_nullMessageId_doesNotDispatch() throws Exception {
-        resetDedupCache();
+    public void test_trackPushReceived_nullMessageId_doesNotDispatch() throws Exception {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(
                 eventCaptor,
@@ -1440,15 +1439,14 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn(null);
                     when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.handlePushReceived(remoteMessage);
+                    Messaging.trackPushReceived(mockContext, remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
 
     @Test
-    public void test_handlePushReceived_emptyMessageId_doesNotDispatch() throws Exception {
-        resetDedupCache();
+    public void test_trackPushReceived_emptyMessageId_doesNotDispatch() throws Exception {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(
                 eventCaptor,
@@ -1458,15 +1456,14 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn("");
                     when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.handlePushReceived(remoteMessage);
+                    Messaging.trackPushReceived(mockContext, remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
 
     @Test
-    public void test_handlePushReceived_nullData_doesNotDispatch() throws Exception {
-        resetDedupCache();
+    public void test_trackPushReceived_nullData_doesNotDispatch() throws Exception {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(
                 eventCaptor,
@@ -1476,15 +1473,14 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
                     when(remoteMessage.getData()).thenReturn(null);
 
-                    Messaging.handlePushReceived(remoteMessage);
+                    Messaging.trackPushReceived(mockContext, remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
 
     @Test
-    public void test_handlePushReceived_emptyData_doesNotDispatch() throws Exception {
-        resetDedupCache();
+    public void test_trackPushReceived_emptyData_doesNotDispatch() throws Exception {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(
                 eventCaptor,
@@ -1494,69 +1490,10 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
                     when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.handlePushReceived(remoteMessage);
+                    Messaging.trackPushReceived(mockContext, remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
 
-    @Test
-    public void test_handlePushReceived_sameMessageIdTwice_dedupsToSingleDispatch()
-            throws Exception {
-        resetDedupCache();
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(
-                eventCaptor,
-                null,
-                () -> {
-                    final Map<String, String> data = new HashMap<>();
-                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{}");
-                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
-                    when(remoteMessage.getMessageId()).thenReturn("dup-msg-id");
-                    when(remoteMessage.getData()).thenReturn(data);
-
-                    // Simulates FCM at-least-once delivery calling handlePushReceived twice
-                    // for the same messageId.
-                    Messaging.handlePushReceived(remoteMessage);
-                    Messaging.handlePushReceived(remoteMessage);
-
-                    // Only ONE dispatch — the LRU cache absorbs the second call.
-                    assertEquals(1, dispatchCount(eventCaptor));
-                    assertEquals(
-                            "dup-msg-id", eventCaptor.getValue().getEventData().get("messageId"));
-                });
-    }
-
-    @Test
-    public void test_handlePushReceived_differentMessageIds_dispatchesBoth() throws Exception {
-        resetDedupCache();
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(
-                eventCaptor,
-                null,
-                () -> {
-                    final Map<String, String> data = new HashMap<>();
-                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{}");
-
-                    final RemoteMessage remoteMessageA = mock(RemoteMessage.class);
-                    when(remoteMessageA.getMessageId()).thenReturn("msg-A");
-                    when(remoteMessageA.getData()).thenReturn(data);
-
-                    final RemoteMessage remoteMessageB = mock(RemoteMessage.class);
-                    when(remoteMessageB.getMessageId()).thenReturn("msg-B");
-                    when(remoteMessageB.getData()).thenReturn(data);
-
-                    Messaging.handlePushReceived(remoteMessageA);
-                    Messaging.handlePushReceived(remoteMessageB);
-
-                    // Both fire because messageIds differ.
-                    assertEquals(2, dispatchCount(eventCaptor));
-                    assertEquals(
-                            "msg-A",
-                            eventCaptor.getAllValues().get(0).getEventData().get("messageId"));
-                    assertEquals(
-                            "msg-B",
-                            eventCaptor.getAllValues().get(1).getEventData().get("messageId"));
-                });
-    }
 }

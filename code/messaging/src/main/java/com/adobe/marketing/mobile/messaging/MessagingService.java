@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import android.app.Application;
 import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.NonNull;
@@ -20,9 +19,6 @@ import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.NamedCollection;
-import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -35,12 +31,6 @@ import com.google.firebase.messaging.RemoteMessage;
 public class MessagingService extends FirebaseMessagingService {
     private static final String SELF_TAG = "MessagingService";
     private static final String XDM_KEY = "_xdm";
-
-    // Self-init constants. Mirror AppIdManager's persistence in Core (NamedCollection +
-    // key name written by ConfigurationExtension.configureWithAppID).
-    private static final String CONFIG_DATASTORE = "AdobeMobile_ConfigState";
-    private static final String CONFIG_KEY_APP_ID = "config.appID";
-    private static volatile boolean selfInitTried = false;
 
     @Override
     public void onNewToken(final @NonNull String token) {
@@ -83,111 +73,10 @@ public class MessagingService extends FirebaseMessagingService {
                 NotificationManagerCompat.from(context);
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
-        // Bootstrap the SDK if this is a cold-start push, then record delivery. selfInit is a
-        // no-op after the first call (guarded by selfInitTried) and MobileCore fires its
-        // initialize callback even when already initialized, so this works correctly for both
-        // cold-start and warm-start pushes.
-        selfInit(context, () -> Messaging.handlePushReceived(remoteMessage));
+        // Record push delivery. trackPushReceived handles SDK bootstrapping on cold start and
+        // dispatches the pushTracking.receive Edge event once initialized.
+        Messaging.trackPushReceived(context, remoteMessage);
         return true;
-    }
-
-    /**
-     * Bootstraps the AEP SDK from a cached {@code appId} when the Messaging extension is not yet
-     * registered, then runs {@code onInitComplete} from the {@link MobileCore#initialize}
-     * completion callback. Used when a cold-start push arrives before the host app finishes
-     * initialization.
-     *
-     * <p>Runs at most once per process. If no cached {@code appId} is available (first launch
-     * before any {@link MobileCore#configureWithAppID(String)} call), self-init is skipped and
-     * {@code onInitComplete} is not invoked.
-     *
-     * @param context the {@link Context} from FCM's {@code onMessageReceived}
-     * @param onInitComplete callback invoked after initialization completes, or immediately if
-     *     self-init was already attempted in this process
-     */
-    private static synchronized void selfInit(
-            final @NonNull Context context, final @NonNull Runnable onInitComplete) {
-        if (selfInitTried) {
-            // Self-init was already attempted in this process. Whether extensions actually
-            // registered or not, the deferred action should still run so the push-receive
-            // event isn't silently dropped.
-            onInitComplete.run();
-            return;
-        }
-        selfInitTried = true;
-
-        if (!(context.getApplicationContext() instanceof Application)) {
-            Log.warning(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Self-init aborted: ApplicationContext is not an Application instance.");
-            return;
-        }
-        final Application application = (Application) context.getApplicationContext();
-
-        // Prime ServiceProvider with the Application instance so the data store service has a
-        // valid context. Required before readCachedAppId() — otherwise NamedCollection creation
-        // fails with "ApplicationContext is null". setApplication is idempotent; the subsequent
-        // MobileCore.initialize call will see it as already-set and short-circuit internally.
-        MobileCore.setApplication(application);
-
-        // Read the appId persisted by a previous successful MobileCore.configureWithAppID call.
-        // If none exists, the host app has never configured the SDK and there's nothing to
-        // bootstrap from. configureWithAppID writes to the same NamedCollection / key via
-        // ConfigurationExtension's internal AppIdManager.
-        final String cachedAppId = readCachedAppId();
-        if (StringUtils.isNullOrEmpty(cachedAppId)) {
-            Log.warning(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Self-init aborted: no cached appId found in persistence. The host app must"
-                            + " configureWithAppID at least once before the SDK can self-init.");
-            return;
-        }
-        Log.debug(
-                MessagingPushConstants.LOG_TAG,
-                SELF_TAG,
-                "Self-init: cached appId found, calling MobileCore.initialize.");
-
-        // Use Core's default-configuration overload — equivalent to what the simple
-        // MobileCore.initialize(app, appId) API gives a host app. This intentionally avoids
-        // touching InitOptions: Core once-per-process initialize contract, only
-        // the first call's options take effect, so any non-default we set here could not later
-        // be overridden by the host app. Defaults keep automatic lifecycle tracking enabled,
-        // matching the most common host-app expectation.
-        MobileCore.initialize(
-                application,
-                cachedAppId,
-                ignored -> {
-                    Log.debug(
-                            MessagingPushConstants.LOG_TAG,
-                            SELF_TAG,
-                            "Self-init: MobileCore.initialize completed; running deferred"
-                                    + " push-receive dispatch.");
-                    onInitComplete.run();
-                });
-    }
-
-    /**
-     * Reads the {@code appId} previously written to {@value #CONFIG_DATASTORE} / {@value
-     * #CONFIG_KEY_APP_ID} by Core's {@code ConfigurationExtension.configureWithAppID}.
-     *
-     * @return the persisted appId, or {@code null} if not present or unreadable.
-     */
-    @androidx.annotation.Nullable private static String readCachedAppId() {
-        try {
-            final NamedCollection store =
-                    ServiceProvider.getInstance()
-                            .getDataStoreService()
-                            .getNamedCollection(CONFIG_DATASTORE);
-            return (store != null) ? store.getString(CONFIG_KEY_APP_ID, null) : null;
-        } catch (final RuntimeException e) {
-            Log.warning(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Self-init: failed to read cached appId: " + e.getMessage());
-            return null;
-        }
     }
 
     /**
