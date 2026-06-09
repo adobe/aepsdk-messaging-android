@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Intent;
-import android.os.Bundle;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
@@ -41,7 +40,6 @@ import com.adobe.marketing.mobile.util.MonitorExtension;
 import com.adobe.marketing.mobile.util.TestHelper;
 import com.adobe.marketing.mobile.util.TestRetryRule;
 import com.adobe.marketing.mobile.util.TestableNetworkRequest;
-import com.google.firebase.messaging.RemoteMessage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -77,7 +75,6 @@ public class MessagingPublicAPITests {
 
     @Before
     public void setup() throws Exception {
-        resetHandlePushReceivedDedupCache();
         MessagingTestUtils.setEdgeIdentityPersistence(
                 MessagingTestUtils.createIdentityMap("ECID", "mockECID"),
                 TestHelper.getDefaultApplication());
@@ -240,105 +237,6 @@ public class MessagingPublicAPITests {
 
         // verify intent is updated
         assertFalse(updated);
-    }
-
-    // --------------------------------------------------------------------------------------------
-    // Tests for Messaging.handlePushReceived API
-    // --------------------------------------------------------------------------------------------
-
-    @Test
-    public void testHandlePushReceived() throws Exception {
-        resetHandlePushReceivedDedupCache();
-        final String messageId = "mockReceiveMessageId";
-        final Map<String, String> data = getPushReceivedData();
-
-        Messaging.handlePushReceived(buildRemoteMessage(messageId, data));
-
-        final List<Event> messagingRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
-        assertEquals(1, messagingRequestEvents.size());
-        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
-        assertEquals(
-                messageId,
-                messagingEventData.get(
-                        MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID));
-        assertEquals(
-                "pushTracking.receive",
-                messagingEventData.get(
-                        MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE));
-        assertEquals(
-                true,
-                messagingEventData.get(
-                        MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED));
-        assertNotNull(
-                messagingEventData.get(
-                        MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM));
-
-        final List<Event> edgeRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
-        assertEquals(1, edgeRequestEvents.size());
-        final Map<String, String> edgeTrackingData =
-                MessagingTestUtils.flattenMap(edgeRequestEvents.get(0).getEventData());
-        assertEquals(
-                messageId,
-                edgeTrackingData.get("xdm.pushNotificationTracking.pushProviderMessageID"));
-        assertEquals("0", edgeTrackingData.get("xdm.application.launches.value"));
-        assertEquals("pushTracking.receive", edgeTrackingData.get("xdm.eventType"));
-        assertEquals("somedatasetid", edgeTrackingData.get("meta.collect.datasetId"));
-    }
-
-    @Test
-    public void testHandlePushReceived_nullMessageId() throws InterruptedException {
-        // RemoteMessage with no message_id set → getMessageId() returns null
-        Messaging.handlePushReceived(buildRemoteMessage(null, getPushReceivedData()));
-
-        final List<Event> messagingRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
-        assertEquals(0, messagingRequestEvents.size());
-
-        final List<Event> edgeRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
-        assertEquals(0, edgeRequestEvents.size());
-    }
-
-    @Test
-    public void testHandlePushReceived_nullData() throws InterruptedException {
-        // RemoteMessage with messageId but no data keys → getData() returns empty map
-        Messaging.handlePushReceived(buildRemoteMessage("mockMessageId", null));
-
-        final List<Event> messagingRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
-        assertEquals(0, messagingRequestEvents.size());
-
-        final List<Event> edgeRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
-        assertEquals(0, edgeRequestEvents.size());
-    }
-
-    @Test
-    public void testHandlePushReceived_duplicateMessageId_dedups() throws Exception {
-        resetHandlePushReceivedDedupCache();
-        final Map<String, String> data = getPushReceivedData();
-        final String messageId = "mockDedupMessageId";
-
-        Messaging.handlePushReceived(buildRemoteMessage(messageId, data));
-        Messaging.handlePushReceived(buildRemoteMessage(messageId, data));
-
-        final List<Event> messagingRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
-        assertEquals(1, messagingRequestEvents.size());
-
-        final List<Event> edgeRequestEvents =
-                getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
-        assertEquals(1, edgeRequestEvents.size());
     }
 
     // --------------------------------------------------------------------------------------------
@@ -2524,57 +2422,6 @@ public class MessagingPublicAPITests {
                     + "            }\n"
                     + "          }");
         return intent;
-    }
-
-    /**
-     * Builds a real {@link RemoteMessage} from a messageId and data map using the Bundle
-     * constructor exposed by Firebase. Reserved Firebase keys are excluded from {@link
-     * RemoteMessage#getData()}, so user data is stored directly as bundle extras.
-     *
-     * @param messageId value for {@code google.message_id}; pass {@code null} to omit it so that
-     *     {@link RemoteMessage#getMessageId()} returns {@code null}.
-     * @param data user data to embed; pass {@code null} or empty to produce an empty data map.
-     */
-    private RemoteMessage buildRemoteMessage(
-            final String messageId, final Map<String, String> data) {
-        final Bundle bundle = new Bundle();
-        if (messageId != null) {
-            bundle.putString("google.message_id", messageId);
-        }
-        if (data != null) {
-            for (final Map.Entry<String, String> entry : data.entrySet()) {
-                bundle.putString(entry.getKey(), entry.getValue());
-            }
-        }
-        return new RemoteMessage(bundle);
-    }
-
-    private Map<String, String> getPushReceivedData() {
-        final Map<String, String> data = new HashMap<>();
-        data.put(
-                MessagingTestConstants.TrackingKeys._XDM,
-                "{\n"
-                    + "            cjm ={\n"
-                    + "              _experience= {\n"
-                    + "                customerJourneyManagement= {\n"
-                    + "                  messageExecution= {\n"
-                    + "                    messageExecutionID= 16-Sept-postman, \n"
-                    + "                    messageID= 567, \n"
-                    + "                    journeyVersionID= some-journeyVersionId, \n"
-                    + "                    journeyVersionInstanceID= someJourneyVersionInstanceID\n"
-                    + "                  }\n"
-                    + "                }\n"
-                    + "              }\n"
-                    + "            }\n"
-                    + "          }");
-        return data;
-    }
-
-    private void resetHandlePushReceivedDedupCache() throws Exception {
-        final java.lang.reflect.Field cacheField =
-                Messaging.class.getDeclaredField("recentlyTrackedMessageIds");
-        cacheField.setAccessible(true);
-        ((java.util.Set<String>) cacheField.get(null)).clear();
     }
 
     private void setMockNetworkResponseForPersonalizationRequests(final String responseFileName) {

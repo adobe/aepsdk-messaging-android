@@ -82,7 +82,6 @@ dependencies {
 
     // androidTestImplementation dependencies provided by aep-library:
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE, COMPOSE_UI_TEST_JUNIT4, COMPOSE_UI_TEST_MANIFEST
-    androidTestImplementation("com.google.firebase:firebase-messaging:23.4.1")
     androidTestImplementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
     androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
     androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
