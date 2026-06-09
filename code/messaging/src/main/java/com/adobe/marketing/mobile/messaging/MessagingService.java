@@ -60,7 +60,15 @@ public class MessagingService extends FirebaseMessagingService {
                 SELF_TAG,
                 "onMessageReceived: received remote message from FCM; delegating to"
                         + " handleRemoteMessage.");
+
+        // Build and display the notification immediately while the FCM wakelock is active.
         handleRemoteMessage(this, remoteMessage);
+
+        // Bootstrap the SDK if this is a cold-start push, then record delivery. selfInit is a
+        // no-op after the first call (guarded by selfInitTried) and MobileCore fires its
+        // initialize callback even when already initialized, so this works correctly for both
+        // cold-start and warm-start pushes.
+        selfInit(this, () -> Messaging.handlePushReceived(remoteMessage));
     }
 
     public static boolean handleRemoteMessage(
@@ -74,40 +82,13 @@ public class MessagingService extends FirebaseMessagingService {
             return false;
         }
 
-        // RemoteMessage#getMessageId() is declared @Nullable by Firebase. Bail out before any
-        // downstream code that dereferences it (hashCode for notification id, dedup key, etc.).
-        final String messageId = remoteMessage.getMessageId();
-        if (StringUtils.isNullOrEmpty(messageId)) {
-            Log.warning(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "handleRemoteMessage: messageId is null or empty; skipping.");
-            return false;
-        }
-
-        // Build and display the notification synchronously — this must happen while the FCM
-        // wakelock is active so the user sees the notification immediately. Self-init and the
-        // receive-tracking dispatch run independently below.
+        // Build and display the notification synchronously while the FCM wakelock is active.
         final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
         final Notification notification = MessagingPushBuilder.build(payload, context);
-        NotificationManagerCompat.from(context).notify(messageId.hashCode(), notification);
+        final NotificationManagerCompat notificationManager =
+                NotificationManagerCompat.from(context);
+        notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
-        // Push receive tracking dispatch. If the Messaging extension is already registered,
-        // fire immediately. Otherwise, bootstrap the SDK from the cached appId and fire the
-        // dispatch from the initialize completion callback — this avoids blocking the FCM
-        // service thread on a latch and guarantees extensions are registered before dispatch.
-        if (MessagingExtension.isRegistered()) {
-            Messaging.handlePushReceived(messageId, remoteMessage.getData());
-        } else {
-            Log.debug(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Messaging extension is not registered. Attempting self-init from cached"
-                            + " configuration before dispatching push receive event.");
-            selfInit(
-                    context,
-                    () -> Messaging.handlePushReceived(messageId, remoteMessage.getData()));
-        }
         return true;
     }
 
@@ -194,7 +175,8 @@ public class MessagingService extends FirebaseMessagingService {
      *
      * @return the persisted appId, or {@code null} if not present or unreadable.
      */
-    @androidx.annotation.Nullable private static String readCachedAppId() {
+    @androidx.annotation.Nullable
+    private static String readCachedAppId() {
         try {
             final NamedCollection store =
                     ServiceProvider.getInstance()

@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile;
 
 import android.content.Intent;
+import com.google.firebase.messaging.RemoteMessage;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.messaging.CompletionHandler;
@@ -180,12 +181,11 @@ public final class Messaging {
      * event is dispatched exactly once per notification per process, even if this method is called
      * multiple times for the same message.
      *
-     * @param messageId {@link String} the Firebase message ID from {@code
-     *     RemoteMessage#getMessageId()}
-     * @param data {@link Map} the data payload from {@code RemoteMessage#getData()}
+     * @param remoteMessage {@link RemoteMessage} the Firebase remote message received in {@code
+     *     FirebaseMessagingService#onMessageReceived}
      */
-    public static void handlePushReceived(
-            @NonNull final String messageId, @NonNull final Map<String, String> data) {
+    public static void handlePushReceived(@NonNull final RemoteMessage remoteMessage) {
+        final String messageId = remoteMessage.getMessageId();
         if (StringUtils.isNullOrEmpty(messageId)) {
             Log.warning(
                     LOG_TAG,
@@ -193,6 +193,8 @@ public final class Messaging {
                     "Failed to track push notification received, messageId is null or empty.");
             return;
         }
+
+        final Map<String, String> data = remoteMessage.getData();
         if (MapUtils.isNullOrEmpty(data)) {
             Log.warning(
                     LOG_TAG,

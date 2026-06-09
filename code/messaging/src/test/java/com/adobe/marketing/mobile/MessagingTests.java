@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.content.Intent;
+import com.google.firebase.messaging.RemoteMessage;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
@@ -1395,8 +1396,11 @@ public class MessagingTests {
                     final Map<String, String> data = new HashMap<>();
                     data.put(MessagingTestConstants.TrackingKeys._XDM, "{\"cjm\":{}}");
                     data.put("adb_title", "Hello");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(data);
 
-                    Messaging.handlePushReceived("test-msg-id", data);
+                    Messaging.handlePushReceived(remoteMessage);
 
                     final Event dispatched = eventCaptor.getValue();
                     Assert.assertNotNull(dispatched);
@@ -1432,10 +1436,11 @@ public class MessagingTests {
                 eventCaptor,
                 null,
                 () -> {
-                    final Map<String, String> data = new HashMap<>();
-                    data.put("k", "v");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn(null);
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.handlePushReceived(null, data);
+                    Messaging.handlePushReceived(remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
@@ -1449,10 +1454,11 @@ public class MessagingTests {
                 eventCaptor,
                 null,
                 () -> {
-                    final Map<String, String> data = new HashMap<>();
-                    data.put("k", "v");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.handlePushReceived("", data);
+                    Messaging.handlePushReceived(remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
@@ -1466,7 +1472,12 @@ public class MessagingTests {
                 eventCaptor,
                 null,
                 () -> {
-                    Messaging.handlePushReceived("test-msg-id", null);
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(null);
+
+                    Messaging.handlePushReceived(remoteMessage);
+
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
@@ -1479,7 +1490,12 @@ public class MessagingTests {
                 eventCaptor,
                 null,
                 () -> {
-                    Messaging.handlePushReceived("test-msg-id", new HashMap<>());
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
+
+                    Messaging.handlePushReceived(remoteMessage);
+
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
@@ -1495,11 +1511,14 @@ public class MessagingTests {
                 () -> {
                     final Map<String, String> data = new HashMap<>();
                     data.put(MessagingTestConstants.TrackingKeys._XDM, "{}");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("dup-msg-id");
+                    when(remoteMessage.getData()).thenReturn(data);
 
                     // Simulates FCM at-least-once delivery calling handlePushReceived twice
                     // for the same messageId.
-                    Messaging.handlePushReceived("dup-msg-id", data);
-                    Messaging.handlePushReceived("dup-msg-id", data);
+                    Messaging.handlePushReceived(remoteMessage);
+                    Messaging.handlePushReceived(remoteMessage);
 
                     // Only ONE dispatch — the LRU cache absorbs the second call.
                     assertEquals(1, dispatchCount(eventCaptor));
@@ -1519,8 +1538,16 @@ public class MessagingTests {
                     final Map<String, String> data = new HashMap<>();
                     data.put(MessagingTestConstants.TrackingKeys._XDM, "{}");
 
-                    Messaging.handlePushReceived("msg-A", data);
-                    Messaging.handlePushReceived("msg-B", data);
+                    final RemoteMessage remoteMessageA = mock(RemoteMessage.class);
+                    when(remoteMessageA.getMessageId()).thenReturn("msg-A");
+                    when(remoteMessageA.getData()).thenReturn(data);
+
+                    final RemoteMessage remoteMessageB = mock(RemoteMessage.class);
+                    when(remoteMessageB.getMessageId()).thenReturn("msg-B");
+                    when(remoteMessageB.getData()).thenReturn(data);
+
+                    Messaging.handlePushReceived(remoteMessageA);
+                    Messaging.handlePushReceived(remoteMessageB);
 
                     // Both fire because messageIds differ.
                     assertEquals(2, dispatchCount(eventCaptor));

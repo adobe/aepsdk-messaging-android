@@ -55,7 +55,7 @@ If your application already registered a `FirebaseMessagingService` class, then 
 public class YourAppFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
-        if (MessagingService.handleRemoteMessage(this, message)) {
+        if (MessagingService.handleRemoteMessage(this, remoteMessage)) {
             // Push notification originated from Adobe Journey Optimizer is handled by the Messaging extension.
         } else {
             // Handle push notification originated from other sources.

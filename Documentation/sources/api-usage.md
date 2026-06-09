@@ -68,27 +68,22 @@ When using [automatic display and tracking](./push-notification/automatic-handli
 
 ```java
 /**
- * messageId is the id of the push notification from RemoteMessage#getMessageId().
- * data is the data payload from RemoteMessage#getData().
+ * remoteMessage is the RemoteMessage object received in FirebaseMessagingService#onMessageReceived.
+ * The messageId and data payload are extracted internally.
  */
-Messaging.handlePushReceived(final String messageId, final Map<String, String> data)
+Messaging.handlePushReceived(@NonNull final RemoteMessage remoteMessage)
 ```
 
 #### Kotlin
 
 ```kotlin
-remoteMessage.messageId?.let { messageId ->
-    Messaging.handlePushReceived(messageId, remoteMessage.data)
-}
+Messaging.handlePushReceived(remoteMessage)
 ```
 
 #### Java
 
 ```java
-final String messageId = remoteMessage.getMessageId();
-if (messageId != null && !messageId.isEmpty()) {
-    Messaging.handlePushReceived(messageId, remoteMessage.getData());
-}
+Messaging.handlePushReceived(remoteMessage);
 ```
 
 ### Sending push notification interactions details 

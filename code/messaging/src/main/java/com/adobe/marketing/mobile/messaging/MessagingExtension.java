@@ -43,26 +43,6 @@ import org.json.JSONObject;
 public final class MessagingExtension extends Extension {
     private static final String SELF_TAG = "MessagingExtension";
 
-    /**
-     * Flag indicating whether this extension has been registered with the EventHub in the current
-     * process. Used by {@link MessagingService#handleRemoteMessage} to detect an un-initialized SDK
-     * state and trigger self-init when a killed-state push arrives before the host app's foreground
-     * initialization completes.
-     *
-     * <p>Flipped to {@code true} in {@link #onRegistered()} and back to {@code false} in {@link
-     * #onUnregistered()}. Volatile because it is read from threads other than the EventHub executor
-     * (specifically, the FCM service thread).
-     */
-    private static volatile boolean registered = false;
-
-    /**
-     * @return {@code true} if {@link MessagingExtension} is currently registered with Core's
-     *     EventHub in this process, {@code false} otherwise.
-     */
-    static boolean isRegistered() {
-        return registered;
-    }
-
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
@@ -161,7 +141,6 @@ public final class MessagingExtension extends Extension {
     @Override
     protected void onRegistered() {
         super.onRegistered();
-        registered = true;
         getApi().registerEventListener(
                         EventType.GENERIC_IDENTITY,
                         EventSource.REQUEST_CONTENT,
@@ -224,9 +203,7 @@ public final class MessagingExtension extends Extension {
     }
 
     @Override
-    protected void onUnregistered() {
-        registered = false;
-    }
+    protected void onUnregistered() {}
 
     @Override
     public boolean readyForEvent(@NonNull final Event event) {

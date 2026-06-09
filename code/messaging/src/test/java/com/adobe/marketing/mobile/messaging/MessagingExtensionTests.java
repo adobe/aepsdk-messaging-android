@@ -1967,25 +1967,6 @@ public class MessagingExtensionTests {
     // ========================================================================================
 
     @Test
-    public void test_isRegistered_returnsFalseBeforeOnRegistered() {
-        runUsingMockedServiceProvider(() -> assertFalse(MessagingExtension.isRegistered()));
-    }
-
-    @Test
-    public void test_isRegistered_returnsTrueAfterOnRegisteredAndFalseAfterOnUnregistered() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
-
-                    assertFalse(MessagingExtension.isRegistered());
-                    messagingExtension.onRegistered();
-                    assertTrue(MessagingExtension.isRegistered());
-                    messagingExtension.onUnregistered();
-                    assertFalse(MessagingExtension.isRegistered());
-                });
-    }
-
-    @Test
     public void test_processEvent_pushNotificationReceivedEvent_dispatchesEdgeEvent() {
         runUsingMockedServiceProvider(
                 () -> {
