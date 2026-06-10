@@ -28,7 +28,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
@@ -39,6 +41,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +66,7 @@ import org.mockito.stubbing.Answer;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingTests {
     @Mock Intent mockIntent;
+    @Mock Context mockContext;
     @Mock ServiceProvider mockServiceProvider;
     @Mock DeviceInforming mockDeviceInfoService;
 
@@ -409,8 +413,8 @@ public class MessagingTests {
                     Messaging.handleNotificationResponse(
                             mockIntent, true, mockActionId, mockCallback);
 
-                    // verify
-                    verify(mockIntent, times(2)).getStringExtra(anyString());
+                    // verify (3 calls: messageId, adobe_xdm, _xdm fallback)
+                    verify(mockIntent, times(3)).getStringExtra(anyString());
 
                     // verify no event captured
                     assertEquals(0, eventCaptor.getAllValues().size());
@@ -1366,6 +1370,369 @@ public class MessagingTests {
 
                     // verify no event dispatched
                     assertNull(eventCaptor.getValue());
+                });
+    }
+
+    // ========================================================================================
+    // PushNotificationListener via handleNotificationResponse
+    // ========================================================================================
+
+    @After
+    public void clearListener() {
+        Messaging.setPushNotificationListener(null);
+    }
+
+    private void stubMockIntentWithExtras(final Map<String, String> data) {
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            when(mockIntent.getStringExtra(entry.getKey())).thenReturn(entry.getValue());
+        }
+        final Bundle mockBundle = mock(Bundle.class);
+        when(mockBundle.keySet()).thenReturn(data.keySet());
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            when(mockBundle.get(entry.getKey())).thenReturn(entry.getValue());
+        }
+        when(mockIntent.getExtras()).thenReturn(mockBundle);
+    }
+
+    @Test
+    public void test_pushListener_onNotificationOpened_bodyTap() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-123");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Test Title");
+                    data.put("custom_key", "custom_value");
+                    stubMockIntentWithExtras(data);
+
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
+
+                    ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                            ArgumentCaptor.forClass(MessagingPushPayload.class);
+                    verify(listener, times(1))
+                            .onNotificationOpened(payloadCaptor.capture(), eq(null));
+                    verify(listener, times(0)).onNotificationDismissed(any());
+
+                    MessagingPushPayload payload = payloadCaptor.getValue();
+                    assertNotNull(payload);
+                    assertEquals("msg-123", payload.getMessageId());
+                    assertEquals("Test Title", payload.getTitle());
+                    assertEquals("custom_value", payload.getData().get("custom_key"));
+                });
+    }
+
+    @Test
+    public void test_pushListener_onNotificationOpened_buttonClick() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-456");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Test Title");
+                    stubMockIntentWithExtras(data);
+
+                    Messaging.handleNotificationResponse(mockIntent, true, "Accept");
+
+                    verify(listener, times(1)).onNotificationOpened(any(), eq("Accept"));
+                    verify(listener, times(0)).onNotificationDismissed(any());
+                });
+    }
+
+    @Test
+    public void test_pushListener_onNotificationDismissed() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-789");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Dismissed Notification");
+                    stubMockIntentWithExtras(data);
+
+                    Messaging.handleNotificationResponse(mockIntent, false, "Dismiss");
+
+                    ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                            ArgumentCaptor.forClass(MessagingPushPayload.class);
+                    verify(listener, times(0)).onNotificationOpened(any(), any());
+                    verify(listener, times(1)).onNotificationDismissed(payloadCaptor.capture());
+
+                    MessagingPushPayload payload = payloadCaptor.getValue();
+                    assertNotNull(payload);
+                    assertEquals("msg-789", payload.getMessageId());
+                });
+    }
+
+    @Test
+    public void test_pushListener_nullListener_noCrash() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    Messaging.setPushNotificationListener(null);
+
+                    when(mockIntent.getStringExtra("messageId")).thenReturn("msg-000");
+                    when(mockIntent.getStringExtra("adobe_xdm")).thenReturn("{\"test\":\"xdm\"}");
+
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
+
+                    // should not throw; tracking event should still be dispatched
+                    assertNotNull(eventCaptor.getValue());
+                });
+    }
+
+    @Test
+    public void test_pushListener_unregisterStopsCallbacks() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+                    Messaging.setPushNotificationListener(null);
+
+                    when(mockIntent.getStringExtra("messageId")).thenReturn("msg-unset");
+                    when(mockIntent.getStringExtra("adobe_xdm")).thenReturn("{\"test\":\"xdm\"}");
+
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
+
+                    verifyNoInteractions(listener);
+                });
+    }
+
+    @Test
+    public void test_pushListener_exceptionDoesNotPreventTracking() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+                    Mockito.doThrow(new RuntimeException("listener crash"))
+                            .when(listener)
+                            .onNotificationOpened(any(), any());
+
+                    when(mockIntent.getStringExtra("messageId")).thenReturn("msg-crash");
+                    when(mockIntent.getStringExtra("adobe_xdm")).thenReturn("{\"test\":\"xdm\"}");
+
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
+
+                    // tracking event should still be dispatched despite listener throwing
+                    assertNotNull(eventCaptor.getValue());
+                    assertEquals(
+                            "Push notification interaction event",
+                            eventCaptor.getValue().getName());
+                });
+    }
+
+    @Test
+    public void test_pushListener_payloadContainsCustomData() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+
+                    final Map<String, String> data = new HashMap<>();
+                    data.put("messageId", "msg-custom");
+                    data.put("adobe_xdm", "{\"test\":\"xdm\"}");
+                    data.put("adb_title", "Title");
+                    data.put("adb_body", "Body");
+                    data.put("screen", "offers");
+                    data.put("campaign_id", "camp-42");
+                    stubMockIntentWithExtras(data);
+
+                    Messaging.handleNotificationResponse(mockIntent, true, null);
+
+                    ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                            ArgumentCaptor.forClass(MessagingPushPayload.class);
+                    verify(listener).onNotificationOpened(payloadCaptor.capture(), eq(null));
+
+                    MessagingPushPayload payload = payloadCaptor.getValue();
+                    assertEquals("Title", payload.getTitle());
+                    assertEquals("Body", payload.getBody());
+                    assertEquals("offers", payload.getData().get("screen"));
+                    assertEquals("camp-42", payload.getData().get("campaign_id"));
+                });
+    }
+
+    // ========================================================================================
+    // trackPushReceived
+    // ========================================================================================
+
+    @Test
+    public void test_trackPushReceived_validParams_dispatchesPushReceivedEvent() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{\"cjm\":{}}");
+                    data.put("adb_title", "Hello");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(data);
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    final Event dispatched = eventCaptor.getValue();
+                    Assert.assertNotNull(dispatched);
+                    assertEquals("Push notification received", dispatched.getName());
+                    assertEquals(EventType.MESSAGING, dispatched.getType());
+                    assertEquals(EventSource.REQUEST_CONTENT, dispatched.getSource());
+                    assertEquals("test-msg-id", dispatched.getEventData().get("messageId"));
+                    assertEquals(
+                            "pushTracking.receive", dispatched.getEventData().get("eventType"));
+                    assertEquals(true, dispatched.getEventData().get("pushnotificationreceived"));
+                    assertEquals("{\"cjm\":{}}", dispatched.getEventData().get("adobe_xdm"));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_notifiesPushNotificationListener() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{\"cjm\":{}}");
+                    data.put("adb_title", "Hello");
+                    data.put("custom_key", "custom_value");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(data);
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    final ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                            ArgumentCaptor.forClass(MessagingPushPayload.class);
+                    verify(listener, times(1)).onNotificationReceived(payloadCaptor.capture());
+
+                    final MessagingPushPayload payload = payloadCaptor.getValue();
+                    assertNotNull(payload);
+                    assertEquals("Hello", payload.getTitle());
+                    assertEquals("custom_value", payload.getData().get("custom_key"));
+                });
+    }
+
+    /**
+     * Helper: returns the number of times MobileCore.dispatchEvent was called inside the captor
+     * passed to runWithMockedMobileCore. Mockito's ArgumentCaptor stores all captured values in a
+     * list — getAllValues().size() is the call count.
+     */
+    private int dispatchCount(final ArgumentCaptor<Event> captor) {
+        try {
+            return captor.getAllValues().size();
+        } catch (final Exception e) {
+            return 0;
+        }
+    }
+
+    @Test
+    public void test_trackPushReceived_nullMessageId_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn(null);
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_emptyMessageId_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_nullData_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<String, String>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_emptyData_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
 }

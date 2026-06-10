@@ -211,6 +211,7 @@ public final class MessagingConstants {
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
             static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
 
             private Messaging() {}
 
@@ -440,6 +441,14 @@ public final class MessagingConstants {
     }
 
     public final class Push {
+        public class TrackingKeys {
+            public static final String MESSAGE_ID = "messageId";
+            public static final String GOOGLE_MESSAGE_ID = "google.message_id";
+            public static final String ACTION_DISMISS = "Dismiss";
+
+            private TrackingKeys() {}
+        }
+
         public class PayloadKeys {
             public static final String TITLE = "adb_title";
             public static final String BODY = "adb_body";

@@ -297,6 +297,26 @@ class InternalMessagingUtils {
                         false);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is a push notification received event.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a push notification received
+     *     event.
+     */
+    static boolean isPushNotificationReceivedEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+                && DataReader.optBoolean(
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED,
+                        false);
+    }
+
     static boolean isSchemaConsequence(final Event event) {
         if (event == null || event.getEventData() == null) {
             return false;

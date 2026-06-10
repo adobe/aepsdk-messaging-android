@@ -1969,6 +1969,68 @@ public class MessagingExtensionTests {
     }
 
     // ========================================================================================
+    // processEvents PushNotificationReceivedEvent
+    // ========================================================================================
+
+    @Test
+    public void test_processEvent_pushNotificationReceivedEvent_dispatchesEdgeEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    mockConfigSharedState();
+                    final Event event =
+                            samplePushReceivedEvent(
+                                    "receive-message-id", "pushTracking.receive", null);
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+                    messagingExtension.processEvent(event);
+
+                    verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+
+                    final Event pushTrackingStatusEvent = eventCaptor.getAllValues().get(0);
+                    assertEquals("Push tracking status event", pushTrackingStatusEvent.getName());
+                    assertEquals(
+                            PushTrackingStatus.TRACKING_INITIATED.getValue(),
+                            pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
+
+                    final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
+                    assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
+                    assertEquals(EventType.EDGE, pushTrackingEdgeEvent.getType());
+                    final Map<String, String> edgeTrackingData =
+                            MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+                    assertEquals(
+                            "receive-message-id",
+                            edgeTrackingData.get(
+                                    "xdm.pushNotificationTracking.pushProviderMessageID"));
+                    assertEquals("0", edgeTrackingData.get("xdm.application.launches.value"));
+                    assertEquals("pushTracking.receive", edgeTrackingData.get("xdm.eventType"));
+                    assertEquals("mock_datasetId", edgeTrackingData.get("meta.collect.datasetId"));
+                });
+    }
+
+    @Test
+    public void
+            test_processEvent_pushNotificationReceivedEvent_whenDatasetIdEmpty_doesNotDispatch() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockConfigData.getValue())
+                            .thenReturn(
+                                    new HashMap<String, Object>() {
+                                        {
+                                            put("messaging.eventDataset", "");
+                                        }
+                                    });
+                    mockConfigSharedState();
+                    final Event event =
+                            samplePushReceivedEvent(
+                                    "receive-message-id", "pushTracking.receive", null);
+
+                    messagingExtension.processEvent(event);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    // ========================================================================================
     // processEvents MessagingRequestContentEvent - propositionEventType tests
     // ========================================================================================
 
@@ -2977,6 +3039,22 @@ public class MessagingExtensionTests {
                         .setEventData(eventData)
                         .build();
         return event;
+    }
+
+    private Event samplePushReceivedEvent(
+            final String messageId, final String eventType, final String adobeXdm) {
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.put(TRACK_INFO_KEY_EVENT_TYPE, eventType);
+        eventData.put(TRACK_INFO_KEY_ADOBE_XDM, adobeXdm);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_RECEIVED, true);
+
+        return new Event.Builder(
+                        "mock_push_received_event",
+                        MessagingTestConstants.EventType.MESSAGING,
+                        EventSource.REQUEST_CONTENT)
+                .setEventData(eventData)
+                .build();
     }
 
     private void mockConfigSharedState() {
