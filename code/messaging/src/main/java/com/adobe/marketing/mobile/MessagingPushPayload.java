@@ -15,6 +15,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import com.adobe.marketing.mobile.messaging.MessagingConstants;
 import com.adobe.marketing.mobile.services.Log;
@@ -95,28 +97,6 @@ public class MessagingPushPayload {
                 }
             };
 
-    /**
-     * Contains push payload keys to be added to Intent.extras via {@link #putDataInExtras(Intent)}
-     */
-    private static final List<String> pushPayloadKeys =
-            new ArrayList<String>() {
-                {
-                    add(MessagingConstants.Push.PayloadKeys.TITLE);
-                    add(MessagingConstants.Push.PayloadKeys.BODY);
-                    add(MessagingConstants.Push.PayloadKeys.SOUND);
-                    add(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER);
-                    add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY);
-                    add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY);
-                    add(MessagingConstants.Push.PayloadKeys.CHANNEL_ID);
-                    add(MessagingConstants.Push.PayloadKeys.ICON);
-                    add(MessagingConstants.Push.PayloadKeys.IMAGE_URL);
-                    add(MessagingConstants.Push.PayloadKeys.ACTION_TYPE);
-                    add(MessagingConstants.Push.PayloadKeys.ACTION_URI);
-                    add(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS);
-                    add(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID);
-                }
-            };
-
     private static final int ACTION_BUTTON_CAPACITY = 3;
     private String title;
     private String body;
@@ -186,6 +166,46 @@ public class MessagingPushPayload {
      */
     public MessagingPushPayload(final Map<String, String> data) {
         init(data);
+    }
+
+    /**
+     * Constructor
+     *
+     * <p>Reconstructs a MessagingPushPayload from a notification interaction {@link Intent}. The
+     * intent extras are extracted into a data map and the message ID is read from the {@code
+     * "messageId"} or {@code "google.message_id"} extra.
+     *
+     * @param intent the notification interaction intent containing push data extras
+     */
+    public MessagingPushPayload(@NonNull final Intent intent) {
+        final Bundle extras = intent.getExtras();
+        if (extras == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, intent has no extras");
+            return;
+        }
+        final Map<String, String> intentData = new HashMap<>();
+        for (final String key : extras.keySet()) {
+            try {
+                final Object value = extras.get(key);
+                if (value instanceof String) {
+                    intentData.put(key, (String) value);
+                }
+            } catch (final Exception ignored) {
+            }
+        }
+        init(intentData);
+
+        String resolvedMessageId = intentData.get(MessagingConstants.Push.TrackingKeys.MESSAGE_ID);
+        if (StringUtils.isNullOrEmpty(resolvedMessageId)) {
+            resolvedMessageId =
+                    intentData.get(MessagingConstants.Push.TrackingKeys.GOOGLE_MESSAGE_ID);
+        }
+        if (!StringUtils.isNullOrEmpty(resolvedMessageId)) {
+            this.messageId = resolvedMessageId;
+        }
     }
 
     public String getTitle() {
@@ -314,14 +334,12 @@ public class MessagingPushPayload {
      * @param intent {@code Intent} to be modified
      */
     public void putDataInExtras(final Intent intent) {
-        // Adding this check to avoid crashes in case intent or data is null
         if (data == null || intent == null) {
             return;
         }
-        for (final String key : pushPayloadKeys) {
-            final String value = data.get(key);
-            if (!StringUtils.isNullOrEmpty(value)) {
-                intent.putExtra(key, value);
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            if (!StringUtils.isNullOrEmpty(entry.getValue())) {
+                intent.putExtra(entry.getKey(), entry.getValue());
             }
         }
     }
