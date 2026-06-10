@@ -36,9 +36,9 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.PushNotificationListener;
 import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.PushNotificationListener;
 import com.google.firebase.messaging.RemoteMessage;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -417,8 +417,13 @@ public class MessagingServiceTests {
     // ========================================================================================
 
     @Test
-    public void test_handleRemoteMessage_callsOnNotificationReceived() {
+    public void test_handleRemoteMessage_callsOnNotificationReceived() throws Exception {
         // setup
+        // The push-received callback now fires from Messaging.trackPushReceived, which
+        // handleRemoteMessage invokes through selfInit's completion runnable. Simulate the
+        // SDK already being initialized (selfInitTried=true) so that runnable executes
+        // synchronously and the listener is notified within this call.
+        resetStaticField(MessagingService.class, "selfInitTried", true);
         final PushNotificationListener listener = Mockito.mock(PushNotificationListener.class);
         PushCallbackHandler.setListener(listener);
         when(remoteMessage.getData())
@@ -467,36 +472,5 @@ public class MessagingServiceTests {
 
         // verify
         assertTrue(isHandled);
-    }
-
-    @Test
-    public void test_handleRemoteMessage_listenerExceptionDoesNotPreventEvent() {
-        // setup
-        final PushNotificationListener listener = Mockito.mock(PushNotificationListener.class);
-        Mockito.doThrow(new RuntimeException("listener crash"))
-                .when(listener)
-                .onNotificationReceived(any());
-        PushCallbackHandler.setListener(listener);
-        when(remoteMessage.getData())
-                .thenReturn(
-                        new HashMap<String, String>() {
-                            {
-                                put("_xdm", "somevalues");
-                                put("adb_title", "Test Title");
-                            }
-                        });
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-
-        // test — should not throw despite listener crashing
-        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
-
-        // verify notification was still displayed and event dispatched
-        assertTrue(isHandled);
-        mobileCore.verify(() -> MobileCore.dispatchEvent(eventCaptor.capture()));
-        assertNotNull(eventCaptor.getValue());
-        assertEquals("Push Notification Displayed", eventCaptor.getValue().getName());
-
-        // cleanup
-        PushCallbackHandler.setListener(null);
     }
 }

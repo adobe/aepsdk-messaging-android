@@ -25,7 +25,6 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import java.util.HashMap;
 
 /**
  * This class is the entry point for all push notifications received from Firebase.
@@ -86,8 +85,7 @@ public class MessagingService extends FirebaseMessagingService {
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
         // Bootstrap the SDK if this is a cold-start push, then record delivery.
-        selfInit(context, () -> Messaging.trackPushReceived(context, remoteMessage));
-        PushCallbackHandler.notifyReceived(payload);
+        selfInit(context, () -> Messaging.trackPushReceived(remoteMessage));
 
         return true;
     }

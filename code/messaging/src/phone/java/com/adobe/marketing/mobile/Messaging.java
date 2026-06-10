@@ -164,9 +164,9 @@ public final class Messaging {
      * @param remoteMessage {@link RemoteMessage} the Firebase remote message received in {@code
      *     FirebaseMessagingService#onMessageReceived}
      */
-    public static void trackPushReceived(
-            @NonNull final Context context, @NonNull final RemoteMessage remoteMessage) {
+    public static void trackPushReceived(@NonNull final RemoteMessage remoteMessage) {
         final String messageId = remoteMessage.getMessageId();
+        PushCallbackHandler.notifyReceived(new MessagingPushPayload(remoteMessage));
         if (StringUtils.isNullOrEmpty(messageId)) {
             Log.warning(
                     LOG_TAG,

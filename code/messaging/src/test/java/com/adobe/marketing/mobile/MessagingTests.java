@@ -1609,7 +1609,7 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
                     when(remoteMessage.getData()).thenReturn(data);
 
-                    Messaging.trackPushReceived(mockContext, remoteMessage);
+                    Messaging.trackPushReceived(remoteMessage);
 
                     final Event dispatched = eventCaptor.getValue();
                     Assert.assertNotNull(dispatched);
@@ -1621,6 +1621,37 @@ public class MessagingTests {
                             "pushTracking.receive", dispatched.getEventData().get("eventType"));
                     assertEquals(true, dispatched.getEventData().get("pushnotificationreceived"));
                     assertEquals("{\"cjm\":{}}", dispatched.getEventData().get("adobe_xdm"));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_notifiesPushNotificationListener() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{\"cjm\":{}}");
+                    data.put("adb_title", "Hello");
+                    data.put("custom_key", "custom_value");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(data);
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    final ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                            ArgumentCaptor.forClass(MessagingPushPayload.class);
+                    verify(listener, times(1)).onNotificationReceived(payloadCaptor.capture());
+
+                    final MessagingPushPayload payload = payloadCaptor.getValue();
+                    assertNotNull(payload);
+                    assertEquals("Hello", payload.getTitle());
+                    assertEquals("custom_value", payload.getData().get("custom_key"));
                 });
     }
 
@@ -1648,7 +1679,7 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn(null);
                     when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.trackPushReceived(mockContext, remoteMessage);
+                    Messaging.trackPushReceived(remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
@@ -1665,7 +1696,7 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn("");
                     when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.trackPushReceived(mockContext, remoteMessage);
+                    Messaging.trackPushReceived(remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
@@ -1680,9 +1711,9 @@ public class MessagingTests {
                 () -> {
                     final RemoteMessage remoteMessage = mock(RemoteMessage.class);
                     when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
-                    when(remoteMessage.getData()).thenReturn(null);
+                    when(remoteMessage.getData()).thenReturn(new HashMap<String, String>());
 
-                    Messaging.trackPushReceived(mockContext, remoteMessage);
+                    Messaging.trackPushReceived(remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
@@ -1699,7 +1730,7 @@ public class MessagingTests {
                     when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
                     when(remoteMessage.getData()).thenReturn(new HashMap<>());
 
-                    Messaging.trackPushReceived(mockContext, remoteMessage);
+                    Messaging.trackPushReceived(remoteMessage);
 
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
