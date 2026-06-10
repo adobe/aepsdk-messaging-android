@@ -36,6 +36,7 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.PushNotificationListener;
 import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.google.firebase.messaging.RemoteMessage;
@@ -409,5 +410,67 @@ public class MessagingServiceTests {
                 () -> MobileCore.initialize(any(Application.class), anyString(), any()), times(1));
         // dispatchEvent fires for both pushes.
         mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), times(2));
+    }
+
+    // ========================================================================================
+    // PushNotificationListener - onNotificationReceived
+    // ========================================================================================
+
+    @Test
+    public void test_handleRemoteMessage_callsOnNotificationReceived() throws Exception {
+        // setup
+        // The push-received callback now fires from Messaging.trackPushReceived, which
+        // handleRemoteMessage invokes through selfInit's completion runnable. Simulate the
+        // SDK already being initialized (selfInitTried=true) so that runnable executes
+        // synchronously and the listener is notified within this call.
+        resetStaticField(MessagingService.class, "selfInitTried", true);
+        final PushNotificationListener listener = Mockito.mock(PushNotificationListener.class);
+        PushCallbackHandler.setListener(listener);
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Test Title");
+                                put("custom_key", "custom_value");
+                            }
+                        });
+
+        // test
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify
+        assertTrue(isHandled);
+        ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                ArgumentCaptor.forClass(MessagingPushPayload.class);
+        verify(listener, times(1)).onNotificationReceived(payloadCaptor.capture());
+
+        MessagingPushPayload payload = payloadCaptor.getValue();
+        assertNotNull(payload);
+        assertEquals("Test Title", payload.getTitle());
+        assertEquals("custom_value", payload.getData().get("custom_key"));
+
+        // cleanup
+        PushCallbackHandler.setListener(null);
+    }
+
+    @Test
+    public void test_handleRemoteMessage_noListenerNoCrash() {
+        // setup
+        PushCallbackHandler.setListener(null);
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Test Title");
+                            }
+                        });
+
+        // test — should not throw
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify
+        assertTrue(isHandled);
     }
 }
