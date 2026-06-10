@@ -69,16 +69,6 @@ public class MessagingTests {
     @Mock ServiceProvider mockServiceProvider;
     @Mock DeviceInforming mockDeviceInfoService;
 
-    @org.junit.Before
-    public void setUp() throws Exception {
-        // Pre-set selfInitTried=true so trackPushReceived tests hit the warm path and the
-        // dispatch callback runs synchronously — without needing a full Application/ServiceProvider
-        // mock chain for selfInit.
-        final java.lang.reflect.Field f = Messaging.class.getDeclaredField("selfInitTried");
-        f.setAccessible(true);
-        f.set(null, true);
-    }
-
     private void runWithMockedMobileCore(
             final ArgumentCaptor<Event> eventArgumentCaptor,
             final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackWithErrorArgumentCaptor,

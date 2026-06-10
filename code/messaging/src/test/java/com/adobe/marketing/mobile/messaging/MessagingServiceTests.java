@@ -39,6 +39,7 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.google.firebase.messaging.RemoteMessage;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import org.junit.After;
 import org.junit.Before;
@@ -70,7 +71,7 @@ public class MessagingServiceTests {
     public void before() throws Exception {
         // Reset the static selfInitTried flag between tests via reflection — otherwise state
         // leaks from one test to the next.
-        resetStaticField(com.adobe.marketing.mobile.Messaging.class, "selfInitTried", false);
+        resetStaticField(MessagingService.class, "selfInitTried", false);
 
         // Default: a typical AJO data payload with an _xdm field — the AJO-notification gate
         // returns true on this. Individual tests can override remoteMessage.getData() to test
@@ -229,7 +230,7 @@ public class MessagingServiceTests {
             throws Exception {
         // Simulate that self-init already ran in this process (SDK was initialized earlier).
         // selfInit's early-return path runs the callback synchronously without re-initializing.
-        resetStaticField(com.adobe.marketing.mobile.Messaging.class, "selfInitTried", true);
+        resetStaticField(MessagingService.class, "selfInitTried", true);
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         final boolean handled = MessagingService.handleRemoteMessage(context, remoteMessage);
