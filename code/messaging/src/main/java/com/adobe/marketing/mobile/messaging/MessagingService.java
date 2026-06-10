@@ -83,7 +83,7 @@ public class MessagingService extends FirebaseMessagingService {
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
         // Bootstrap the SDK if this is a cold-start push, then record delivery.
-        selfInit(context, () -> Messaging.trackPushReceived(context, remoteMessage));
+        selfInit(context, () -> Messaging.trackPushReceived(remoteMessage));
         return true;
     }
 
