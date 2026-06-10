@@ -101,6 +101,8 @@ public class YourAppFirebaseMessagingService extends FirebaseMessagingService {
 
 Call `Messaging.trackPushReceived(remoteMessage)` from `onMessageReceived` after displaying the notification to record a `pushTracking.receive` experience event in Adobe Journey Optimizer. This indicates the notification was delivered to the device, independent of whether the user interacts with it.
 
+> **Prerequisites:** The AEP SDK must be fully initialized before calling this API. Calling `trackPushReceived` before the SDK is initialized will result in the event being silently dropped, as `MobileCore.dispatchEvent` has no effect until the EventHub is running. Ensure the SDK is started in your `Application.onCreate` before relying on this API from a push-received callback.
+
 ```java
 Messaging.trackPushReceived(
     @NonNull final RemoteMessage remoteMessage) // RemoteMessage received in onMessageReceived

@@ -66,6 +66,8 @@ When manually building and displaying push notifications, call `trackPushReceive
 
 When using [automatic display and tracking](./push-notification/automatic-handling-and-tracking.md) via `MessagingService`, receive tracking is handled automatically and this API does not need to be called.
 
+> **Prerequisites:** The AEP SDK must be fully initialized before calling this API. Calling `trackPushReceived` before the SDK is initialized will result in the event being silently dropped. Ensure the SDK is started in your `Application.onCreate` before relying on this API from a push-received callback.
+
 ```java
 /**
  * remoteMessage - the RemoteMessage object received in onMessageReceived.
