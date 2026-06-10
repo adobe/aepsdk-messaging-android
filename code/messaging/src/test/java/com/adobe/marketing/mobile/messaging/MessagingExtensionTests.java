@@ -227,7 +227,7 @@ public class MessagingExtensionTests {
                     // test
                     messagingExtension.onRegistered();
 
-                    // verify 7 listeners are registered
+                    // verify 8 listeners are registered (CONSENT/RESPONSE_CONTENT added in Phase 5)
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.GENERIC_IDENTITY),
@@ -263,6 +263,9 @@ public class MessagingExtensionTests {
                                     eq(EventType.MESSAGING),
                                     eq(EventSource.CONTENT_COMPLETE),
                                     any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.CONSENT), eq(EventSource.RESPONSE_CONTENT), any());
 
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
@@ -297,7 +300,7 @@ public class MessagingExtensionTests {
                     // test
                     messagingExtension.onRegistered();
 
-                    // verify 7 listeners are registered
+                    // verify 8 listeners are registered (CONSENT/RESPONSE_CONTENT added in Phase 5)
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.GENERIC_IDENTITY),
@@ -333,6 +336,9 @@ public class MessagingExtensionTests {
                                     eq(EventType.MESSAGING),
                                     eq(EventSource.CONTENT_COMPLETE),
                                     any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.CONSENT), eq(EventSource.RESPONSE_CONTENT), any());
 
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
@@ -2755,6 +2761,257 @@ public class MessagingExtensionTests {
                                     ((Map<String, Object>) eventDataMap.get("data"))
                                             .get("pushNotificationDetails");
                     assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
+                });
+    }
+
+    // ========================================================================================
+    // handleEdgeConsentResponse — `collectConsentResyncRequired` flag tests
+    //
+    // Transition detection lives in AEPEdgeConsent now. Messaging just checks the
+    // boolean flag on the event payload — present and true => resync; otherwise no-op.
+    // ========================================================================================
+
+    /**
+     * Flag present and {@code true} with a persisted push token and valid ECID → an Edge resync
+     * event is dispatched with the correct name and XDM push-notification-details payload.
+     *
+     * <p>{@code resyncPushToken} calls {@code dispatchPushTokenSyncEdgeEvent(token, event, true)}
+     * directly (same path as normal sync, just with {@code isResync=true}), so the dispatched event
+     * is {@code EventType.EDGE}, not {@code GENERIC_IDENTITY}.
+     */
+    @Test
+    public void test_handleEdgeConsentResponse_flagPresent_dispatchesResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // Persisted token
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+
+                    // Valid ECID in XDM shared state — required by dispatchPushTokenSyncEdgeEvent
+                    final Map<String, Object> mockEdgeIdentityState = new HashMap<>();
+                    final Map<String, Object> ecidsMap = new HashMap<>();
+                    final Map<String, Object> identityMap = new HashMap<>();
+                    final List<Map<String, Object>> ecidList = new ArrayList<>();
+                    identityMap.put(
+                            MessagingTestConstants.SharedState.EdgeIdentity.ID, "mock_ecid");
+                    ecidList.add(identityMap);
+                    ecidsMap.put("ECID", ecidList);
+                    mockEdgeIdentityState.put("identityMap", ecidsMap);
+                    when(mockEdgeIdentityData.getValue()).thenReturn(mockEdgeIdentityState);
+                    when(mockExtensionApi.getXDMSharedState(
+                                    eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(mockEdgeIdentityData);
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            true);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    try (MockedStatic<MobileCore> mobileCoreMockedStatic =
+                            Mockito.mockStatic(MobileCore.class)) {
+                        mobileCoreMockedStatic
+                                .when(MobileCore::getApplication)
+                                .thenReturn(mockApplication);
+                        when(mockApplication.getPackageName()).thenReturn("mockPackageName");
+
+                        messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                        // One Edge event dispatched — NOT a GENERIC_IDENTITY intermediate event.
+                        ArgumentCaptor<Event> dispatchedCaptor =
+                                ArgumentCaptor.forClass(Event.class);
+                        verify(mockExtensionApi, times(1)).dispatch(dispatchedCaptor.capture());
+                        Event resyncEvent = dispatchedCaptor.getValue();
+                        assertEquals(
+                                MessagingConstants.EventName.PUSH_IDENTIFIER_RESYNC_EVENT,
+                                resyncEvent.getName());
+                        assertEquals(MessagingTestConstants.EventType.EDGE, resyncEvent.getType());
+                        assertEquals(EventSource.REQUEST_CONTENT, resyncEvent.getSource());
+
+                        // Verify XDM push-notification-details carry the token and ECID.
+                        @SuppressWarnings("unchecked")
+                        List<Map<String, Object>> pushDetails =
+                                (List<Map<String, Object>>)
+                                        ((Map<String, Object>)
+                                                        resyncEvent.getEventData().get("data"))
+                                                .get("pushNotificationDetails");
+                        assertNotNull(pushDetails);
+                        assertEquals(1, pushDetails.size());
+                        assertEquals("validToken", pushDetails.get(0).get("token"));
+                    }
+                });
+    }
+
+    /** Flag present, push token is an empty string → treated same as null, no dispatch. */
+    @Test
+    public void test_handleEdgeConsentResponse_flagPresent_emptyPushIdentifier_doesNotDispatch() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("");
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            true);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    /**
+     * Flag present, valid token persisted, but XDM shared state has no valid ECID structure →
+     * {@code dispatchPushTokenSyncEdgeEvent} returns early, nothing dispatched.
+     *
+     * <p>The default {@code mockEdgeIdentityData} (set up by {@link
+     * #runUsingMockedServiceProvider}) returns {@code {"key":"value"}} — not a valid identityMap —
+     * so {@code getSharedStateEcid} returns null and the method bails out silently.
+     */
+    @Test
+    public void test_handleEdgeConsentResponse_flagPresent_ecidUnavailable_doesNotDispatch() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+                    // No valid ECID mock — getXDMSharedState is not stubbed → returns null →
+                    // ecid = null → dispatchPushTokenSyncEdgeEvent returns early, no dispatch.
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            true);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    /** Defensive: event with null data must not crash and must not dispatch. */
+    @Test
+    public void test_handleEdgeConsentResponse_nullEventData_doesNotCrashOrResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // Build event without calling setEventData → getEventData() returns null.
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    /**
+     * Flag missing from the event payload (steady-state CONSENT_PREFERENCES_UPDATED with no
+     * transition) → Messaging stays silent.
+     */
+    @Test
+    public void test_handleEdgeConsentResponse_flagAbsent_doesNotResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(new HashMap<>())
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    /** Flag explicitly {@code false} → Messaging stays silent. */
+    @Test
+    public void test_handleEdgeConsentResponse_flagFalse_doesNotResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            false);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    /**
+     * Flag present and {@code true} but no persisted push token → orchestrator runs but the {@code
+     * resyncPushToken} helper finds nothing to dispatch.
+     */
+    @Test
+    public void test_handleEdgeConsentResponse_flagPresentButNoPushIdentifier_doesNotDispatch() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // No persisted token
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn(null);
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Consent
+                                    .COLLECT_CONSENT_RESYNC_REQUIRED,
+                            true);
+                    Event consentEvent =
+                            new Event.Builder(
+                                            "Consent Preferences Updated",
+                                            EventType.CONSENT,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleEdgeConsentResponse(consentEvent);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
                 });
     }
 

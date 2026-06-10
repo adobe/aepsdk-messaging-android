@@ -63,6 +63,13 @@
         </activity>
 
         <activity
+            android:name=".MessagingSettingsActivity"
+            android:exported="false"
+            android:label="Messaging Settings"
+            android:parentActivityName=".ContentCardsTestActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
             android:name=".SecondLevelActivity"
             android:exported="true"
             android:parentActivityName=".MainActivity">

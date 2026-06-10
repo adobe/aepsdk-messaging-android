@@ -22,6 +22,7 @@ val mavenLifecycleVersion: String by project
 val mavenAssuranceVersion: String by project
 val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
+val mavenEdgeConsentVersion: String by project
 
 android {
       namespace = "com.adobe.marketing.mobile.messagingsample"
@@ -62,6 +63,7 @@ dependencies {
     implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")
     implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
     implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
+    implementation("com.adobe.marketing.mobile:edgeconsent:$mavenEdgeConsentVersion")
 
     implementation("com.google.firebase:firebase-messaging:23.4.1")
     implementation("androidx.appcompat:appcompat:1.6.1")

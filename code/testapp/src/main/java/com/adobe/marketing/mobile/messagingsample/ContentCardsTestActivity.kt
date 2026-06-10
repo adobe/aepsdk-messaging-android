@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messagingsample
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.widget.Toast
@@ -88,6 +89,17 @@ private fun ContentCardsTestScreen(viewModel: ContentCardsTestViewModel = viewMo
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
     ) {
+        // Launcher for the manual messaging-settings screen (collect-consent toggles,
+        // optimizePushSync switch, set-push-identifier). Placed here because the
+        // SecondLevelActivity deep-link path is broken in this build.
+        Button(
+            onClick = {
+                context.startActivity(Intent(context, MessagingSettingsActivity::class.java))
+            },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+        ) {
+            Text("Settings & Testing")
+        }
         Text(
             text = stringResource(R.string.content_cards_surfaces_label),
             style = MaterialTheme.typography.titleSmall,

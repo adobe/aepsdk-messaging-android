@@ -182,6 +182,19 @@ public final class MessagingConstants {
             private Identity() {}
         }
 
+        final class Consent {
+            /**
+             * Top-level boolean field on {@code CONSENT_PREFERENCES_UPDATED} events emitted by
+             * AEPEdgeConsent. When {@code true}, collect-consent just transitioned to {@code "y"}
+             * from a non-{@code "y"} value (including null) and Messaging should re-sync any data
+             * that was gated by consent (i.e. the push token). Transition detection is owned by
+             * AEPEdgeConsent; Messaging only consumes the signal.
+             */
+            static final String COLLECT_CONSENT_RESYNC_REQUIRED = "collectConsentResyncRequired";
+
+            private Consent() {}
+        }
+
         final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
@@ -342,6 +355,7 @@ public final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_TRACKING_STATUS_EVENT = "Push tracking status event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
+        static final String PUSH_IDENTIFIER_RESYNC_EVENT = "Push Identifier Re-sync";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
         static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
