@@ -148,7 +148,7 @@ public final class Messaging {
      * Dispatches a push notification received event ({@code pushTracking.receive}) to Adobe
      * Experience Edge, recording that the push notification was delivered to the device.
      *
-     * <p>This API covers two delivery paths:
+     * <p>This API is called from two delivery paths:
      *
      * <ul>
      *   <li><b>SDK-handled path:</b> called automatically by {@link
@@ -156,7 +156,8 @@ public final class Messaging {
      *   <li><b>Customer-handled path:</b> when the customer builds and displays the notification
      *       themselves (without delegating to {@link MessagingService}), they should call this
      *       method explicitly from their {@code FirebaseMessagingService#onMessageReceived}
-     *       implementation to ensure push receive tracking is recorded.
+     *       implementation. Customer should ensure to initialize the SDK before calling this API
+     *       for push receive tracking to be recorded.
      * </ul>
      *
      * @param remoteMessage {@link RemoteMessage} the Firebase remote message received in {@code
