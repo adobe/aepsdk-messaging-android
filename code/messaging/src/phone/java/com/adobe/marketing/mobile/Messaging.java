@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile;
 
-import android.content.Context;
 import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -159,12 +158,10 @@ public final class Messaging {
      *       implementation to ensure push receive tracking is recorded.
      * </ul>
      *
-     * @param context {@link Context} from {@code FirebaseMessagingService#onMessageReceived}
      * @param remoteMessage {@link RemoteMessage} the Firebase remote message received in {@code
      *     FirebaseMessagingService#onMessageReceived}
      */
-    public static void trackPushReceived(
-            @NonNull final Context context, @NonNull final RemoteMessage remoteMessage) {
+    public static void trackPushReceived(@NonNull final RemoteMessage remoteMessage) {
         final String messageId = remoteMessage.getMessageId();
         if (StringUtils.isNullOrEmpty(messageId)) {
             Log.warning(

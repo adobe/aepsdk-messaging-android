@@ -68,23 +68,22 @@ When using [automatic display and tracking](./push-notification/automatic-handli
 
 ```java
 /**
- * context      - the Context from FirebaseMessagingService#onMessageReceived (typically `this`).
  * remoteMessage - the RemoteMessage object received in onMessageReceived.
  *                 The messageId and data payload are extracted internally.
  */
-Messaging.trackPushReceived(@NonNull final Context context, @NonNull final RemoteMessage remoteMessage)
+Messaging.trackPushReceived(@NonNull final RemoteMessage remoteMessage)
 ```
 
 #### Kotlin
 
 ```kotlin
-Messaging.trackPushReceived(this, remoteMessage)
+Messaging.trackPushReceived(remoteMessage)
 ```
 
 #### Java
 
 ```java
-Messaging.trackPushReceived(this, remoteMessage);
+Messaging.trackPushReceived(remoteMessage);
 ```
 
 ### Sending push notification interactions details 

@@ -92,18 +92,17 @@ public class YourAppFirebaseMessagingService extends FirebaseMessagingService {
         notificationManager.notify(notificationId, notificationBuilder.build());
 
         // Record that the push notification was delivered to the device.
-        Messaging.trackPushReceived(this, remoteMessage);
+        Messaging.trackPushReceived(remoteMessage);
     }
 }
 ```
 
 ## Tracking push notification delivery
 
-Call `Messaging.trackPushReceived(context, remoteMessage)` from `onMessageReceived` after displaying the notification to record a `pushTracking.receive` experience event in Adobe Journey Optimizer. This indicates the notification was delivered to the device, independent of whether the user interacts with it.
+Call `Messaging.trackPushReceived(remoteMessage)` from `onMessageReceived` after displaying the notification to record a `pushTracking.receive` experience event in Adobe Journey Optimizer. This indicates the notification was delivered to the device, independent of whether the user interacts with it.
 
 ```java
 Messaging.trackPushReceived(
-    @NonNull final Context context,       // typically `this` in onMessageReceived
     @NonNull final RemoteMessage remoteMessage) // RemoteMessage received in onMessageReceived
 ```
 
