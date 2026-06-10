@@ -27,6 +27,7 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
+import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ public final class Messaging {
     private static final String EVENT_SOURCE_NOTIFICATION = "com.adobe.eventSource.notification";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT =
             "Push notification interaction event";
+    private static final String PUSH_NOTIFICATION_RECEIVED_EVENT = "Push notification received";
     private static final String UPDATE_PROPOSITIONS = "Update propositions";
     private static final String GET_PROPOSITIONS = "Get propositions";
     private static final String REFRESH_MESSAGES = "Refresh in-app messages";
@@ -69,6 +71,8 @@ public final class Messaging {
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
     private static final String RESPONSE_ERROR = "responseerror";
     private static final String SCOPE = "scope";
+    private static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
+    private static final String EVENT_TYPE_PUSH_TRACKING_RECEIVED = "pushTracking.receive";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
@@ -138,6 +142,69 @@ public final class Messaging {
         }
 
         return true;
+    }
+
+    /**
+     * Dispatches a push notification received event ({@code pushTracking.receive}) to Adobe
+     * Experience Edge, recording that the push notification was delivered to the device.
+     *
+     * <p>This API is called from two delivery paths:
+     *
+     * <ul>
+     *   <li><b>SDK-handled path:</b> called automatically by {@link
+     *       MessagingService#handleRemoteMessage} — no customer action needed.
+     *   <li><b>Customer-handled path:</b> when the customer builds and displays the notification
+     *       themselves (without delegating to {@link MessagingService}), they should call this
+     *       method explicitly from their {@code FirebaseMessagingService#onMessageReceived}
+     *       implementation. Customer should ensure to initialize the SDK before calling this API
+     *       for push receive tracking to be recorded.
+     * </ul>
+     *
+     * @param remoteMessage {@link RemoteMessage} the Firebase remote message received in {@code
+     *     FirebaseMessagingService#onMessageReceived}
+     */
+    public static void trackPushReceived(@NonNull final RemoteMessage remoteMessage) {
+        final String messageId = remoteMessage.getMessageId();
+        PushCallbackHandler.notifyReceived(new MessagingPushPayload(remoteMessage));
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.warning(
+                    LOG_TAG,
+                    CLASS_NAME,
+                    "Failed to track push notification received, messageId is null or empty.");
+            return;
+        }
+
+        final Map<String, String> data = remoteMessage.getData();
+        if (MapUtils.isNullOrEmpty(data)) {
+            Log.warning(
+                    LOG_TAG,
+                    CLASS_NAME,
+                    "Failed to track push notification received, data map is null or empty.");
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.put(TRACK_INFO_KEY_ADOBE_XDM, data.get(_XDM));
+        eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_RECEIVED);
+        eventData.put(PUSH_NOTIFICATION_RECEIVED, true);
+
+        final Event pushReceivedEvent =
+                new Event.Builder(
+                                PUSH_NOTIFICATION_RECEIVED_EVENT,
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+
+        Log.debug(
+                LOG_TAG,
+                CLASS_NAME,
+                "trackPushReceived: dispatching push-receive event for messageId=%s"
+                        + " (uniqueIdentifier=%s).",
+                messageId,
+                pushReceivedEvent.getUniqueIdentifier());
+        MobileCore.dispatchEvent(pushReceivedEvent);
     }
 
     /**

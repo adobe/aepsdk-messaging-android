@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
@@ -40,6 +41,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +66,7 @@ import org.mockito.stubbing.Answer;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingTests {
     @Mock Intent mockIntent;
+    @Mock Context mockContext;
     @Mock ServiceProvider mockServiceProvider;
     @Mock DeviceInforming mockDeviceInfoService;
 
@@ -1585,6 +1588,151 @@ public class MessagingTests {
                     assertEquals("Body", payload.getBody());
                     assertEquals("offers", payload.getData().get("screen"));
                     assertEquals("camp-42", payload.getData().get("campaign_id"));
+                });
+    }
+
+    // ========================================================================================
+    // trackPushReceived
+    // ========================================================================================
+
+    @Test
+    public void test_trackPushReceived_validParams_dispatchesPushReceivedEvent() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{\"cjm\":{}}");
+                    data.put("adb_title", "Hello");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(data);
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    final Event dispatched = eventCaptor.getValue();
+                    Assert.assertNotNull(dispatched);
+                    assertEquals("Push notification received", dispatched.getName());
+                    assertEquals(EventType.MESSAGING, dispatched.getType());
+                    assertEquals(EventSource.REQUEST_CONTENT, dispatched.getSource());
+                    assertEquals("test-msg-id", dispatched.getEventData().get("messageId"));
+                    assertEquals(
+                            "pushTracking.receive", dispatched.getEventData().get("eventType"));
+                    assertEquals(true, dispatched.getEventData().get("pushnotificationreceived"));
+                    assertEquals("{\"cjm\":{}}", dispatched.getEventData().get("adobe_xdm"));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_notifiesPushNotificationListener() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final PushNotificationListener listener = mock(PushNotificationListener.class);
+                    Messaging.setPushNotificationListener(listener);
+
+                    final Map<String, String> data = new HashMap<>();
+                    data.put(MessagingTestConstants.TrackingKeys._XDM, "{\"cjm\":{}}");
+                    data.put("adb_title", "Hello");
+                    data.put("custom_key", "custom_value");
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(data);
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    final ArgumentCaptor<MessagingPushPayload> payloadCaptor =
+                            ArgumentCaptor.forClass(MessagingPushPayload.class);
+                    verify(listener, times(1)).onNotificationReceived(payloadCaptor.capture());
+
+                    final MessagingPushPayload payload = payloadCaptor.getValue();
+                    assertNotNull(payload);
+                    assertEquals("Hello", payload.getTitle());
+                    assertEquals("custom_value", payload.getData().get("custom_key"));
+                });
+    }
+
+    /**
+     * Helper: returns the number of times MobileCore.dispatchEvent was called inside the captor
+     * passed to runWithMockedMobileCore. Mockito's ArgumentCaptor stores all captured values in a
+     * list — getAllValues().size() is the call count.
+     */
+    private int dispatchCount(final ArgumentCaptor<Event> captor) {
+        try {
+            return captor.getAllValues().size();
+        } catch (final Exception e) {
+            return 0;
+        }
+    }
+
+    @Test
+    public void test_trackPushReceived_nullMessageId_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn(null);
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_emptyMessageId_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_nullData_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<String, String>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
+                });
+    }
+
+    @Test
+    public void test_trackPushReceived_emptyData_doesNotDispatch() throws Exception {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    final RemoteMessage remoteMessage = mock(RemoteMessage.class);
+                    when(remoteMessage.getMessageId()).thenReturn("test-msg-id");
+                    when(remoteMessage.getData()).thenReturn(new HashMap<>());
+
+                    Messaging.trackPushReceived(remoteMessage);
+
+                    assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
 }
