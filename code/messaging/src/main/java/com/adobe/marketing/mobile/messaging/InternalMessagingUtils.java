@@ -13,7 +13,6 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
