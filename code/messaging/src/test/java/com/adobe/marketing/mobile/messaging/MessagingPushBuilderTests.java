@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mockConstruction;
@@ -30,6 +31,11 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.MessagingPushPayload;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationBuilder;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationConstructionFailedException;
+import com.google.firebase.messaging.RemoteMessage;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +44,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -58,6 +65,7 @@ public class MessagingPushBuilderTests {
     @Mock Context context;
     @Mock MessagingPushPayload payload;
     @Mock Notification notification;
+    @Mock RemoteMessage remoteMessage;
     @Mock PackageManager packageManager;
     @Mock Intent launchIntent;
     @Mock Uri sampleUri;
@@ -207,5 +215,126 @@ public class MessagingPushBuilderTests {
         // verify
         assertNotNull(notification);
         verify(mockNotificationBuilder, times(1)).setPriority(Notification.PRIORITY_DEFAULT);
+    }
+
+    @Test
+    public void test_build_fromRemoteMessage_WhenAJOTemplateTypePresent_UsesNotificationBuilder() {
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_template_type", "ajo_basic");
+                                put("adb_title", "AJO Title");
+                                put("adb_body", "AJO Body");
+                            }
+                        });
+
+        try (MockedStatic<NotificationBuilder> notificationBuilderMock =
+                Mockito.mockStatic(NotificationBuilder.class)) {
+            NotificationCompat.Builder notificationCompatBuilder =
+                    Mockito.mock(NotificationCompat.Builder.class);
+            when(notificationCompatBuilder.build()).thenReturn(notification);
+            notificationBuilderMock
+                    .when(
+                            () ->
+                                    NotificationBuilder.constructNotificationBuilder(
+                                            any(Map.class), any(), any()))
+                    .thenReturn(notificationCompatBuilder);
+
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify the templated notification is built via the notificationbuilder library
+            assertNotNull(result);
+            notificationBuilderMock.verify(
+                    () ->
+                            NotificationBuilder.constructNotificationBuilder(
+                                    any(Map.class), any(), any()));
+        }
+    }
+
+    @Test
+    public void test_build_fromRemoteMessage_WhenAJOTemplate_ConstructionFails_ReturnsNull() {
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_template_type", "ajo_basic");
+                                put("adb_title", "AJO Title");
+                            }
+                        });
+
+        try (MockedStatic<NotificationBuilder> notificationBuilderMock =
+                Mockito.mockStatic(NotificationBuilder.class)) {
+            notificationBuilderMock
+                    .when(
+                            () ->
+                                    NotificationBuilder.constructNotificationBuilder(
+                                            any(Map.class), any(), any()))
+                    .thenThrow(new NotificationConstructionFailedException("construction failed"));
+
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify
+            assertNull(result);
+        }
+    }
+
+    @Test
+    public void test_build_fromRemoteMessage_WhenAJOTemplate_IllegalArgumentThrown_ReturnsNull() {
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_template_type", "ajo_basic");
+                                put("adb_title", "AJO Title");
+                            }
+                        });
+
+        try (MockedStatic<NotificationBuilder> notificationBuilderMock =
+                Mockito.mockStatic(NotificationBuilder.class)) {
+            notificationBuilderMock
+                    .when(
+                            () ->
+                                    NotificationBuilder.constructNotificationBuilder(
+                                            any(Map.class), any(), any()))
+                    .thenThrow(new IllegalArgumentException("invalid argument"));
+
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify
+            assertNull(result);
+        }
+    }
+
+    @Test
+    public void test_build_fromRemoteMessage_WhenNoTemplateType_UsesLegacyPayloadFlow() {
+        // setup - no adb_template_type key, so the legacy MessagingPushPayload flow is used
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_title", "Sample Title");
+                                put("adb_body", "Sample Body");
+                            }
+                        });
+
+        try (MockedConstruction<MessagingPushPayload> payloadConstruction =
+                        mockConstruction(MessagingPushPayload.class);
+                MockedStatic<NotificationBuilder> notificationBuilderMock =
+                        Mockito.mockStatic(NotificationBuilder.class)) {
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify the legacy payload-based flow was used and the notificationbuilder
+            // library was not invoked
+            assertNotNull(result);
+            notificationBuilderMock.verifyNoInteractions();
+        }
     }
 }
