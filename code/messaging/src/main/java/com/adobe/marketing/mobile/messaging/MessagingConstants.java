@@ -182,6 +182,19 @@ public final class MessagingConstants {
             private Identity() {}
         }
 
+        final class Consent {
+            /**
+             * Top-level boolean field on {@code CONSENT_PREFERENCES_UPDATED} events emitted by
+             * AEPEdgeConsent. When {@code true}, collect-consent just transitioned to {@code "y"}
+             * from a non-{@code "y"} value (including null) and Messaging should re-sync any data
+             * that was gated by consent (i.e. the push token). Transition detection is owned by
+             * AEPEdgeConsent; Messaging only consumes the signal.
+             */
+            static final String COLLECT_CONSENT_RESYNC_REQUIRED = "collectConsentResyncRequired";
+
+            private Consent() {}
+        }
+
         final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
@@ -198,6 +211,7 @@ public final class MessagingConstants {
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
             static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
 
             private Messaging() {}
 
@@ -341,6 +355,7 @@ public final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_TRACKING_STATUS_EVENT = "Push tracking status event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
+        static final String PUSH_IDENTIFIER_RESYNC_EVENT = "Push Identifier Re-sync";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
         static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
@@ -426,6 +441,14 @@ public final class MessagingConstants {
     }
 
     public final class Push {
+        public class TrackingKeys {
+            public static final String MESSAGE_ID = "messageId";
+            public static final String GOOGLE_MESSAGE_ID = "google.message_id";
+            public static final String ACTION_DISMISS = "Dismiss";
+
+            private TrackingKeys() {}
+        }
+
         public class PayloadKeys {
             public static final String TITLE = "adb_title";
             public static final String BODY = "adb_body";

@@ -12,12 +12,16 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
+import android.util.Log
 import com.adobe.marketing.mobile.Assurance
 import com.adobe.marketing.mobile.Edge
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.MessagingPushPayload
 import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.LoggingMode
 import com.adobe.marketing.mobile.Lifecycle
+import com.adobe.marketing.mobile.edge.consent.Consent
+import com.adobe.marketing.mobile.PushNotificationListener
 import com.adobe.marketing.mobile.edge.identity.Identity
 
 class MessagingApplication : Application() {
@@ -31,13 +35,21 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        val extensions = listOf(Messaging.EXTENSION, Identity.EXTENSION, Lifecycle.EXTENSION, Edge.EXTENSION, Assurance.EXTENSION)
+        val extensions = listOf(
+            Messaging.EXTENSION,
+            Identity.EXTENSION,
+            Lifecycle.EXTENSION,
+            Edge.EXTENSION,
+            Assurance.EXTENSION,
+            Consent.EXTENSION
+        )
         MobileCore.registerExtensions(extensions) {
             // Necessary property id which has the edge configuration id needed by aep sdk
             if (STAGING) {
                 MobileCore.configureWithAppID(STAGING_APP_ID)
                 MobileCore.updateConfiguration(
-                    hashMapOf("edge.environment" to "int") as Map<String, Any>)
+                    hashMapOf("edge.environment" to "int") as Map<String, Any>
+                )
             } else {
                 MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
             }
@@ -47,7 +59,25 @@ class MessagingApplication : Application() {
                 "messaging.optimizePushSync" to true
             )
             MobileCore.updateConfiguration(configMap)
+
+            Messaging.setPushNotificationListener(object : PushNotificationListener {
+                override fun onNotificationReceived(payload: MessagingPushPayload) {
+                    Log.d(TAG, "Push received — title: ${payload.title}, messageId: ${payload.messageId}, custom data: ${payload.data}")
+                }
+
+                override fun onNotificationOpened(payload: MessagingPushPayload, actionButtonId: String?) {
+                    Log.d(TAG, "Push opened — messageId: ${payload.messageId}, actionButtonId: $actionButtonId")
+                }
+
+                override fun onNotificationDismissed(payload: MessagingPushPayload) {
+                    Log.d(TAG, "Push dismissed — messageId: ${payload.messageId}")
+                }
+            })
         }
         // Assurance.startSession(ASSURANCE_SESSION_ID)
+    }
+
+    companion object {
+        private const val TAG = "MessagingApplication"
     }
 }

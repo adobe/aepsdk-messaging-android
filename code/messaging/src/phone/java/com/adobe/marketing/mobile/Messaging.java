@@ -19,6 +19,7 @@ import com.adobe.marketing.mobile.messaging.IamRefreshHandler;
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.MessagingUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
+import com.adobe.marketing.mobile.messaging.PushCallbackHandler;
 import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.messaging.Surface;
 import com.adobe.marketing.mobile.services.Log;
@@ -26,6 +27,7 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
+import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.9.0";
+    private static final String EXTENSION_VERSION = "3.10.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -46,6 +48,7 @@ public final class Messaging {
     private static final String EVENT_SOURCE_NOTIFICATION = "com.adobe.eventSource.notification";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT =
             "Push notification interaction event";
+    private static final String PUSH_NOTIFICATION_RECEIVED_EVENT = "Push notification received";
     private static final String UPDATE_PROPOSITIONS = "Update propositions";
     private static final String GET_PROPOSITIONS = "Get propositions";
     private static final String REFRESH_MESSAGES = "Refresh in-app messages";
@@ -68,6 +71,8 @@ public final class Messaging {
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
     private static final String RESPONSE_ERROR = "responseerror";
     private static final String SCOPE = "scope";
+    private static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
+    private static final String EVENT_TYPE_PUSH_TRACKING_RECEIVED = "pushTracking.receive";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
@@ -140,6 +145,69 @@ public final class Messaging {
     }
 
     /**
+     * Dispatches a push notification received event ({@code pushTracking.receive}) to Adobe
+     * Experience Edge, recording that the push notification was delivered to the device.
+     *
+     * <p>This API is called from two delivery paths:
+     *
+     * <ul>
+     *   <li><b>SDK-handled path:</b> called automatically by {@link
+     *       MessagingService#handleRemoteMessage} — no customer action needed.
+     *   <li><b>Customer-handled path:</b> when the customer builds and displays the notification
+     *       themselves (without delegating to {@link MessagingService}), they should call this
+     *       method explicitly from their {@code FirebaseMessagingService#onMessageReceived}
+     *       implementation. Customer should ensure to initialize the SDK before calling this API
+     *       for push receive tracking to be recorded.
+     * </ul>
+     *
+     * @param remoteMessage {@link RemoteMessage} the Firebase remote message received in {@code
+     *     FirebaseMessagingService#onMessageReceived}
+     */
+    public static void trackPushReceived(@NonNull final RemoteMessage remoteMessage) {
+        final String messageId = remoteMessage.getMessageId();
+        PushCallbackHandler.notifyReceived(new MessagingPushPayload(remoteMessage));
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.warning(
+                    LOG_TAG,
+                    CLASS_NAME,
+                    "Failed to track push notification received, messageId is null or empty.");
+            return;
+        }
+
+        final Map<String, String> data = remoteMessage.getData();
+        if (MapUtils.isNullOrEmpty(data)) {
+            Log.warning(
+                    LOG_TAG,
+                    CLASS_NAME,
+                    "Failed to track push notification received, data map is null or empty.");
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.put(TRACK_INFO_KEY_ADOBE_XDM, data.get(_XDM));
+        eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_RECEIVED);
+        eventData.put(PUSH_NOTIFICATION_RECEIVED, true);
+
+        final Event pushReceivedEvent =
+                new Event.Builder(
+                                PUSH_NOTIFICATION_RECEIVED_EVENT,
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+
+        Log.debug(
+                LOG_TAG,
+                CLASS_NAME,
+                "trackPushReceived: dispatching push-receive event for messageId=%s"
+                        + " (uniqueIdentifier=%s).",
+                messageId,
+                pushReceivedEvent.getUniqueIdentifier());
+        MobileCore.dispatchEvent(pushReceivedEvent);
+    }
+
+    /**
      * Sends the push notification interactions as an experience event to Adobe Experience Edge.
      *
      * @param intent object which contains the tracking and xdm information.
@@ -195,7 +263,10 @@ public final class Messaging {
             }
         }
 
-        final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
+        String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
+        if (StringUtils.isNullOrEmpty(xdmData)) {
+            xdmData = intent.getStringExtra(_XDM);
+        }
         if (StringUtils.isNullOrEmpty(xdmData)) {
             Log.warning(
                     LOG_TAG,
@@ -269,6 +340,8 @@ public final class Messaging {
             eventData.put(TRACK_INFO_KEY_ACTION_ID, customActionId);
             eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
+
+        PushCallbackHandler.notifyInteraction(intent, customActionId);
 
         final Event messagingEvent =
                 new Event.Builder(
@@ -564,5 +637,18 @@ public final class Messaging {
 
     private static ExecutorService getPushToInappExecutor() {
         return ExecutorHolder.INSTANCE;
+    }
+
+    /**
+     * Registers a listener to receive push notification lifecycle events (received, opened,
+     * dismissed). Only one listener can be active at a time; setting a new listener replaces the
+     * previous one.
+     *
+     * @param listener the {@link PushNotificationListener} to register, or {@code null} to
+     *     unregister
+     */
+    public static void setPushNotificationListener(
+            @Nullable final PushNotificationListener listener) {
+        PushCallbackHandler.setListener(listener);
     }
 }

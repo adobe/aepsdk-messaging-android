@@ -29,7 +29,9 @@
                 android:value="Extension" />
         </service>
 
-        <receiver android:name=".NotificationInteractionReceiver" />
+        <receiver
+            android:name=".NotificationInteractionReceiver"
+            android:exported="false" />
 
         <provider
             android:name="com.adobe.marketing.mobile.messaging.MessagingFileProvider"

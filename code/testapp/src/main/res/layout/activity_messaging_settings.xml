@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+    Copyright 2026 Adobe. All rights reserved.
+    This file is licensed to you under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License. You may obtain a copy
+    of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software distributed under
+    the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+    OF ANY KIND, either express or implied. See the License for the specific language
+    governing permissions and limitations under the License.
+
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".MessagingSettingsActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/settings_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Settings and Testing"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Manual controls for testing the consent-driven push token re-sync flow."
+            android:textSize="13sp"
+            android:paddingBottom="24dp" />
+
+        <!-- ============ Collect Consent ============ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Collect Consent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dispatches Consent.update with the chosen consents.collect.val. Pending (p) verifies the y → p → y invariant."
+            android:textSize="12sp"
+            android:paddingBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/collect_consent_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp">
+
+            <RadioButton
+                android:id="@+id/collect_yes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yes (y)" />
+
+            <RadioButton
+                android:id="@+id/collect_no"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="No (n)" />
+
+            <RadioButton
+                android:id="@+id/collect_pending"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Pending (p)" />
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btn_update_consent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Update Consent" />
+
+        <!-- ============ Optimize Push Sync ============ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Optimize Push Sync"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Toggles messaging.optimizePushSync. When ON, the SDK skips re-syncing if the token hasn't changed since last sync."
+            android:textSize="12sp"
+            android:paddingBottom="8dp" />
+
+        <Switch
+            android:id="@+id/switch_optimize_push_sync"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Optimize Push Sync"
+            android:paddingBottom="24dp" />
+
+        <!-- ============ Push Identifier ============ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Push Identifier"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Calls MobileCore.setPushIdentifier(...) with the entered token. Use to simulate token rotation while exercising consent flows."
+            android:textSize="12sp"
+            android:paddingBottom="8dp" />
+
+        <EditText
+            android:id="@+id/edit_push_token"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter a push token (e.g. test-token-1)"
+            android:inputType="text"
+            android:singleLine="true"
+            android:paddingBottom="8dp"
+            android:autofillHints="" />
+
+        <Button
+            android:id="@+id/btn_set_push_identifier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Set Push Identifier" />
+
+        <!-- ============ Status ============ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Last action"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/last_action"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="(no action yet)"
+            android:textSize="13sp"
+            android:fontFamily="monospace"
+            android:padding="8dp"
+            android:background="#EEEEEE" />
+
+    </LinearLayout>
+</ScrollView>
