@@ -18,7 +18,6 @@ import androidx.core.app.NotificationManagerCompat;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
-import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -58,8 +57,11 @@ public class MessagingService extends FirebaseMessagingService {
             return false;
         }
 
-        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
-        final Notification notification = MessagingPushBuilder.build(payload, context);
+        final Notification notification = MessagingPushBuilder.build(remoteMessage, context);
+        if (notification == null) {
+            // notification could not be constructed; the push message is ignored
+            return false;
+        }
 
         // display notification
         final NotificationManagerCompat notificationManager =

@@ -14,7 +14,6 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        mavenLocal()
     }
 }
 
@@ -23,7 +22,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        mavenLocal()
         maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
         maven { url = uri("https://jitpack.io") }
     }

@@ -30,7 +30,6 @@ import androidx.core.app.NotificationManagerCompat;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
-import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.HashMap;
@@ -73,7 +72,7 @@ public class MessagingServiceTests {
                 .when(
                         () ->
                                 MessagingPushBuilder.build(
-                                        any(MessagingPushPayload.class), any(Context.class)))
+                                        any(RemoteMessage.class), any(Context.class)))
                 .thenReturn(notification);
 
         when(remoteMessage.getMessageId()).thenReturn("someMessageID");
@@ -154,8 +153,7 @@ public class MessagingServiceTests {
 
         // verify notification created from push notification builder is displayed
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
-        pushBuilder.verify(
-                () -> MessagingPushBuilder.build(any(MessagingPushPayload.class), eq(context)));
+        pushBuilder.verify(() -> MessagingPushBuilder.build(eq(remoteMessage), eq(context)));
     }
 
     @Test
@@ -189,5 +187,32 @@ public class MessagingServiceTests {
 
         // verify
         assertFalse(isHandled);
+    }
+
+    @Test
+    public void test_handleRemoteMessage_whenNotificationBuildFails_ReturnsFalse() {
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Sample Title");
+                            }
+                        });
+        pushBuilder
+                .when(
+                        () ->
+                                MessagingPushBuilder.build(
+                                        any(RemoteMessage.class), any(Context.class)))
+                .thenReturn(null);
+
+        // test
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify the push message is ignored and no notification is displayed
+        assertFalse(isHandled);
+        verify(notificationManager, times(0)).notify(anyInt(), any());
+        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), times(0));
     }
 }

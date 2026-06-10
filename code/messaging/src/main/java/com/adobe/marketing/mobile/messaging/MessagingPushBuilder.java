@@ -24,14 +24,18 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationBuilder;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationConstructionFailedException;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.util.StringUtils;
+import com.google.firebase.messaging.RemoteMessage;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -53,6 +57,47 @@ class MessagingPushBuilder {
     // used.
     // This will appear in the notification settings for the app.
     private static final String DEFAULT_CHANNEL_NAME = "General Notifications";
+
+    /**
+     * Builds a notification for the received {@link RemoteMessage}.
+     *
+     * <p>If the message carries an AJO template type ({@link
+     * MessagingConstants.Push.PayloadKeys#TEMPLATE_TYPE}), rendering is delegated to the UI
+     * notificationbuilder library. Otherwise the existing {@link MessagingPushPayload} based push
+     * flow is used.
+     *
+     * @param remoteMessage the {@link RemoteMessage} received from the push notification
+     * @param context the application {@link Context}
+     * @return the notification, or {@code null} if a templated notification could not be
+     *     constructed
+     */
+    @Nullable static Notification build(final RemoteMessage remoteMessage, final Context context) {
+        final String templateType =
+                remoteMessage.getData().get(MessagingConstants.Push.PayloadKeys.TEMPLATE_TYPE);
+
+        if (!StringUtils.isNullOrEmpty(templateType)) {
+            // AJO template payload -> delegate rendering to the UI notificationbuilder library
+            try {
+                return NotificationBuilder.constructNotificationBuilder(
+                                remoteMessage.getData(),
+                                MessagingPushTrackerActivity.class,
+                                NotificationInteractionReceiver.class)
+                        .build();
+            } catch (final NotificationConstructionFailedException | IllegalArgumentException e) {
+                Log.warning(
+                        MessagingPushConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Failed to build templated notification, ignoring the push message. Error:"
+                                + " %s",
+                        e.getLocalizedMessage());
+                return null;
+            }
+        }
+
+        // existing AJO push flow - untouched
+        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
+        return build(payload, context);
+    }
 
     /**
      * Builds a notification for the received payload.
