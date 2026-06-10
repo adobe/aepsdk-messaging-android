@@ -25,6 +25,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import java.util.HashMap;
 
 /**
  * This class is the entry point for all push notifications received from Firebase.
@@ -78,12 +79,16 @@ public class MessagingService extends FirebaseMessagingService {
         // Build and display the notification synchronously while the FCM wakelock is active.
         final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
         final Notification notification = MessagingPushBuilder.build(payload, context);
+
+        // display notification
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
         // Bootstrap the SDK if this is a cold-start push, then record delivery.
         selfInit(context, () -> Messaging.trackPushReceived(context, remoteMessage));
+        PushCallbackHandler.notifyReceived(payload);
+
         return true;
     }
 
@@ -175,7 +180,7 @@ public class MessagingService extends FirebaseMessagingService {
      * @param remoteMessage the message received from Firebase
      * @return true if the remote message originated from Adobe Journey Optimizer, false otherwise
      */
-    private static boolean isAJONotification(final @NonNull RemoteMessage remoteMessage) {
+    public static boolean isAJONotification(final @NonNull RemoteMessage remoteMessage) {
         // TODO: Use the newly introduced key "ajo_type" to identify Adobe push notifications.
         return remoteMessage.getData().containsKey(XDM_KEY)
                 || remoteMessage.getData().containsKey(MessagingConstants.Push.PayloadKeys.TITLE);
