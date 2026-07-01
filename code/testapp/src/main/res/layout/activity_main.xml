@@ -12,37 +12,19 @@
     governing permissions and limitations under the License.
 
 -->
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#C5C5CA"
-    android:fillViewport="true"
-    tools:context=".MainActivity">
-
-<androidx.appcompat.widget.LinearLayoutCompat
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="vertical"
-    android:paddingBottom="24dp">
+    tools:context=".MainActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Messaging Sample App" />
-
-    <Button
-        android:id="@+id/btnSimulatePushHttp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Simulate push (HTTP image)" />
-
-    <Button
-        android:id="@+id/btnSimulatePushHttps"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Simulate push (HTTPS image)" />
 
     <Button
         android:id="@+id/btnGetLocalNotification"
@@ -119,5 +101,3 @@
         android:text="Reset identities" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>
-
-</androidx.core.widget.NestedScrollView>
