@@ -56,6 +56,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val LOG_TAG = "MainActivity"
         const val FROM = "from"
+        /** adb: am start -n .../.MainActivity --ez simulate_http_push true */
+        const val EXTRA_SIMULATE_HTTP_PUSH = "simulate_http_push"
     }
 
     private fun askNotificationPermission() {
@@ -274,6 +276,28 @@ class MainActivity : ComponentActivity() {
 
         // Request push permissions for Android 33
         askNotificationPermission()
+
+        if (intent?.getBooleanExtra(EXTRA_SIMULATE_HTTP_PUSH, false) == true) {
+            triggerHttpPushSimulation()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_SIMULATE_HTTP_PUSH, false)) {
+            triggerHttpPushSimulation()
+        }
+    }
+
+    private fun triggerHttpPushSimulation() {
+        Toast.makeText(this, "Simulating HTTP push…", Toast.LENGTH_SHORT).show()
+        PushSimulationHelper.simulateAjoPush(
+            this,
+            PushSimulationHelper.HTTP_EMULATOR_IMAGE_URL,
+            "Cleartext HTTP push test (Variant B — LAN)",
+            "HTTP image at host LAN IP — expand notification shade"
+        )
     }
 
     private fun setupButtonClickListeners() {
@@ -330,6 +354,20 @@ class MainActivity : ComponentActivity() {
 
         binding.btnResetIdentities.setOnClickListener {
             MobileCore.resetIdentities()
+        }
+
+        binding.btnSimulatePushHttp.setOnClickListener {
+            triggerHttpPushSimulation()
+        }
+
+        binding.btnSimulatePushHttps.setOnClickListener {
+            Toast.makeText(this, "Simulating HTTPS push…", Toast.LENGTH_SHORT).show()
+            PushSimulationHelper.simulateAjoPush(
+                this,
+                PushSimulationHelper.HTTPS_CONTROL_IMAGE_URL,
+                "HTTPS push control",
+                "Rich push with HTTPS image"
+            )
         }
     }
 
