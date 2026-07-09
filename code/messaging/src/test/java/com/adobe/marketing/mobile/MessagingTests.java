@@ -1252,6 +1252,181 @@ public class MessagingTests {
     }
 
     @Test
+    public void test_updatePropositionsForSurfaces_withXdmAndData() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("promos/feed1"));
+
+                    Map<String, Object> restaurant = new HashMap<>();
+                    restaurant.put("restaurantId", "6099");
+                    Map<String, Object> xdm = new HashMap<>();
+                    xdm.put("_chipotle", restaurant);
+
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("customKey", "customValue");
+
+                    // test
+                    Messaging.updatePropositionsForSurfaces(surfacePaths, xdm, data);
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+
+                    Event event = eventCaptor.getAllValues().get(0);
+                    Map<String, Object> eventData = event.getEventData();
+                    assertNotNull(eventData);
+                    assertEquals(
+                            true,
+                            DataReader.optBoolean(
+                                    eventData,
+                                    MessagingTestConstants.EventDataKeys.Messaging
+                                            .UPDATE_PROPOSITIONS,
+                                    false));
+
+                    Map<String, Object> capturedXdm =
+                            DataReader.optTypedMap(Object.class, eventData, "xdm", null);
+                    assertNotNull(capturedXdm);
+                    Map<String, Object> capturedChipotle =
+                            DataReader.optTypedMap(Object.class, capturedXdm, "_chipotle", null);
+                    assertEquals("6099", capturedChipotle.get("restaurantId"));
+
+                    Map<String, Object> capturedData =
+                            DataReader.optTypedMap(Object.class, eventData, "data", null);
+                    assertNotNull(capturedData);
+                    assertEquals("customValue", capturedData.get("customKey"));
+                });
+    }
+
+    @Test
+    public void test_updatePropositionsForSurfaces_withXdmAndData_andCallback() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("promos/feed1"));
+
+                    Map<String, Object> xdm = new HashMap<>();
+                    xdm.put("key", "value");
+
+                    // test - exercise the callback-bearing overload
+                    Messaging.updatePropositionsForSurfaces(
+                            surfacePaths, xdm, null, callback -> {});
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+
+                    Event event = eventCaptor.getAllValues().get(0);
+                    Map<String, Object> eventData = event.getEventData();
+                    Map<String, Object> capturedXdm =
+                            DataReader.optTypedMap(Object.class, eventData, "xdm", null);
+                    assertEquals("value", capturedXdm.get("key"));
+                    // data absent when not provided
+                    assertNull(DataReader.optTypedMap(Object.class, eventData, "data", null));
+                });
+    }
+
+    @Test
+    public void test_updatePropositionsForSurfaces_withXdmOnly() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("promos/feed1"));
+                    Map<String, Object> xdm = new HashMap<>();
+                    xdm.put("key", "value");
+
+                    // test
+                    Messaging.updatePropositionsForSurfaces(surfacePaths, xdm, null);
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+                    Event event = eventCaptor.getAllValues().get(0);
+                    Map<String, Object> eventData = event.getEventData();
+                    Map<String, Object> capturedXdm =
+                            DataReader.optTypedMap(Object.class, eventData, "xdm", null);
+                    assertEquals("value", capturedXdm.get("key"));
+                    assertNull(DataReader.optTypedMap(Object.class, eventData, "data", null));
+                });
+    }
+
+    @Test
+    public void test_updatePropositionsForSurfaces_withDataOnly() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("promos/feed1"));
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("customKey", "customValue");
+
+                    // test
+                    Messaging.updatePropositionsForSurfaces(surfacePaths, null, data);
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+                    Event event = eventCaptor.getAllValues().get(0);
+                    Map<String, Object> eventData = event.getEventData();
+                    Map<String, Object> capturedData =
+                            DataReader.optTypedMap(Object.class, eventData, "data", null);
+                    assertEquals("customValue", capturedData.get("customKey"));
+                    assertNull(DataReader.optTypedMap(Object.class, eventData, "xdm", null));
+                });
+    }
+
+    @Test
+    public void
+            test_updatePropositionsForSurfaces_withXdm_whenEmptyListProvided_thenNoEventDispatched() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    Map<String, Object> xdm = new HashMap<>();
+                    xdm.put("key", "value");
+
+                    // test - empty surfaces should short-circuit even when xdm is provided
+                    Messaging.updatePropositionsForSurfaces(new ArrayList<>(), xdm, null);
+
+                    // verify no event dispatched
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+                    assertNull(eventCaptor.getValue());
+                });
+    }
+
+    @Test
+    public void test_updatePropositionsForSurfaces_backwardCompatible_noXdmOrDataKeys() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("promos/feed1"));
+
+                    // test - the existing surfaces-only overload should not attach xdm/data keys
+                    Messaging.updatePropositionsForSurfaces(surfacePaths);
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+
+                    Event event = eventCaptor.getAllValues().get(0);
+                    Map<String, Object> eventData = event.getEventData();
+                    assertNotNull(eventData);
+                    assertNull(DataReader.optTypedMap(Object.class, eventData, "xdm", null));
+                    assertNull(DataReader.optTypedMap(Object.class, eventData, "data", null));
+                });
+    }
+
+    @Test
     public void
             test_updatePropositionsForSurfaces_whenSomeSurfacePathsInvalid_thenOnlyValidPathsUsedForFeedRetrieval() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);

@@ -380,7 +380,10 @@ public final class MessagingExtension extends Extension {
                     SELF_TAG,
                     "Processing request to retrieve propositions from the remote.");
             edgePersonalizationResponseHandler.fetchPropositions(
-                    eventToProcess, InternalMessagingUtils.getSurfaces(eventToProcess));
+                    eventToProcess,
+                    InternalMessagingUtils.getSurfaces(eventToProcess),
+                    InternalMessagingUtils.getUpdatePropositionsXdm(eventToProcess),
+                    InternalMessagingUtils.getUpdatePropositionsData(eventToProcess));
         } else if (InternalMessagingUtils.isGetPropositionsEvent(eventToProcess)) {
             // Queue the get propositions event in the
             // edgePersonalizationResponseHandler.serialWorkDispatcher to ensure any prior update
