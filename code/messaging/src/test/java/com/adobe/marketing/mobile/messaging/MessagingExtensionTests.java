@@ -2325,7 +2325,7 @@ public class MessagingExtensionTests {
 
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .fetchPropositions(any(Event.class), listArgumentCaptor.capture());
+                            .fetchPropositions(any(Event.class), listArgumentCaptor.capture(), isNull(), isNull());
                     List<Surface> capturedSurfaces = listArgumentCaptor.getValue();
                     assertEquals(2, capturedSurfaces.size());
                     List<String> sortedList = new ArrayList<>();
