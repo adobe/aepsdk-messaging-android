@@ -233,7 +233,7 @@ class EdgePersonalizationResponseHandler {
         eventData.put(
                 MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY, messageRequestData);
 
-        // add xdm with an event type of personalization.request
+        // add xdm with an event type of decisioning.propositionFetch
         final Map<String, Object> xdmData =
                 new HashMap<String, Object>() {
                     {

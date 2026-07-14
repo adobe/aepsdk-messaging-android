@@ -273,7 +273,7 @@ public final class MessagingConstants {
                 private Inbound() {}
 
                 final class EventType {
-                    static final String PERSONALIZATION_REQUEST = "personalization.request";
+                    static final String PERSONALIZATION_REQUEST = "decisioning.propositionFetch";
 
                     private EventType() {}
                 }
