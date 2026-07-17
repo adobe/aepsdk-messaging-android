@@ -347,7 +347,8 @@ class EdgePersonalizationResponseHandler {
         eventData.put(
                 MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY, messageRequestData);
 
-        // add xdm with an event type of decisioning.propositionFetch, merging any caller-provided XDM.
+        // add xdm with an event type of decisioning.propositionFetch, merging any caller-provided
+        // XDM.
         // the internal eventType is required and always wins over a caller-provided value.
         final Map<String, Object> xdmData = new HashMap<>();
         if (customXdm != null && !customXdm.isEmpty()) {
