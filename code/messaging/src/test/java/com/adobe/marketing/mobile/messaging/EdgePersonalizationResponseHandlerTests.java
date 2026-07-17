@@ -278,6 +278,261 @@ public class EdgePersonalizationResponseHandlerTests {
                 });
     }
 
+    // ========================================================================================
+    // createPersonalizationRequestEventData (custom XDM / data merge)
+    // ========================================================================================
+    @Test
+    public void createPersonalizationRequestEventData_baseStructure_whenNoCustomXdmOrData() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> expected = null;
+                    try {
+                        expected =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/surface\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+
+                    Map<String, Object> actual =
+                            edgePersonalizationResponseHandler
+                                    .createPersonalizationRequestEventData(
+                                            Collections.singletonList("mobileapp://test/surface"),
+                                            null,
+                                            null);
+
+                    assertEquals(expected, actual);
+                });
+    }
+
+    @Test
+    public void createPersonalizationRequestEventData_withCustomXdm() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> customXdm = new HashMap<>();
+                    customXdm.put("_chipotle", Collections.singletonMap("restaurantId", "6099"));
+
+                    Map<String, Object> expected = null;
+                    try {
+                        expected =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\","
+                                                    + " \"_chipotle\":{\"restaurantId\":\"6099\"}},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/surface\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+
+                    Map<String, Object> actual =
+                            edgePersonalizationResponseHandler
+                                    .createPersonalizationRequestEventData(
+                                            Collections.singletonList("mobileapp://test/surface"),
+                                            customXdm,
+                                            null);
+
+                    assertEquals(expected, actual);
+                });
+    }
+
+    @Test
+    public void createPersonalizationRequestEventData_withCustomData() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> customData = new HashMap<>();
+                    customData.put("customKey", "customValue");
+
+                    Map<String, Object> expected = null;
+                    try {
+                        expected =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"customKey\":\"customValue\","
+                                                    + " \"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/surface\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+
+                    Map<String, Object> actual =
+                            edgePersonalizationResponseHandler
+                                    .createPersonalizationRequestEventData(
+                                            Collections.singletonList("mobileapp://test/surface"),
+                                            null,
+                                            customData);
+
+                    assertEquals(expected, actual);
+                });
+    }
+
+    @Test
+    public void createPersonalizationRequestEventData_customXdmCannotOverrideInternalEventType() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // caller attempts to override the internal eventType
+                    Map<String, Object> customXdm = new HashMap<>();
+                    customXdm.put("eventType", "some.other.type");
+                    customXdm.put("_chipotle", Collections.singletonMap("restaurantId", "6099"));
+
+                    Map<String, Object> expected = null;
+                    try {
+                        expected =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\","
+                                                    + " \"_chipotle\":{\"restaurantId\":\"6099\"}},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/surface\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+
+                    Map<String, Object> actual =
+                            edgePersonalizationResponseHandler
+                                    .createPersonalizationRequestEventData(
+                                            Collections.singletonList("mobileapp://test/surface"),
+                                            customXdm,
+                                            null);
+
+                    // internal eventType wins; custom sibling preserved
+                    assertEquals(expected, actual);
+                });
+    }
+
+    @Test
+    public void
+            createPersonalizationRequestEventData_customDataCannotOverrideInternalAdobeNamespace() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // caller attempts to override the internal __adobe response-format namespace
+                    Map<String, Object> customData = new HashMap<>();
+                    customData.put(
+                            "__adobe",
+                            Collections.singletonMap(
+                                    "ajo",
+                                    Collections.singletonMap("in-app-response-format", 999)));
+                    customData.put("customKey", "customValue");
+
+                    Map<String, Object> expected = null;
+                    try {
+                        expected =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"customKey\":\"customValue\","
+                                                    + " \"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/surface\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+
+                    Map<String, Object> actual =
+                            edgePersonalizationResponseHandler
+                                    .createPersonalizationRequestEventData(
+                                            Collections.singletonList("mobileapp://test/surface"),
+                                            null,
+                                            customData);
+
+                    // internal __adobe wins; custom sibling preserved
+                    assertEquals(expected, actual);
+                });
+    }
+
+    @Test
+    public void createPersonalizationRequestEventData_withCustomXdmAndData() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> customXdm = new HashMap<>();
+                    customXdm.put("_chipotle", Collections.singletonMap("restaurantId", "6099"));
+                    Map<String, Object> customData = new HashMap<>();
+                    customData.put("customKey", "customValue");
+
+                    Map<String, Object> expected = null;
+                    try {
+                        expected =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\","
+                                                    + " \"_chipotle\":{\"restaurantId\":\"6099\"}},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"customKey\":\"customValue\","
+                                                    + " \"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/surface\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+
+                    Map<String, Object> actual =
+                            edgePersonalizationResponseHandler
+                                    .createPersonalizationRequestEventData(
+                                            Collections.singletonList("mobileapp://test/surface"),
+                                            customXdm,
+                                            customData);
+
+                    assertEquals(expected, actual);
+                });
+    }
+
+    @Test
+    public void createPersonalizationRequestEventData_multipleSurfaces() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    List<String> surfaceUris = new ArrayList<>();
+                    surfaceUris.add("mobileapp://test/one");
+                    surfaceUris.add("mobileapp://test/two");
+
+                    Map<String, Object> expected = null;
+                    try {
+                        expected =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/one\",\"mobileapp://test/two\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+
+                    Map<String, Object> actual =
+                            edgePersonalizationResponseHandler
+                                    .createPersonalizationRequestEventData(surfaceUris, null, null);
+
+                    assertEquals(expected, actual);
+                });
+    }
+
     @Test
     public void
             test_fetchMessages_ValidApplicationPackageNamePresent_NullOriginatingEventCompletionHandler() {
