@@ -355,8 +355,7 @@ class EdgePersonalizationResponseHandler {
         }
         xdmData.put(
                 MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE,
-                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType
-                        .PROPOSITION_FETCH);
+                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PROPOSITION_FETCH);
         eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM, xdmData);
 
         // add a data object specifying the response format desired from XAS, merging any
