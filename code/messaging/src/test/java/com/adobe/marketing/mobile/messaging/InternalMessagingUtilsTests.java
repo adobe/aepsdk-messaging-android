@@ -1304,6 +1304,73 @@ public class InternalMessagingUtilsTests {
     }
 
     // ========================================================================================
+    // getUpdatePropositionsXdm / getUpdatePropositionsData
+    // ========================================================================================
+    @Test
+    public void getUpdatePropositionsXdm_returnsXdm_whenPresent() {
+        // setup
+        Map<String, Object> xdm = new HashMap<>();
+        xdm.put("key", "value");
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("xdm", xdm);
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+
+        // test & verify
+        Map<String, Object> result = InternalMessagingUtils.getUpdatePropositionsXdm(event);
+        assertNotNull(result);
+        assertEquals("value", result.get("key"));
+    }
+
+    @Test
+    public void getUpdatePropositionsXdm_returnsNull_whenAbsent() {
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertNull(InternalMessagingUtils.getUpdatePropositionsXdm(event));
+    }
+
+    @Test
+    public void getUpdatePropositionsXdm_returnsNull_whenEventIsNull() {
+        assertNull(InternalMessagingUtils.getUpdatePropositionsXdm(null));
+    }
+
+    @Test
+    public void getUpdatePropositionsData_returnsData_whenPresent() {
+        // setup
+        Map<String, Object> data = new HashMap<>();
+        data.put("customKey", "customValue");
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("data", data);
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+
+        // test & verify
+        Map<String, Object> result = InternalMessagingUtils.getUpdatePropositionsData(event);
+        assertNotNull(result);
+        assertEquals("customValue", result.get("customKey"));
+    }
+
+    @Test
+    public void getUpdatePropositionsData_returnsNull_whenAbsent() {
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertNull(InternalMessagingUtils.getUpdatePropositionsData(event));
+    }
+
+    @Test
+    public void getUpdatePropositionsData_returnsNull_whenEventIsNull() {
+        assertNull(InternalMessagingUtils.getUpdatePropositionsData(null));
+    }
+
+    // ========================================================================================
     // Event id retrieval
     // ========================================================================================
     @Test
