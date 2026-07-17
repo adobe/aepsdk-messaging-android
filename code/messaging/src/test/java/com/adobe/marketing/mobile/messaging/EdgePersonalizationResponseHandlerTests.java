@@ -290,7 +290,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         expected =
                                 JSONUtils.toMap(
                                         new JSONObject(
-                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                "{\"xdm\":{\"eventType\":\"decisioning.propositionFetch\"},"
                                                     + " \"request\":{\"sendCompletion\":true},"
                                                     + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
                                                     + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/surface\"],"
@@ -324,7 +324,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         expected =
                                 JSONUtils.toMap(
                                         new JSONObject(
-                                                "{\"xdm\":{\"eventType\":\"personalization.request\","
+                                                "{\"xdm\":{\"eventType\":\"decisioning.propositionFetch\","
                                                     + " \"_chipotle\":{\"restaurantId\":\"6099\"}},"
                                                     + " \"request\":{\"sendCompletion\":true},"
                                                     + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
@@ -359,7 +359,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         expected =
                                 JSONUtils.toMap(
                                         new JSONObject(
-                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                "{\"xdm\":{\"eventType\":\"decisioning.propositionFetch\"},"
                                                     + " \"request\":{\"sendCompletion\":true},"
                                                     + " \"data\":{\"customKey\":\"customValue\","
                                                     + " \"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
@@ -396,7 +396,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         expected =
                                 JSONUtils.toMap(
                                         new JSONObject(
-                                                "{\"xdm\":{\"eventType\":\"personalization.request\","
+                                                "{\"xdm\":{\"eventType\":\"decisioning.propositionFetch\","
                                                     + " \"_chipotle\":{\"restaurantId\":\"6099\"}},"
                                                     + " \"request\":{\"sendCompletion\":true},"
                                                     + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
@@ -439,7 +439,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         expected =
                                 JSONUtils.toMap(
                                         new JSONObject(
-                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                "{\"xdm\":{\"eventType\":\"decisioning.propositionFetch\"},"
                                                     + " \"request\":{\"sendCompletion\":true},"
                                                     + " \"data\":{\"customKey\":\"customValue\","
                                                     + " \"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
@@ -477,7 +477,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         expected =
                                 JSONUtils.toMap(
                                         new JSONObject(
-                                                "{\"xdm\":{\"eventType\":\"personalization.request\","
+                                                "{\"xdm\":{\"eventType\":\"decisioning.propositionFetch\","
                                                     + " \"_chipotle\":{\"restaurantId\":\"6099\"}},"
                                                     + " \"request\":{\"sendCompletion\":true},"
                                                     + " \"data\":{\"customKey\":\"customValue\","
@@ -514,7 +514,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         expected =
                                 JSONUtils.toMap(
                                         new JSONObject(
-                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                "{\"xdm\":{\"eventType\":\"decisioning.propositionFetch\"},"
                                                     + " \"request\":{\"sendCompletion\":true},"
                                                     + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
                                                     + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://test/one\",\"mobileapp://test/two\"],"

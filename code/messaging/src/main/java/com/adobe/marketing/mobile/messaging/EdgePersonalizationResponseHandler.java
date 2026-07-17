@@ -314,7 +314,7 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Builds the event data for a {@code personalization.request} edge event for the provided
+     * Builds the event data for a {@code decisioning.propositionFetch} edge event for the provided
      * surface URIs.
      *
      * <p>Any {@code customXdm} is merged into the request XDM and any {@code customData} is merged
@@ -347,7 +347,7 @@ class EdgePersonalizationResponseHandler {
         eventData.put(
                 MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY, messageRequestData);
 
-        // add xdm with an event type of personalization.request, merging any caller-provided XDM.
+        // add xdm with an event type of decisioning.propositionFetch, merging any caller-provided XDM.
         // the internal eventType is required and always wins over a caller-provided value.
         final Map<String, Object> xdmData = new HashMap<>();
         if (customXdm != null && !customXdm.isEmpty()) {
