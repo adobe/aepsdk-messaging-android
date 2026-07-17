@@ -240,7 +240,7 @@ class EdgePersonalizationResponseHandler {
                         put(
                                 MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE,
                                 MessagingConstants.EventDataKeys.Messaging.Inbound.EventType
-                                        .PERSONALIZATION_REQUEST);
+                                        .PROPOSITION_FETCH);
                     }
                 };
         eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM, xdmData);

@@ -254,7 +254,7 @@ public class MessagingTestConstants {
                     public static final String DISPLAY = "decisioning.propositionDisplay";
                     public static final String DISQUALIFY = "decisioning.propositionDisqualify";
                     public static final String SUPPRESS_DISPLAY = "decisioning.propositionSuppressDisplay";
-                    public static final String PERSONALIZATION_REQUEST = "decisioning.propositionFetch";
+                    public static final String PROPOSITION_FETCH = "decisioning.propositionFetch";
                     public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED = "pushTracking.applicationOpened";
                     public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION = "pushTracking.customAction";
 
