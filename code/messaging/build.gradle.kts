@@ -43,6 +43,7 @@ aepLibrary {
     }
 
     android {
+
         defaultConfig {
             buildConfigField("java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)")
             buildConfigField("java.util.concurrent.atomic.AtomicBoolean", "IS_FUNCTIONAL_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)")
@@ -59,7 +60,9 @@ aepLibrary {
 }
 
 dependencies {
-    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    // Extensible Plugins: consume the rc-plugin core (with MobileCore.addPlugins/getPlugin +
+    // the plugin interfaces) from JitPack until it is released. Built from adobe/aepsdk-core-android@rc-plugin.
+    implementation("com.github.adobe.aepsdk-core-android:core:rc-plugin-SNAPSHOT")
     // dependencies provided by aep-library:
     // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
     implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
