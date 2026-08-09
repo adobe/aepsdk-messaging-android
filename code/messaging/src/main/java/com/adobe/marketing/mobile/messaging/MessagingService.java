@@ -16,10 +16,10 @@ import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
-import com.adobe.marketing.mobile.ILiveUpdateHandler;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.plugin.ILiveupdatePlugin;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -84,17 +84,16 @@ public class MessagingService extends FirebaseMessagingService {
         if (remoteMessage
                 .getData()
                 .containsKey(MessagingConstants.Push.PayloadKeys.LIVE_UPDATE_DATA)) {
-            final ILiveUpdateHandler handler = Messaging.getLiveUpdateHandler();
-            if (handler == null) {
+            final ILiveupdatePlugin liveUpdatePlugin = MobileCore.getPlugin(ILiveupdatePlugin.class);
+            if (liveUpdatePlugin == null) {
                 Log.warning(
                         MessagingPushConstants.LOG_TAG,
                         SELF_TAG,
-                        "Received a Live Update push but no ILiveUpdateHandler is registered."
-                                + " Dropping. Register a handler via"
-                                + " Messaging.setLiveUpdateHandler(...).");
+                        "Received a Live Update push but no ILiveupdatePlugin is registered."
+                                + " Dropping. Register a plugin via MobileCore.addPlugins(...).");
                 return true;
             }
-            handler.handleLiveUpdatePush(context, remoteMessage);
+            liveUpdatePlugin.handleLiveUpdatePush(context, remoteMessage);
             return true;
         }
 
