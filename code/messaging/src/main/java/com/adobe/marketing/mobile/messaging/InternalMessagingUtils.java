@@ -379,6 +379,43 @@ class InternalMessagingUtils {
         return retrievedSurfaces;
     }
 
+    /**
+     * Retrieves the caller-provided custom XDM from an {@code updatePropositionsForSurfaces} {@code
+     * Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code Map<String, Object>} containing the custom XDM, or {@code null} if not present
+     */
+    static Map<String, Object> getUpdatePropositionsXdm(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
+        return DataReader.optTypedMap(
+                Object.class,
+                event.getEventData(),
+                MessagingConstants.EventDataKeys.Messaging.XDM,
+                null);
+    }
+
+    /**
+     * Retrieves the caller-provided custom free-form data from an {@code
+     * updatePropositionsForSurfaces} {@code Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code Map<String, Object>} containing the custom data, or {@code null} if not
+     *     present
+     */
+    static Map<String, Object> getUpdatePropositionsData(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
+        return DataReader.optTypedMap(
+                Object.class,
+                event.getEventData(),
+                MessagingConstants.EventDataKeys.Messaging.DATA,
+                null);
+    }
+
     // ========================================================================================
     // Event id retrieval
     // ========================================================================================
