@@ -254,6 +254,78 @@ Messaging.updatePropositionsForSurfaces(surfaces, success -> {
 });
 ```
 
+### updatePropositionsForSurfaces(surfaces, xdm, data, callback)
+
+Dispatches an event for the Edge network extension to fetch personalization decisions from the AJO campaigns for the provided `Surface`s array, attaching optional custom XDM and free-form data fields to the personalization request. The returned decision `Proposition`s are cached in-memory by the Messaging extension.
+
+Any fields provided in `xdm` are merged into the XDM object of the outgoing personalization request. Any fields provided in `data` are merged into the free-form data object of the request. Internal keys required by the SDK — for example, the personalization request `eventType` — always take precedence and cannot be overwritten by the caller.
+
+If provided, `callback` will be called on the Messaging extension's background thread once the response has been fully processed. `true` will be passed to the `callback` if a network response was returned and successfully processed.
+
+To retrieve previously cached decision `Proposition`s, use `getPropositionsForSurfaces` API.
+
+#### Java
+
+##### Syntax
+
+```java
+public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces, @Nullable final Map<String, Object> xdm, @Nullable final Map<String, Object> data, @Nullable final AdobeCallback<Boolean> callback)
+```
+
+##### Example
+
+#### Kotlin
+
+```kotlin
+val surface1 = Surface("myActivity#button")
+val surface2 = Surface("myActivityAttributes")
+val surfaces = listOf(surface1, surface2)
+
+// Custom XDM fields — e.g. context data used by decisioning eligibility rules
+val xdmData = mapOf<String, Any>("userTier" to "gold", "loyaltyPoints" to 1200)
+
+// Optional free-form data attached to the request
+val freeFormData = mapOf<String, Any>("campaignSource" to "homeScreen")
+
+Messaging.updatePropositionsForSurfaces(surfaces, xdmData, freeFormData) { success ->
+    if (success) {
+        // handle success scenario
+    } else {
+        // handle error scenario
+    }
+}
+```
+
+#### Java
+
+```java
+final Surface surface1 = new Surface("myActivity#button");
+final Surface surface2 = new Surface("myActivityAttributes");
+
+final List<Surface> surfaces = new ArrayList<>();
+surfaces.add(surface1);
+surfaces.add(surface2);
+
+// Custom XDM fields — e.g. context data used by decisioning eligibility rules
+final Map<String, Object> xdmData = new HashMap<>();
+xdmData.put("userTier", "gold");
+xdmData.put("loyaltyPoints", 1200);
+
+// Optional free-form data attached to the request
+final Map<String, Object> freeFormData = new HashMap<>();
+freeFormData.put("campaignSource", "homeScreen");
+
+Messaging.updatePropositionsForSurfaces(surfaces, xdmData, freeFormData, success -> {
+    if (success) {
+        // handle success scenario
+    } else {
+        // handle error scenario
+    }
+});
+```
+
+---
+
 ### getPropositionsForSurfaces
 
 Retrieves the previously fetched propositions from the SDK's in-memory propositions cache for the provided surfaces. The callback is invoked with the decision propositions corresponding to the given surfaces or `AdobeError`, if it occurs. 

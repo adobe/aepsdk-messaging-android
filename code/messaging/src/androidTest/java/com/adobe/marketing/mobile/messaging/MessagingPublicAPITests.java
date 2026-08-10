@@ -502,7 +502,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(1, surfacesList.size());
         assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test", surfacesList.get(0));
     }
@@ -562,7 +562,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -628,7 +628,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -941,7 +941,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -1099,7 +1099,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -1206,7 +1206,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -1348,7 +1348,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -1530,7 +1530,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -1699,7 +1699,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -1809,7 +1809,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -1954,7 +1954,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -2128,7 +2128,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
@@ -2303,7 +2303,7 @@ public class MessagingPublicAPITests {
                 DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
         final List<String> surfacesList =
                 DataReader.optStringList(personalizationDataMap, "surfaces", null);
-        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals("decisioning.propositionFetch", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",

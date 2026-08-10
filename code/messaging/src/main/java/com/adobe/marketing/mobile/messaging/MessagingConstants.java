@@ -205,6 +205,8 @@ public final class MessagingConstants {
             static final String UPDATE_PROPOSITIONS = "updatepropositions";
             static final String GET_PROPOSITIONS = "getpropositions";
             static final String SURFACES = "surfaces";
+            static final String XDM = "xdm";
+            static final String DATA = "data";
             static final String ENDING_EVENT_ID = "endingEventId";
             static final String RESPONSE_ERROR = "responseerror";
             static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
@@ -273,7 +275,7 @@ public final class MessagingConstants {
                 private Inbound() {}
 
                 final class EventType {
-                    static final String PERSONALIZATION_REQUEST = "personalization.request";
+                    static final String PROPOSITION_FETCH = "decisioning.propositionFetch";
 
                     private EventType() {}
                 }

@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.10.0";
+    private static final String EXTENSION_VERSION = "3.11.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -65,6 +65,8 @@ public final class Messaging {
     private static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
     private static final String _XDM = "_xdm";
     private static final String SURFACES = "surfaces";
+    private static final String XDM = "xdm";
+    private static final String DATA = "data";
     private static final String PROPOSITIONS = "propositions";
     private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
     private static final String GET_PROPOSITIONS_EVENT = "getpropositions";
@@ -512,7 +514,7 @@ public final class Messaging {
      *     propositions
      */
     public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
-        updatePropositionsForSurfaces(surfaces, null);
+        updatePropositionsForSurfaces(surfaces, null, null, null);
     }
 
     /**
@@ -526,6 +528,59 @@ public final class Messaging {
      */
     public static void updatePropositionsForSurfaces(
             @NonNull final List<Surface> surfaces,
+            @Nullable final AdobeCallback<Boolean> callback) {
+        updatePropositionsForSurfaces(surfaces, null, null, callback);
+    }
+
+    /**
+     * Dispatches an event to fetch propositions for the provided surfaces from Adobe Journey
+     * Optimizer via the Experience Edge network, attaching custom XDM and/or free-form data to the
+     * personalization request.
+     *
+     * <p>Any fields provided in {@code xdm} are merged into the request's XDM object, and any
+     * fields provided in {@code data} are merged into the request's free-form data object. Internal
+     * keys required by the SDK (for example, the personalization request {@code eventType}) always
+     * take precedence and cannot be overwritten by the caller.
+     *
+     * @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving
+     *     propositions
+     * @param xdm An optional {@code Map<String, Object>} of custom XDM fields to attach to the
+     *     personalization request (for example, context fields used by decisioning eligibility
+     *     rules)
+     * @param data An optional {@code Map<String, Object>} of custom free-form data to attach to the
+     *     personalization request
+     */
+    public static void updatePropositionsForSurfaces(
+            @NonNull final List<Surface> surfaces,
+            @Nullable final Map<String, Object> xdm,
+            @Nullable final Map<String, Object> data) {
+        updatePropositionsForSurfaces(surfaces, xdm, data, null);
+    }
+
+    /**
+     * Dispatches an event to fetch propositions for the provided surfaces from Adobe Journey
+     * Optimizer via the Experience Edge network, attaching custom XDM and/or free-form data to the
+     * personalization request.
+     *
+     * <p>Any fields provided in {@code xdm} are merged into the request's XDM object, and any
+     * fields provided in {@code data} are merged into the request's free-form data object. Internal
+     * keys required by the SDK (for example, the personalization request {@code eventType}) always
+     * take precedence and cannot be overwritten by the caller.
+     *
+     * @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving
+     *     propositions
+     * @param xdm An optional {@code Map<String, Object>} of custom XDM fields to attach to the
+     *     personalization request (for example, context fields used by decisioning eligibility
+     *     rules)
+     * @param data An optional {@code Map<String, Object>} of custom free-form data to attach to the
+     *     personalization request
+     * @param callback An optional callback to be called once the proposition response has been
+     *     processed by the Messaging extension
+     */
+    public static void updatePropositionsForSurfaces(
+            @NonNull final List<Surface> surfaces,
+            @Nullable final Map<String, Object> xdm,
+            @Nullable final Map<String, Object> data,
             @Nullable final AdobeCallback<Boolean> callback) {
         if (surfaces == null || surfaces.isEmpty()) {
             Log.warning(
@@ -554,6 +609,14 @@ public final class Messaging {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(UPDATE_PROPOSITIONS_EVENT, true);
         eventData.put(SURFACES, validSurfacesFlattened);
+
+        if (xdm != null && !xdm.isEmpty()) {
+            eventData.put(XDM, xdm);
+        }
+
+        if (data != null && !data.isEmpty()) {
+            eventData.put(DATA, data);
+        }
 
         final Event updatePropositionsEvent =
                 new Event.Builder(

@@ -168,8 +168,30 @@ class EdgePersonalizationResponseHandler {
      * @param event The fetch propositions {@link Event}
      * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
      */
-    @SuppressWarnings("NestedIfDepth")
     void fetchPropositions(final Event event, final List<Surface> surfaces) {
+        fetchPropositions(event, surfaces, null, null);
+    }
+
+    /**
+     * Generates and dispatches an event prompting the Edge extension to fetch propositions
+     * (currently in-app messages, content cards, or code-based experiences), attaching any
+     * caller-provided custom XDM and/or free-form data to the personalization request. The surface
+     * URIs used in the request are generated using the application id of the app. If the
+     * application id is unavailable, calling this method will do nothing.
+     *
+     * @param event The fetch propositions {@link Event}
+     * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
+     * @param customXdm An optional {@code Map<String, Object>} of custom XDM to merge into the
+     *     personalization request XDM.
+     * @param customData An optional {@code Map<String, Object>} of custom data to merge into the
+     *     personalization request data.
+     */
+    @SuppressWarnings("NestedIfDepth")
+    void fetchPropositions(
+            final Event event,
+            final List<Surface> surfaces,
+            final Map<String, Object> customXdm,
+            final Map<String, Object> customData) {
         // get a completion handler for requesting event if one exists
         final CompletionHandler handler =
                 parent.completionHandlerForOriginatingEventId(event.getUniqueIdentifier());
@@ -216,52 +238,9 @@ class EdgePersonalizationResponseHandler {
             validatedSurfaceUris.add(surface.getUri());
         }
 
-        // begin construction of event data
-        final Map<String, Object> eventData = new HashMap<>();
-        final Map<String, Object> messageRequestData = new HashMap<>();
-        final Map<String, Object> personalizationData = new HashMap<>();
-
-        // add query parameters containing supported schemas and requested surfaces
-        personalizationData.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS, SUPPORTED_SCHEMAS);
-        personalizationData.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES,
-                validatedSurfaceUris);
-        messageRequestData.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION,
-                personalizationData);
-        eventData.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY, messageRequestData);
-
-        // add xdm with an event type of personalization.request
-        final Map<String, Object> xdmData =
-                new HashMap<String, Object>() {
-                    {
-                        put(
-                                MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE,
-                                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType
-                                        .PERSONALIZATION_REQUEST);
-                    }
-                };
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM, xdmData);
-
-        // add a data object to the request specifying the format desired in the response from XAS
-        final Map<String, Object> data = new HashMap<>();
-        final Map<String, Object> ajo = new HashMap<>();
-        final Map<String, Object> inAppResponseFormat = new HashMap<>();
-        inAppResponseFormat.put(
-                MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.INAPP_RESPONSE_FORMAT,
-                MessagingConstants.EventDataKeys.Messaging.Data.Value.NEW_IAM);
-        ajo.put(MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.AJO, inAppResponseFormat);
-        data.put(MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.NAMESPACE, ajo);
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA, data);
-
-        // add a request object so we get a response event from edge when the propositions stream is
-        // closed for this event
-        final Map<String, Object> request = new HashMap<>();
-        request.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION, true);
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST, request);
-        // end construction of event data
+        // build the personalization request event data, merging any caller-provided custom XDM/data
+        final Map<String, Object> eventData =
+                createPersonalizationRequestEventData(validatedSurfaceUris, customXdm, customData);
 
         final Event newEvent =
                 new Event.Builder(
@@ -332,6 +311,76 @@ class EdgePersonalizationResponseHandler {
                         extensionApi.dispatch(processCompletedEvent);
                     }
                 });
+    }
+
+    /**
+     * Builds the event data for a {@code decisioning.propositionFetch} edge event for the provided
+     * surface URIs.
+     *
+     * <p>Any {@code customXdm} is merged into the request XDM and any {@code customData} is merged
+     * into the request data. Internal keys required by the SDK — the personalization request {@code
+     * eventType} in XDM and the {@code __adobe} in-app response format in data — always take
+     * precedence and cannot be overwritten by the caller.
+     *
+     * @param validatedSurfaceUris the validated surface URI strings to request propositions for.
+     * @param customXdm optional custom XDM to merge into the request XDM.
+     * @param customData optional custom data to merge into the request data.
+     * @return the event data {@code Map} for the chained edge request event.
+     */
+    Map<String, Object> createPersonalizationRequestEventData(
+            final List<String> validatedSurfaceUris,
+            final Map<String, Object> customXdm,
+            final Map<String, Object> customData) {
+        final Map<String, Object> eventData = new HashMap<>();
+        final Map<String, Object> messageRequestData = new HashMap<>();
+        final Map<String, Object> personalizationData = new HashMap<>();
+
+        // add query parameters containing supported schemas and requested surfaces
+        personalizationData.put(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS, SUPPORTED_SCHEMAS);
+        personalizationData.put(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES,
+                validatedSurfaceUris);
+        messageRequestData.put(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION,
+                personalizationData);
+        eventData.put(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY, messageRequestData);
+
+        // add xdm with an event type of decisioning.propositionFetch, merging any caller-provided
+        // XDM.
+        // the internal eventType is required and always wins over a caller-provided value.
+        final Map<String, Object> xdmData = new HashMap<>();
+        if (customXdm != null && !customXdm.isEmpty()) {
+            xdmData.putAll(customXdm);
+        }
+        xdmData.put(
+                MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE,
+                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PROPOSITION_FETCH);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM, xdmData);
+
+        // add a data object specifying the response format desired from XAS, merging any
+        // caller-provided data. the internal __adobe namespace is required and always wins.
+        final Map<String, Object> data = new HashMap<>();
+        if (customData != null && !customData.isEmpty()) {
+            data.putAll(customData);
+        }
+        final Map<String, Object> ajo = new HashMap<>();
+        final Map<String, Object> inAppResponseFormat = new HashMap<>();
+        inAppResponseFormat.put(
+                MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.INAPP_RESPONSE_FORMAT,
+                MessagingConstants.EventDataKeys.Messaging.Data.Value.NEW_IAM);
+        ajo.put(MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.AJO, inAppResponseFormat);
+        data.put(MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.NAMESPACE, ajo);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA, data);
+
+        // add a request object so we get a response event from edge when the propositions stream is
+        // closed for this event
+        final Map<String, Object> request = new HashMap<>();
+        request.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION, true);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST, request);
+
+        return eventData;
     }
 
     /**
