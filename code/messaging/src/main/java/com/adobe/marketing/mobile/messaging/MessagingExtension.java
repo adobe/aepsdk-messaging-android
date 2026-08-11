@@ -168,6 +168,12 @@ public final class MessagingExtension extends Extension {
                         MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
                         this::processEvent);
 
+        // register listener for edge error responses (offline content card availability)
+        getApi().registerEventListener(
+                        MessagingConstants.EventType.EDGE,
+                        MessagingConstants.EventSource.EDGE_ERROR_RESPONSE,
+                        this::processEvent);
+
         // register listener for handling debug events
         getApi().registerEventListener(EventType.SYSTEM, EventSource.DEBUG, this::handleDebugEvent);
 
@@ -189,8 +195,24 @@ public final class MessagingExtension extends Extension {
                             "MessagingEvents",
                             event -> {
                                 if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
-                                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
-                                            InternalMessagingUtils.getSurfaces(event), event);
+                                    if (InternalMessagingUtils.isUsePersistedContentCards(event)) {
+                                        // retrieve persisted content cards from disk
+                                        final List<Surface> surfaces =
+                                                InternalMessagingUtils.getSurfaces(event);
+                                        final Map<Surface, List<Proposition>>
+                                                persistedPropositions =
+                                                        edgePersonalizationResponseHandler
+                                                                .retrievePersistedPropositions(
+                                                                        surfaces);
+                                        edgePersonalizationResponseHandler
+                                                .dispatchPropositionsResponse(
+                                                        persistedPropositions, event);
+                                    } else {
+                                        edgePersonalizationResponseHandler
+                                                .retrieveInMemoryPropositions(
+                                                        InternalMessagingUtils.getSurfaces(event),
+                                                        event);
+                                    }
                                 } else if (event.getType().equals(EventType.EDGE)) {
                                     return !edgePersonalizationResponseHandler
                                             .getRequestedSurfacesForEventId()
@@ -234,8 +256,10 @@ public final class MessagingExtension extends Extension {
             return false;
         }
 
-        // fetch propositions on initial launch once we have configuration and identity state set
+        // hydrate content cards from disk before the initial network fetch
+        // to provide offline availability
         if (!initialMessageFetchComplete) {
+            edgePersonalizationResponseHandler.hydrateAllPersistedContentCards();
             edgePersonalizationResponseHandler.fetchPropositions(event, null);
             initialMessageFetchComplete = true;
         }
@@ -466,6 +490,16 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isClearPersistedPropositionsEvent(eventToProcess)) {
+            // handle clear persisted propositions request
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Processing request to clear persisted propositions.");
+            edgePersonalizationResponseHandler.clearPersistedContentCardAndInboxPropositions();
+        } else if (InternalMessagingUtils.isEdgeErrorResponseEvent(eventToProcess)) {
+            // handle edge error response for offline content card availability
+            edgePersonalizationResponseHandler.handleEdgeErrorResponse(eventToProcess);
         }
     }
 
@@ -489,6 +523,9 @@ public final class MessagingExtension extends Extension {
                     "Cannot track proposition item, proposition interaction XDM is not available.");
             return;
         }
+        // enrich tracking XDM with content card origin (servedFromPersistentCache)
+        edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
+                propositionInteractionXdm);
         sendPropositionInteraction(propositionInteractionXdm);
     }
 
@@ -603,6 +640,8 @@ public final class MessagingExtension extends Extension {
         createMessagingSharedState(null, resetIdentitiesEvent);
         // remove the push token from the named collection
         InternalMessagingUtils.persistPushToken(null);
+        // clear content card state and persisted caches on identity reset
+        edgePersonalizationResponseHandler.clearContentCards();
     }
 
     /**

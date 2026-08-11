@@ -340,6 +340,59 @@ class InternalMessagingUtils {
         return consequenceType.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is a clear persisted propositions event.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a clear persisted propositions
+     *     event.
+     */
+    static boolean isClearPersistedPropositionsEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+                && DataReader.optBoolean(
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.Messaging.CLEAR_PERSISTED_PROPOSITIONS,
+                        false);
+    }
+
+    /**
+     * Determines if the passed in {@code Event} is an edge error response event.
+     *
+     * @param event An Edge error response {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is an edge error response event.
+     */
+    static boolean isEdgeErrorResponseEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return MessagingConstants.EventType.EDGE.equalsIgnoreCase(event.getType())
+                && MessagingConstants.EventSource.EDGE_ERROR_RESPONSE.equalsIgnoreCase(
+                        event.getSource());
+    }
+
+    /**
+     * Determines if the passed in {@code Event} is a use persisted content cards event.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event requests persisted content cards.
+     */
+    static boolean isUsePersistedContentCards(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return DataReader.optBoolean(
+                event.getEventData(),
+                MessagingConstants.EventDataKeys.Messaging.USE_PERSISTED_CONTENT_CARDS,
+                false);
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================

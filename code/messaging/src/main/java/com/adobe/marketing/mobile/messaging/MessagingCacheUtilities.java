@@ -304,6 +304,248 @@ final class MessagingCacheUtilities {
     }
 
     // ========================================================================================================
+    // Private helpers for proposition caching
+    // ========================================================================================================
+
+    /**
+     * Retrieves cached propositions for the given cache key.
+     *
+     * @param cacheKey the cache subdirectory key to retrieve from
+     * @param notFoundMessage log message to show when no cached data is found
+     * @return a {@code Map<Surface, List<Proposition>>} of cached propositions, or null if none
+     *     found
+     */
+    private Map<Surface, List<Proposition>> getCachedPropositionsForKey(
+            final String cacheKey, final String notFoundMessage) {
+        final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, cacheKey);
+        if (cacheResult == null) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, notFoundMessage);
+            return null;
+        }
+
+        ObjectInputStream objectInputStream = null;
+        try {
+            objectInputStream = new ObjectInputStream(cacheResult.getData());
+            final Object cachedData = objectInputStream.readObject();
+            if (cachedData == null) {
+                Log.warning(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Unable to read cached data into an object for key: %s",
+                        cacheKey);
+                return null;
+            }
+
+            // cached data should be Map<Surface, List<Proposition>>
+            if (cachedData instanceof Map) {
+                @SuppressWarnings("unchecked")
+                final Map<Surface, List<Proposition>> result =
+                        (Map<Surface, List<Proposition>>) cachedData;
+                return result;
+            }
+
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Cached data for key %s is not in the expected format.",
+                    cacheKey);
+            return null;
+        } catch (final IOException ioException) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Exception occurred when reading cached data for key %s: %s",
+                    cacheKey,
+                    ioException.getMessage());
+            return null;
+        } catch (final ClassNotFoundException classNotFoundException) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Class not found when reading cached data for key %s: %s",
+                    cacheKey,
+                    classNotFoundException.getMessage());
+            return null;
+        } finally {
+            try {
+                if (objectInputStream != null) {
+                    objectInputStream.close();
+                }
+            } catch (final IOException ioException) {
+                Log.warning(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Exception occurred when closing ObjectInputStream for key %s: %s",
+                        cacheKey,
+                        ioException.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Caches propositions under the given cache key, merging with existing cached data.
+     *
+     * @param cacheKey the cache subdirectory key to write to
+     * @param newPropositions the new propositions to cache
+     * @param surfacesToRemove surfaces to remove from the cache
+     * @param logPrefix prefix for log messages
+     */
+    private void cachePropositionsForKey(
+            final String cacheKey,
+            final Map<Surface, List<Proposition>> newPropositions,
+            final List<Surface> surfacesToRemove,
+            final String logPrefix) {
+        final Map<Surface, List<Proposition>> cachedPropositions =
+                getCachedPropositionsForKey(cacheKey, logPrefix + " - no existing cache found.");
+        final Map<Surface, List<Proposition>> updatedPropositions =
+                cachedPropositions != null ? cachedPropositions : new HashMap<>();
+        updatedPropositions.putAll(newPropositions);
+
+        // remove surfaces that should be evicted
+        if (!MessagingUtils.isNullOrEmpty(surfacesToRemove)) {
+            for (final Surface surface : surfacesToRemove) {
+                updatedPropositions.remove(surface);
+            }
+        }
+
+        final Map<Surface, List<Proposition>> propositions = new HashMap<>(updatedPropositions);
+        if (MapUtils.isNullOrEmpty(propositions)) {
+            cacheService.remove(MessagingConstants.CACHE_BASE_DIR, cacheKey);
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "%s cache has been deleted.",
+                    logPrefix);
+            return;
+        }
+
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Creating new cached %s propositions",
+                logPrefix);
+        ByteArrayOutputStream byteArrayOutputStream = null;
+        InputStream inputStream = null;
+        ObjectOutputStream objectOutputStream = null;
+        try {
+            byteArrayOutputStream = new ByteArrayOutputStream();
+            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(propositions);
+            objectOutputStream.flush();
+            inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            final CacheEntry cacheEntry = new CacheEntry(inputStream, CacheExpiry.never(), null);
+            cacheService.set(MessagingConstants.CACHE_BASE_DIR, cacheKey, cacheEntry);
+        } catch (final IOException e) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "IOException while attempting to write %s cache (%s)",
+                    logPrefix,
+                    e);
+        } finally {
+            try {
+                if (objectOutputStream != null) {
+                    objectOutputStream.close();
+                }
+                if (byteArrayOutputStream != null) {
+                    byteArrayOutputStream.close();
+                }
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (final IOException e) {
+                Log.warning(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Unable to close streams for %s cache (%s)",
+                        logPrefix,
+                        e);
+            }
+        }
+    }
+
+    // ========================================================================================================
+    // Content card proposition caching
+    // ========================================================================================================
+
+    /**
+     * Retrieves cached content card propositions.
+     *
+     * @return a {@code Map<Surface, List<Proposition>>} containing cached content card
+     *     propositions, or null if none found.
+     */
+    Map<Surface, List<Proposition>> getCachedContentCardPropositions() {
+        return getCachedPropositionsForKey(
+                MessagingConstants.CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY,
+                "Unable to find cached content card propositions.");
+    }
+
+    /**
+     * Caches content card propositions.
+     *
+     * @param newPropositions the content card propositions to cache
+     * @param surfacesToRemove surfaces to remove from the content card cache
+     */
+    void cacheContentCardPropositions(
+            final Map<Surface, List<Proposition>> newPropositions,
+            final List<Surface> surfacesToRemove) {
+        cachePropositionsForKey(
+                MessagingConstants.CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY,
+                newPropositions,
+                surfacesToRemove,
+                "Content card");
+    }
+
+    // ========================================================================================================
+    // Inbox proposition caching
+    // ========================================================================================================
+
+    /**
+     * Retrieves cached inbox propositions.
+     *
+     * @return a {@code Map<Surface, List<Proposition>>} containing cached inbox propositions, or
+     *     null if none found.
+     */
+    Map<Surface, List<Proposition>> getCachedInboxPropositions() {
+        return getCachedPropositionsForKey(
+                MessagingConstants.INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY,
+                "Unable to find cached inbox propositions.");
+    }
+
+    /**
+     * Caches inbox propositions.
+     *
+     * @param newPropositions the inbox propositions to cache
+     * @param surfacesToRemove surfaces to remove from the inbox cache
+     */
+    void cacheInboxPropositions(
+            final Map<Surface, List<Proposition>> newPropositions,
+            final List<Surface> surfacesToRemove) {
+        cachePropositionsForKey(
+                MessagingConstants.INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY,
+                newPropositions,
+                surfacesToRemove,
+                "Inbox");
+    }
+
+    /**
+     * Clears all persisted content card and inbox proposition caches.
+     * Does not affect the IAM propositions cache.
+     */
+    void clearPersistedContentCardAndInboxCaches() {
+        cacheService.remove(
+                MessagingConstants.CACHE_BASE_DIR,
+                MessagingConstants.CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY);
+        cacheService.remove(
+                MessagingConstants.CACHE_BASE_DIR,
+                MessagingConstants.INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY);
+        Log.trace(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Content card and inbox proposition caches have been deleted.");
+    }
+
+    // ========================================================================================================
     // Image asset caching
     // ========================================================================================================
 
