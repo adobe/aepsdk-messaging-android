@@ -194,25 +194,20 @@ public final class MessagingExtension extends Extension {
                     new SerialWorkDispatcher<>(
                             "MessagingEvents",
                             event -> {
-                                if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
-                                    if (InternalMessagingUtils.isUsePersistedContentCards(event)) {
-                                        // retrieve persisted content cards from disk
-                                        final List<Surface> surfaces =
-                                                InternalMessagingUtils.getSurfaces(event);
-                                        final Map<Surface, List<Proposition>>
-                                                persistedPropositions =
-                                                        edgePersonalizationResponseHandler
-                                                                .retrievePersistedPropositions(
-                                                                        surfaces);
-                                        edgePersonalizationResponseHandler
-                                                .dispatchPropositionsResponse(
-                                                        persistedPropositions, event);
-                                    } else {
-                                        edgePersonalizationResponseHandler
-                                                .retrieveInMemoryPropositions(
-                                                        InternalMessagingUtils.getSurfaces(event),
-                                                        event);
-                                    }
+                                if (InternalMessagingUtils.isGetPropositionsEvent(event)
+                                        && InternalMessagingUtils.isUsePersistedContentCards(
+                                                event)) {
+                                    // retrieve persisted content cards from disk
+                                    final List<Surface> surfaces =
+                                            InternalMessagingUtils.getSurfaces(event);
+                                    final Map<Surface, List<Proposition>> persistedPropositions =
+                                            edgePersonalizationResponseHandler
+                                                    .retrievePersistedPropositions(surfaces);
+                                    edgePersonalizationResponseHandler.dispatchPropositionsResponse(
+                                            persistedPropositions, event);
+                                } else if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
+                                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                                            InternalMessagingUtils.getSurfaces(event), event);
                                 } else if (event.getType().equals(EventType.EDGE)) {
                                     return !edgePersonalizationResponseHandler
                                             .getRequestedSurfacesForEventId()
