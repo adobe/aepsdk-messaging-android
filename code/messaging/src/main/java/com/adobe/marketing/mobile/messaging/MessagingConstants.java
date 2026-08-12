@@ -28,12 +28,8 @@ public final class MessagingConstants {
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CONTENT_CARD_CACHE_SUBDIRECTORY = "contentCardImages";
-    static final String CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY =
-            "contentCardPropositions";
+    static final String CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY = "contentCardPropositions";
     static final String INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY = "inboxPropositions";
-    // TODO: replace with a value read from shared state configuration once that config flag is
-    // available, instead of this hardcoded default.
-    static final boolean OFFLINE_AVAILABILITY_ENABLED = true;
     static final String HTTP_HEADER_IF_MODIFIED_SINCE = "If-Modified-Since";
     static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
@@ -46,8 +42,7 @@ public final class MessagingConstants {
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
     static final int IGNORE_PUSH_SYNC_TIMEOUT_MS = 1000;
     static final Set<Integer> RECOVERABLE_EDGE_ERROR_STATUS_CODES =
-            Collections.unmodifiableSet(
-                    new HashSet<>(Arrays.asList(408, 429, 502, 503, 504, 507)));
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(408, 429, 502, 503, 504, 507)));
 
     private MessagingConstants() {}
 
@@ -159,6 +154,7 @@ public final class MessagingConstants {
         static final String DATASET_ID = "datasetId";
         static final String COLLECT = "collect";
         static final String EXD_REQUEST_ID = "exdRequestID";
+        static final String DISPLAY = "display";
         static final String INTERACT = "interact";
         static final String DISMISS = "dismiss";
 
@@ -314,8 +310,7 @@ public final class MessagingConstants {
                     static final String SCHEMAS = "schemas";
                     static final String CHARACTERISTICS = "characteristics";
                     static final String TOKENS = "tokens";
-                    static final String SERVED_FROM_PERSISTENT_CACHE =
-                            "servedFromPersistentCache";
+                    static final String SERVED_FROM_PERSISTENT_CACHE = "servedFromPersistentCache";
 
                     private Key() {}
                 }
@@ -438,6 +433,8 @@ public final class MessagingConstants {
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
             static final String OPTIMIZE_PUSH_SYNC = "messaging.optimizePushSync";
+            static final String CONTENT_CARD_OFFLINE_AVAILABLE =
+                    "messaging.contentCardOfflineAvailable";
 
             private Configuration() {}
         }

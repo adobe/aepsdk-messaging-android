@@ -634,8 +634,9 @@ public final class Messaging {
     }
 
     /**
-     * Clears all persisted content card and inbox proposition caches from disk. This does not
-     * affect in-memory propositions or the IAM (in-app message) cache.
+     * Clears all content card state — both in-memory (qualified cards, rules, origin tracking) and
+     * persisted disk caches. This does not affect the IAM (in-app message) cache or code-based
+     * experiences.
      *
      * <p>Use this method to clear stale offline content cards, for example after a user logs out.
      */

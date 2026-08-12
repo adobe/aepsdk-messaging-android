@@ -317,7 +317,8 @@ final class MessagingCacheUtilities {
      */
     private Map<Surface, List<Proposition>> getCachedPropositionsForKey(
             final String cacheKey, final String notFoundMessage) {
-        final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, cacheKey);
+        final CacheResult cacheResult =
+                cacheService.get(MessagingConstants.CACHE_BASE_DIR, cacheKey);
         if (cacheResult == null) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, notFoundMessage);
             return null;
@@ -412,10 +413,7 @@ final class MessagingCacheUtilities {
         if (MapUtils.isNullOrEmpty(propositions)) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, cacheKey);
             Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "%s cache has been deleted.",
-                    logPrefix);
+                    MessagingConstants.LOG_TAG, SELF_TAG, "%s cache has been deleted.", logPrefix);
             return;
         }
 
@@ -529,8 +527,8 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Clears all persisted content card and inbox proposition caches.
-     * Does not affect the IAM propositions cache.
+     * Clears all persisted content card and inbox proposition caches. Does not affect the IAM
+     * propositions cache.
      */
     void clearPersistedContentCardAndInboxCaches() {
         cacheService.remove(

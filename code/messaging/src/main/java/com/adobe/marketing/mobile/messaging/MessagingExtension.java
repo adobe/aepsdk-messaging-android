@@ -491,12 +491,12 @@ public final class MessagingExtension extends Extension {
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
         } else if (InternalMessagingUtils.isClearPersistedPropositionsEvent(eventToProcess)) {
-            // handle clear persisted propositions request
+            // handle clear persisted propositions request — full wipe of in-memory + disk state
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
                     "Processing request to clear persisted propositions.");
-            edgePersonalizationResponseHandler.clearPersistedContentCardAndInboxPropositions();
+            edgePersonalizationResponseHandler.clearContentCards();
         } else if (InternalMessagingUtils.isEdgeErrorResponseEvent(eventToProcess)) {
             // handle edge error response for offline content card availability
             edgePersonalizationResponseHandler.handleEdgeErrorResponse(eventToProcess);
@@ -524,8 +524,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
         // enrich tracking XDM with content card origin (servedFromPersistentCache)
-        edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
-                propositionInteractionXdm);
+        edgePersonalizationResponseHandler.enrichWithContentCardOrigin(propositionInteractionXdm);
         sendPropositionInteraction(propositionInteractionXdm);
     }
 

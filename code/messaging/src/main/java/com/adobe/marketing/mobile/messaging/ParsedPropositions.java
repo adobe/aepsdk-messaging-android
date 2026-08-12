@@ -48,7 +48,8 @@ public class ParsedPropositions {
     ParsedPropositions(
             final Map<Surface, List<Proposition>> propositions,
             final List<Surface> requestedSurfaces,
-            final ExtensionApi extensionApi) {
+            final ExtensionApi extensionApi,
+            final boolean contentCardOfflineAvailable) {
         for (final List<Proposition> propositionList : propositions.values()) {
             // sort the propositions by rank before processing
             Collections.sort(
@@ -129,7 +130,7 @@ public class ParsedPropositions {
                                             PropositionInfo.createFromProposition(proposition);
                                     propositionInfoToCache.put(
                                             consequence.getId(), contentCardPropositionInfo);
-                                    if (MessagingConstants.OFFLINE_AVAILABILITY_ENABLED) {
+                                    if (contentCardOfflineAvailable) {
                                         contentCardPropositionsToPersist =
                                                 MessagingUtils.updatePropositionMapForSurface(
                                                         surface,
@@ -160,12 +161,10 @@ public class ParsedPropositions {
                         propositionsToCache =
                                 MessagingUtils.updatePropositionMapForSurface(
                                         surface, proposition, propositionsToCache);
-                        if (MessagingConstants.OFFLINE_AVAILABILITY_ENABLED) {
+                        if (contentCardOfflineAvailable) {
                             inboxPropositionsToPersist =
                                     MessagingUtils.updatePropositionMapForSurface(
-                                            surface,
-                                            proposition,
-                                            inboxPropositionsToPersist);
+                                            surface, proposition, inboxPropositionsToPersist);
                         }
                         break;
                     default:

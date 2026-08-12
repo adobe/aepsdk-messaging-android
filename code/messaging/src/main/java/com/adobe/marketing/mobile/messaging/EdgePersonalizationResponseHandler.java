@@ -22,6 +22,8 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.SharedStateResolution;
+import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -37,6 +39,7 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -148,7 +151,11 @@ class EdgePersonalizationResponseHandler {
                 }
 
                 final ParsedPropositions parsedPropositions =
-                        new ParsedPropositions(cachedPropositions, surfaces, extensionApi);
+                        new ParsedPropositions(
+                                cachedPropositions,
+                                surfaces,
+                                extensionApi,
+                                isContentCardOfflineAvailable());
                 final Map<Surface, List<LaunchRule>> inAppRules =
                         parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
                 // register any in-app propositions which were previously cached
@@ -162,6 +169,32 @@ class EdgePersonalizationResponseHandler {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Reads the {@code messaging.contentCardOfflineAvailable} flag from Configuration shared state.
+     * Defaults to {@code true} when the configuration is unavailable (matching iOS behavior).
+     *
+     * @return {@code true} if offline content card availability is enabled
+     */
+    boolean isContentCardOfflineAvailable() {
+        try {
+            final SharedStateResult result =
+                    extensionApi.getSharedState(
+                            MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
+                            null,
+                            false,
+                            SharedStateResolution.LAST_SET);
+            if (result == null || result.getValue() == null) {
+                return true;
+            }
+            return DataReader.optBoolean(
+                    result.getValue(),
+                    MessagingConstants.SharedState.Configuration.CONTENT_CARD_OFFLINE_AVAILABLE,
+                    true);
+        } catch (final Exception e) {
+            return true;
         }
     }
 
@@ -672,7 +705,9 @@ class EdgePersonalizationResponseHandler {
     private void endRequestForEventId(final String eventId) {
         // if a non-recoverable edge error was received for this event,
         // skip applying proposition changes to preserve last-known-good state
+        boolean requestFailed = false;
         if (nonRecoverableErrorEventIds.remove(eventId)) {
+            requestFailed = true;
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
@@ -690,10 +725,10 @@ class EdgePersonalizationResponseHandler {
         // clear pending propositions
         inProgressPropositions.clear();
 
-        // call the handler if we have one
+        // call the handler if we have one, passing false on failure (matching iOS behavior)
         final CompletionHandler handler = parent.completionHandlerForEdgeRequestEventId(eventId);
         if (handler != null) {
-            handler.handle.call(true);
+            handler.handle.call(!requestFailed);
         }
     }
 
@@ -704,8 +739,10 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
+        final boolean offlineAvailable = isContentCardOfflineAvailable();
         final ParsedPropositions parsedPropositions =
-                new ParsedPropositions(inProgressPropositions, requestedSurfaces, extensionApi);
+                new ParsedPropositions(
+                        inProgressPropositions, requestedSurfaces, extensionApi, offlineAvailable);
 
         // we need to preserve cache for any surfaces that were not a part of this request
         // any requested surface that is absent from the response needs to be removed from cache and
@@ -725,7 +762,7 @@ class EdgePersonalizationResponseHandler {
 
         // disk-first write strategy: persist content card and inbox propositions to disk
         // before updating in-memory state, ensuring crash consistency
-        if (MessagingConstants.OFFLINE_AVAILABILITY_ENABLED) {
+        if (offlineAvailable) {
             if (!MapUtils.isNullOrEmpty(parsedPropositions.contentCardPropositionsToPersist)) {
                 messagingCacheUtilities.cacheContentCardPropositions(
                         parsedPropositions.contentCardPropositionsToPersist, surfacesToRemove);
@@ -737,10 +774,11 @@ class EdgePersonalizationResponseHandler {
         }
 
         // apply rules
-        updateRulesEngines(parsedPropositions.surfaceRulesBySchemaType, requestedSurfaces);
+        updateRulesEngines(
+                parsedPropositions.surfaceRulesBySchemaType, requestedSurfaces, offlineAvailable);
 
         // mark all content card propositions from this network response as NETWORK origin
-        if (MessagingConstants.OFFLINE_AVAILABILITY_ENABLED) {
+        if (offlineAvailable) {
             for (final Map.Entry<Surface, List<Proposition>> entry :
                     inProgressPropositions.entrySet()) {
                 for (final Proposition proposition : entry.getValue()) {
@@ -755,14 +793,36 @@ class EdgePersonalizationResponseHandler {
 
     private void updateRulesEngines(
             @NonNull final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
-            @NonNull final List<Surface> requestedSurfaces) {
+            @NonNull final List<Surface> requestedSurfaces,
+            final boolean offlineAvailable) {
+        // When offline availability is enabled, prevent disk-origin surfaces from being clobbered
+        // by network responses that don't include content card rules for those surfaces.
+        // Build the set of surfaces to process for content card rules, excluding disk-origin
+        // surfaces that don't have new content card rules in the response.
+        final List<Surface> ccRequestedSurfaces;
+        if (offlineAvailable) {
+            ccRequestedSurfaces = new ArrayList<>(requestedSurfaces);
+            final Map<Surface, List<LaunchRule>> ccNewRules =
+                    surfaceRulesBySchemaType.get(SchemaType.CONTENT_CARD);
+            final Iterator<Surface> it = ccRequestedSurfaces.iterator();
+            while (it.hasNext()) {
+                final Surface surface = it.next();
+                final boolean hasNewRules = ccNewRules != null && ccNewRules.containsKey(surface);
+                if (!hasNewRules && hasDiskOriginContentCards(surface)) {
+                    it.remove();
+                }
+            }
+        } else {
+            ccRequestedSurfaces = requestedSurfaces;
+        }
+
         // process rules from response
         processRulesForSchemaType(
                 SchemaType.INAPP, surfaceRulesBySchemaType, requestedSurfaces, inAppRulesBySurface);
         processRulesForSchemaType(
                 SchemaType.CONTENT_CARD,
                 surfaceRulesBySchemaType,
-                requestedSurfaces,
+                ccRequestedSurfaces,
                 contentCardRulesBySurface);
         processRulesForSchemaType(
                 SchemaType.EVENT_HISTORY_OPERATION,
@@ -785,7 +845,7 @@ class EdgePersonalizationResponseHandler {
                                 EventType.MESSAGING,
                                 EventSource.REQUEST_CONTENT)
                         .build();
-        removeOrReplaceContentCards(contentCardSeedEvent, requestedSurfaces);
+        removeOrReplaceContentCards(contentCardSeedEvent, ccRequestedSurfaces);
 
         // Always sync the in-app + event history rules engine, for the same reason as
         // content cards above: processRulesForSchemaType already cleared stale entries from
@@ -1237,14 +1297,14 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Handles an edge error response event. If the error status code is non-recoverable,
-     * the event id is recorded so that {@link #endRequestForEventId} will skip applying
-     * proposition changes, preserving the last-known-good content card state.
+     * Handles an edge error response event. If the error status code is non-recoverable, the event
+     * id is recorded so that {@link #endRequestForEventId} will skip applying proposition changes,
+     * preserving the last-known-good content card state.
      *
      * @param event the edge error response {@link Event}
      */
     void handleEdgeErrorResponse(final Event event) {
-        if (!MessagingConstants.OFFLINE_AVAILABILITY_ENABLED) {
+        if (!isContentCardOfflineAvailable()) {
             return;
         }
 
@@ -1254,13 +1314,13 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
+        // Treat the error as non-recoverable unless the status code is explicitly in the
+        // recoverable set. Missing or zero status is conservatively treated as non-recoverable
+        // (matching iOS behavior) to preserve the last-known-good state.
         final int status =
                 DataReader.optInt(
-                        event.getEventData(),
-                        MessagingConstants.EventDataKeys.EdgeError.STATUS,
-                        0);
-        if (status != 0
-                && !MessagingConstants.RECOVERABLE_EDGE_ERROR_STATUS_CODES.contains(status)) {
+                        event.getEventData(), MessagingConstants.EventDataKeys.EdgeError.STATUS, 0);
+        if (!MessagingConstants.RECOVERABLE_EDGE_ERROR_STATUS_CODES.contains(status)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
@@ -1273,11 +1333,15 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Hydrates content card rules engine from persisted disk cache. Called at boot time
-     * before the initial network fetch to provide offline content card availability.
+     * Hydrates content card rules engine from persisted disk cache. Called at boot time before the
+     * initial network fetch to provide offline content card availability.
+     *
+     * <p>Also loads event-history rules (disqualify/dismiss) into the main rules engine so that
+     * dismiss/disqualify operations work for disk-loaded content cards without requiring a network
+     * response first.
      */
     void hydrateContentCardRulesEngineFromDisk() {
-        if (!MessagingConstants.OFFLINE_AVAILABILITY_ENABLED) {
+        if (!isContentCardOfflineAvailable()) {
             return;
         }
 
@@ -1299,7 +1363,7 @@ class EdgePersonalizationResponseHandler {
 
         final List<Surface> surfaces = new ArrayList<>(cachedContentCards.keySet());
         final ParsedPropositions parsedPropositions =
-                new ParsedPropositions(cachedContentCards, surfaces, extensionApi);
+                new ParsedPropositions(cachedContentCards, surfaces, extensionApi, true);
 
         // load proposition info for tracking
         propositionInfo.putAll(parsedPropositions.propositionInfoToCache);
@@ -1322,6 +1386,28 @@ class EdgePersonalizationResponseHandler {
             removeOrReplaceContentCards(seedEvent, surfaces);
         }
 
+        // load event-history rules (disqualify/dismiss) into the main rules engine
+        // so that dismiss/disqualify operations work for disk-loaded content cards
+        final Map<Surface, List<LaunchRule>> eventHistoryRules =
+                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.EVENT_HISTORY_OPERATION);
+        if (eventHistoryRules != null) {
+            eventHistoryRulesBySurface.putAll(eventHistoryRules);
+        }
+
+        // also preserve any IAM rules from persisted propositions to prevent
+        // a later rebuildMainRulesEngine from clobbering them
+        final Map<Surface, List<LaunchRule>> iamRules =
+                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
+        if (iamRules != null) {
+            inAppRulesBySurface.putAll(iamRules);
+        }
+
+        // rebuild the main rules engine with combined IAM + event-history rules
+        final List<LaunchRule> allMainRules = new ArrayList<>();
+        allMainRules.addAll(collectRulesFrom(inAppRulesBySurface));
+        allMainRules.addAll(collectRulesFrom(eventHistoryRulesBySurface));
+        launchRulesEngine.replaceRules(allMainRules);
+
         // mark all hydrated propositions as DISK origin
         for (final Map.Entry<Surface, List<Proposition>> entry : cachedContentCards.entrySet()) {
             for (final Proposition proposition : entry.getValue()) {
@@ -1330,11 +1416,9 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    /**
-     * Hydrates inbox propositions from persisted disk cache into in-memory propositions.
-     */
+    /** Hydrates inbox propositions from persisted disk cache into in-memory propositions. */
     void hydrateInboxPropositionsFromDisk() {
-        if (!MessagingConstants.OFFLINE_AVAILABILITY_ENABLED) {
+        if (!isContentCardOfflineAvailable()) {
             return;
         }
 
@@ -1362,8 +1446,8 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Hydrates all persisted content cards and inbox propositions from disk.
-     * Called during boot-time setup before the initial network fetch.
+     * Hydrates all persisted content cards and inbox propositions from disk. Called during
+     * boot-time setup before the initial network fetch.
      */
     void hydrateAllPersistedContentCards() {
         hydrateContentCardRulesEngineFromDisk();
@@ -1371,29 +1455,32 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Enriches the provided proposition interaction XDM with the content card origin
-     * (servedFromPersistentCache) if the proposition was loaded from disk.
+     * Enriches the provided proposition interaction XDM with per-item {@code
+     * servedFromPersistentCache} flags for DISPLAY events only.
+     *
+     * <p>When a disk-loaded proposition is displayed, each item within that proposition receives
+     * {@code data.characteristics.servedFromPersistentCache = true} in the XDM at: {@code
+     * _experience.decisioning.propositions[].items[].data.characteristics.servedFromPersistentCache}
+     *
+     * <p>Non-DISPLAY events (interact, dismiss, trigger) are not enriched.
      *
      * @param propositionInteractionXdm the XDM map to enrich
      * @return the enriched XDM map (same reference, mutated in place)
      */
+    @SuppressWarnings("unchecked")
     Map<String, Object> enrichWithContentCardOrigin(
             final Map<String, Object> propositionInteractionXdm) {
-        if (!MessagingConstants.OFFLINE_AVAILABILITY_ENABLED
-                || MapUtils.isNullOrEmpty(propositionInteractionXdm)) {
+        if (!isContentCardOfflineAvailable() || MapUtils.isNullOrEmpty(propositionInteractionXdm)) {
             return propositionInteractionXdm;
         }
 
-        // walk the XDM to find proposition references and check origin
         try {
-            @SuppressWarnings("unchecked")
             final Map<String, Object> experience =
                     (Map<String, Object>)
                             propositionInteractionXdm.get(
                                     MessagingConstants.TrackingKeys.EXPERIENCE);
             if (experience == null) return propositionInteractionXdm;
 
-            @SuppressWarnings("unchecked")
             final Map<String, Object> decisioning =
                     (Map<String, Object>)
                             experience.get(
@@ -1401,7 +1488,17 @@ class EdgePersonalizationResponseHandler {
                                             .DECISIONING);
             if (decisioning == null) return propositionInteractionXdm;
 
-            @SuppressWarnings("unchecked")
+            // only enrich DISPLAY events (matching iOS behavior)
+            final Map<String, Object> propositionEventType =
+                    (Map<String, Object>)
+                            decisioning.get(
+                                    MessagingConstants.EventDataKeys.Messaging.Inbound.Key
+                                            .PROPOSITION_EVENT_TYPE);
+            if (propositionEventType == null
+                    || !propositionEventType.containsKey(MessagingConstants.TrackingKeys.DISPLAY)) {
+                return propositionInteractionXdm;
+            }
+
             final List<Map<String, Object>> propositions =
                     (List<Map<String, Object>>)
                             decisioning.get(
@@ -1415,15 +1512,47 @@ class EdgePersonalizationResponseHandler {
                                 propositionMap,
                                 MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ID,
                                 null);
-                if (propositionId != null) {
-                    final CardOrigin origin = contentCardOriginByProposition.get(propositionId);
-                    if (origin == CardOrigin.DISK) {
-                        propositionInteractionXdm.put(
-                                MessagingConstants.EventDataKeys.Messaging.Inbound.Key
-                                        .SERVED_FROM_PERSISTENT_CACHE,
-                                true);
-                        return propositionInteractionXdm;
+                if (propositionId == null) continue;
+
+                final CardOrigin origin = contentCardOriginByProposition.get(propositionId);
+                if (origin != CardOrigin.DISK) continue;
+
+                // enrich each item with servedFromPersistentCache per-item
+                final List<Map<String, Object>> items =
+                        (List<Map<String, Object>>)
+                                propositionMap.get(
+                                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key
+                                                .ITEMS);
+                if (items == null) continue;
+
+                for (final Map<String, Object> item : items) {
+                    Map<String, Object> data =
+                            (Map<String, Object>)
+                                    item.get(
+                                            MessagingConstants.EventDataKeys.Messaging.Data.Key
+                                                    .DATA);
+                    if (data == null) {
+                        data = new HashMap<>();
+                        item.put(MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA, data);
                     }
+
+                    Map<String, Object> characteristics =
+                            (Map<String, Object>)
+                                    data.get(
+                                            MessagingConstants.EventDataKeys.Messaging.Inbound.Key
+                                                    .CHARACTERISTICS);
+                    if (characteristics == null) {
+                        characteristics = new HashMap<>();
+                        data.put(
+                                MessagingConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .CHARACTERISTICS,
+                                characteristics);
+                    }
+
+                    characteristics.put(
+                            MessagingConstants.EventDataKeys.Messaging.Inbound.Key
+                                    .SERVED_FROM_PERSISTENT_CACHE,
+                            true);
                 }
             }
         } catch (final ClassCastException ignored) {
@@ -1434,8 +1563,29 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Removes entries from {@code contentCardOriginByProposition} for propositions that are
-     * no longer in the qualified content cards cache.
+     * Returns {@code true} if any content card for the given surface has {@link CardOrigin#DISK}
+     * origin. Used to protect disk-loaded surfaces from being clobbered by network responses that
+     * don't include content card rules for those surfaces.
+     *
+     * @param surface the surface to check
+     * @return {@code true} if the surface has disk-origin content cards
+     */
+    private boolean hasDiskOriginContentCards(final Surface surface) {
+        final List<Proposition> propositions = contentCardsBySurface.get(surface);
+        if (MessagingUtils.isNullOrEmpty(propositions)) {
+            return false;
+        }
+        for (final Proposition proposition : propositions) {
+            if (contentCardOriginByProposition.get(proposition.getUniqueId()) == CardOrigin.DISK) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Removes entries from {@code contentCardOriginByProposition} for propositions that are no
+     * longer in the qualified content cards cache.
      */
     private void pruneContentCardOrigins() {
         final java.util.Set<String> activePropositionIds = new java.util.HashSet<>();
@@ -1448,8 +1598,8 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Clears all in-memory content card state (qualified cards, rules, and origin tracking)
-     * and persisted content card and inbox caches. Used during identity reset.
+     * Clears all in-memory content card state (qualified cards, rules, and origin tracking) and
+     * persisted content card and inbox caches. Used during identity reset.
      */
     void clearContentCards() {
         contentCardsBySurface.clear();
@@ -1506,8 +1656,8 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Dispatches a response event with the provided propositions for the given request event.
-     * Used by the serial work dispatcher to return persisted propositions.
+     * Dispatches a response event with the provided propositions for the given request event. Used
+     * by the serial work dispatcher to return persisted propositions.
      *
      * @param propositions the propositions to dispatch
      * @param event the request event to respond to
