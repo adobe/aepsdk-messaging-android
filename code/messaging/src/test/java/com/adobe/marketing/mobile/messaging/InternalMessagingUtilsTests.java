@@ -2327,4 +2327,35 @@ public class InternalMessagingUtilsTests {
                         .build();
         assertFalse(InternalMessagingUtils.isUsePersistedContentCards(event));
     }
+
+    @Test
+    public void testIsUsePersistedContentCards_returnTrue_differentEventType() {
+        // isUsePersistedContentCards only checks the flag value, not event type or source.
+        // The serial work dispatcher context already guarantees correct type before calling this.
+        final Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.Messaging.USE_PERSISTED_CONTENT_CARDS, true);
+        final Event event =
+                new Event.Builder(
+                                "Get persisted content cards",
+                                EventType.EDGE,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertTrue(InternalMessagingUtils.isUsePersistedContentCards(event));
+    }
+
+    @Test
+    public void testIsUsePersistedContentCards_returnTrue_differentEventSource() {
+        // isUsePersistedContentCards only checks the flag value, not event type or source.
+        final Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.Messaging.USE_PERSISTED_CONTENT_CARDS, true);
+        final Event event =
+                new Event.Builder(
+                                "Get persisted content cards",
+                                EventType.MESSAGING,
+                                EventSource.RESPONSE_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertTrue(InternalMessagingUtils.isUsePersistedContentCards(event));
+    }
 }

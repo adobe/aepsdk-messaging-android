@@ -907,6 +907,363 @@ public class MessagingCacheUtilitiesTests {
                 });
     }
 
+    @Test
+    public void testCacheInboxPropositions_withSurfacesToRemove_removesCache() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - return null for existing cache
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    Surface surface = Surface.fromUriString("mobileapp://mockPackageName");
+                    final List<Proposition> list = new ArrayList<>();
+                    list.add(proposition);
+                    final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                    propositions.put(surface, list);
+
+                    // test - remove the same surface we're adding
+                    messagingCacheUtilities.cacheInboxPropositions(
+                            propositions, Arrays.asList(surface));
+
+                    // verify - since the only surface was removed, cache is deleted
+                    verify(mockCacheService, times(1))
+                            .remove(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY));
+                });
+    }
+
+    @Test
+    public void testCacheInboxPropositions_mergesWithExistingCache() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - existing cached inbox propositions
+                    InputStream existingCacheStream = createPropositionInputStream();
+                    CacheResult existingCacheResult = Mockito.mock(CacheResult.class);
+                    when(existingCacheResult.getData()).thenReturn(existingCacheStream);
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(existingCacheResult);
+
+                    // new propositions for a different surface
+                    Surface newSurface = Surface.fromUriString("mobileapp://newInboxSurface");
+                    final List<Proposition> list = new ArrayList<>();
+                    list.add(proposition);
+                    final Map<Surface, List<Proposition>> newPropositions = new HashMap<>();
+                    newPropositions.put(newSurface, list);
+
+                    // test
+                    messagingCacheUtilities.cacheInboxPropositions(
+                            newPropositions, Collections.emptyList());
+
+                    // verify - cache was set (merged)
+                    verify(mockCacheService, times(1))
+                            .set(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    any());
+                });
+    }
+
+    // getCachedPropositionsForKey — readObject() returns null
+
+    @Test
+    public void testGetCachedContentCardPropositions_returnsNull_whenReadObjectReturnsNull() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // mock ObjectInputStream so readObject() returns null
+                    try (MockedConstruction<ObjectInputStream> oiConstruction =
+                            Mockito.mockConstruction(
+                                    ObjectInputStream.class,
+                                    (mock, context) -> {
+                                        try {
+                                            when(mock.readObject()).thenReturn(null);
+                                        } catch (ClassNotFoundException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    })) {
+                        CacheResult cacheResult = Mockito.mock(CacheResult.class);
+                        when(cacheResult.getData())
+                                .thenReturn(new ByteArrayInputStream(new byte[0]));
+                        when(mockCacheService.get(
+                                        eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                        eq(
+                                                MessagingTestConstants
+                                                        .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                .thenReturn(cacheResult);
+
+                        Map<Surface, List<Proposition>> result =
+                                messagingCacheUtilities.getCachedContentCardPropositions();
+
+                        assertNull(result);
+                    }
+                });
+    }
+
+    // getCachedPropositionsForKey — readObject() returns wrong type (not a Map)
+
+    @Test
+    public void testGetCachedContentCardPropositions_returnsNull_whenCachedDataIsNotMap() {
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedConstruction<ObjectInputStream> oiConstruction =
+                            Mockito.mockConstruction(
+                                    ObjectInputStream.class,
+                                    (mock, context) -> {
+                                        try {
+                                            // return a String instead of a Map
+                                            when(mock.readObject()).thenReturn("not-a-map");
+                                        } catch (ClassNotFoundException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    })) {
+                        CacheResult cacheResult = Mockito.mock(CacheResult.class);
+                        when(cacheResult.getData())
+                                .thenReturn(new ByteArrayInputStream(new byte[0]));
+                        when(mockCacheService.get(
+                                        eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                        eq(
+                                                MessagingTestConstants
+                                                        .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                .thenReturn(cacheResult);
+
+                        Map<Surface, List<Proposition>> result =
+                                messagingCacheUtilities.getCachedContentCardPropositions();
+
+                        assertNull(result);
+                    }
+                });
+    }
+
+    // getCachedPropositionsForKey — readObject() throws ClassNotFoundException
+
+    @Test
+    public void testGetCachedContentCardPropositions_returnsNull_whenClassNotFound() {
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedConstruction<ObjectInputStream> oiConstruction =
+                            Mockito.mockConstruction(
+                                    ObjectInputStream.class,
+                                    (mock, context) -> {
+                                        try {
+                                            when(mock.readObject())
+                                                    .thenThrow(
+                                                            new ClassNotFoundException(
+                                                                    "test class not found"));
+                                        } catch (ClassNotFoundException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    })) {
+                        CacheResult cacheResult = Mockito.mock(CacheResult.class);
+                        when(cacheResult.getData())
+                                .thenReturn(new ByteArrayInputStream(new byte[0]));
+                        when(mockCacheService.get(
+                                        eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                        eq(
+                                                MessagingTestConstants
+                                                        .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                .thenReturn(cacheResult);
+
+                        Map<Surface, List<Proposition>> result =
+                                messagingCacheUtilities.getCachedContentCardPropositions();
+
+                        assertNull(result);
+                    }
+                });
+    }
+
+    // getCachedPropositionsForKey — ObjectInputStream.close() throws IOException in finally
+
+    @Test
+    public void
+            testGetCachedContentCardPropositions_closingInputStreamThrowsIOException_doesNotCrash() {
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedConstruction<ObjectInputStream> oiConstruction =
+                            Mockito.mockConstruction(
+                                    ObjectInputStream.class,
+                                    (mock, context) -> {
+                                        try {
+                                            // readObject returns a valid Map so we reach finally
+                                            final Map<Surface, List<Proposition>> data =
+                                                    new HashMap<>();
+                                            when(mock.readObject()).thenReturn(data);
+                                            // close throws to exercise the finally catch block
+                                            doThrow(new IOException("close failed"))
+                                                    .when(mock)
+                                                    .close();
+                                        } catch (ClassNotFoundException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    })) {
+                        CacheResult cacheResult = Mockito.mock(CacheResult.class);
+                        when(cacheResult.getData())
+                                .thenReturn(new ByteArrayInputStream(new byte[0]));
+                        when(mockCacheService.get(
+                                        eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                        eq(
+                                                MessagingTestConstants
+                                                        .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                .thenReturn(cacheResult);
+
+                        // should not crash; returns the (empty) map despite close() failure
+                        Map<Surface, List<Proposition>> result =
+                                messagingCacheUtilities.getCachedContentCardPropositions();
+                        assertNotNull(result);
+                    }
+                });
+    }
+
+    // cachePropositionsForKey — IOException during writeObject()
+
+    @Test
+    public void
+            testCacheContentCardPropositions_doesNotSetCache_whenWriteObjectThrowsIOException() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // no existing cache
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    try (MockedConstruction<ObjectOutputStream> oosConstruction =
+                            Mockito.mockConstruction(
+                                    ObjectOutputStream.class,
+                                    (mock, context) -> {
+                                        doThrow(new IOException("write failed"))
+                                                .when(mock)
+                                                .writeObject(any(Map.class));
+                                    })) {
+                        final List<Proposition> list = new ArrayList<>();
+                        list.add(proposition);
+                        final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                        propositions.put(
+                                Surface.fromUriString("mobileapp://mockPackageName"), list);
+
+                        messagingCacheUtilities.cacheContentCardPropositions(
+                                propositions, Collections.emptyList());
+
+                        // IOException during write — cache.set should never be called
+                        verify(mockCacheService, times(0)).set(anyString(), anyString(), any());
+                    }
+                });
+    }
+
+    // cachePropositionsForKey — IOException during close (still writes cache)
+
+    @Test
+    public void testCacheContentCardPropositions_setsCache_whenCloseStreamThrowsIOException() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // no existing cache
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    try (MockedConstruction<ObjectOutputStream> oosConstruction =
+                            Mockito.mockConstruction(
+                                    ObjectOutputStream.class,
+                                    (mock, context) -> {
+                                        doThrow(new IOException("close failed")).when(mock).close();
+                                    })) {
+                        final List<Proposition> list = new ArrayList<>();
+                        list.add(proposition);
+                        final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                        propositions.put(
+                                Surface.fromUriString("mobileapp://mockPackageName"), list);
+
+                        messagingCacheUtilities.cacheContentCardPropositions(
+                                propositions, Collections.emptyList());
+
+                        // cache.set IS still called because write succeeded before close failed
+                        verify(mockCacheService, times(1))
+                                .set(
+                                        eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                        eq(
+                                                MessagingTestConstants
+                                                        .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                        any());
+                    }
+                });
+    }
+
+    @Test
+    public void testGetCachedContentCardPropositions_returnsNull_whenIOExceptionOccurs() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - return a CacheResult with a broken InputStream
+                    InputStream brokenStream =
+                            new InputStream() {
+                                @Override
+                                public int read() throws IOException {
+                                    throw new IOException("Simulated IO error");
+                                }
+                            };
+                    CacheResult brokenCacheResult = Mockito.mock(CacheResult.class);
+                    when(brokenCacheResult.getData()).thenReturn(brokenStream);
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(brokenCacheResult);
+
+                    // test
+                    Map<Surface, List<Proposition>> result =
+                            messagingCacheUtilities.getCachedContentCardPropositions();
+
+                    // verify - IOException returns null gracefully
+                    assertNull(result);
+                });
+    }
+
+    @Test
+    public void testGetCachedInboxPropositions_returnsNull_whenIOExceptionOccurs() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - return a CacheResult with a broken InputStream
+                    InputStream brokenStream =
+                            new InputStream() {
+                                @Override
+                                public int read() throws IOException {
+                                    throw new IOException("Simulated IO error");
+                                }
+                            };
+                    CacheResult brokenCacheResult = Mockito.mock(CacheResult.class);
+                    when(brokenCacheResult.getData()).thenReturn(brokenStream);
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(brokenCacheResult);
+
+                    // test
+                    Map<Surface, List<Proposition>> result =
+                            messagingCacheUtilities.getCachedInboxPropositions();
+
+                    // verify - IOException returns null gracefully
+                    assertNull(result);
+                });
+    }
+
     // ========================================================================================================
     // Helper method for creating proposition InputStreams
     // ========================================================================================================
