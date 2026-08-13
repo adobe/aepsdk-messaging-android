@@ -2493,6 +2493,60 @@ public class MessagingExtensionTests {
     }
 
     // ========================================================================================
+    // processEvent clearPersistedPropositionsEvent
+    // ========================================================================================
+    @Test
+    public void test_processEvent_clearPersistedPropositionsEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingTestConstants.EventDataKeys.Messaging
+                                    .CLEAR_PERSISTED_PROPOSITIONS,
+                            true);
+                    Event clearEvent =
+                            new Event.Builder(
+                                            "Clear persisted propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(clearEvent);
+
+                    // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(1)).clearContentCards();
+                });
+    }
+
+    // ========================================================================================
+    // processEvent edgeErrorResponseEvent
+    // ========================================================================================
+    @Test
+    public void test_processEvent_edgeErrorResponseEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    Event errorEvent =
+                            new Event.Builder(
+                                            "Edge error response",
+                                            MessagingTestConstants.EventType.EDGE,
+                                            MessagingTestConstants.EventSource.EDGE_ERROR_RESPONSE)
+                                    .setEventData(new HashMap<>())
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(errorEvent);
+
+                    // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .handleEdgeErrorResponse(errorEvent);
+                });
+    }
+
+    // ========================================================================================
     // completion handler tests
     // ========================================================================================
     @Test

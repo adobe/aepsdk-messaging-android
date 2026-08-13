@@ -452,6 +452,13 @@ public final class MessagingExtension extends Extension {
                 return;
             }
             handleTrackingInfo(eventToProcess, receivedDatasetId);
+        } else if (InternalMessagingUtils.isClearPersistedPropositionsEvent(eventToProcess)) {
+            // handle clear persisted propositions request — full wipe of in-memory + disk state
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Processing request to clear persisted propositions.");
+            edgePersonalizationResponseHandler.clearContentCards();
         } else if (InternalMessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState =
@@ -485,13 +492,6 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
-        } else if (InternalMessagingUtils.isClearPersistedPropositionsEvent(eventToProcess)) {
-            // handle clear persisted propositions request — full wipe of in-memory + disk state
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Processing request to clear persisted propositions.");
-            edgePersonalizationResponseHandler.clearContentCards();
         } else if (InternalMessagingUtils.isEdgeErrorResponseEvent(eventToProcess)) {
             // handle edge error response for offline content card availability
             edgePersonalizationResponseHandler.handleEdgeErrorResponse(eventToProcess);

@@ -4522,4 +4522,395 @@ public class EdgePersonalizationResponseHandlerTests {
                     }
                 });
     }
+
+    // ========================================================================================
+    // hydrateInboxPropositionsFromDisk
+    // ========================================================================================
+    @Test
+    public void test_hydrateInboxPropositionsFromDisk_LoadsInboxPropositions() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface inboxSurface =
+                            Surface.fromUriString("mobileapp://mockPackageName/inbox");
+
+                    // build cached inbox propositions
+                    Map<String, Object> scopeDetails = new HashMap<>();
+                    scopeDetails.put("decisionProvider", "AJO");
+                    scopeDetails.put(
+                            "activity",
+                            new HashMap<String, Object>() {
+                                {
+                                    put("id", "inboxActivity");
+                                }
+                            });
+
+                    Map<String, Object> propositionMap = new HashMap<>();
+                    propositionMap.put("id", "inboxPropositionId");
+                    propositionMap.put("scope", "mobileapp://mockPackageName/inbox");
+                    propositionMap.put("scopeDetails", scopeDetails);
+
+                    Map<String, Object> itemMap = new HashMap<>();
+                    itemMap.put("id", "inboxItemId");
+                    itemMap.put("schema", MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM);
+                    itemMap.put(
+                            "data",
+                            new HashMap<String, Object>() {
+                                {
+                                    put("content", "{\"title\":\"test\"}");
+                                    put("contentType", "application/json");
+                                }
+                            });
+
+                    List<Map<String, Object>> items = new ArrayList<>();
+                    items.add(itemMap);
+                    propositionMap.put("items", items);
+
+                    Proposition inboxProposition = Proposition.fromEventData(propositionMap);
+                    List<Proposition> inboxPropositions = new ArrayList<>();
+                    inboxPropositions.add(inboxProposition);
+
+                    Map<Surface, List<Proposition>> cachedInbox = new HashMap<>();
+                    cachedInbox.put(inboxSurface, inboxPropositions);
+
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions())
+                            .thenReturn(cachedInbox);
+
+                    // test
+                    edgePersonalizationResponseHandler.hydrateInboxPropositionsFromDisk();
+
+                    // verify inbox propositions were loaded
+                    verify(mockMessagingCacheUtilities, times(1)).getCachedInboxPropositions();
+                });
+    }
+
+    @Test
+    public void test_hydrateInboxPropositionsFromDisk_NoCachedInbox_DoesNothing() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions()).thenReturn(null);
+
+                    edgePersonalizationResponseHandler.hydrateInboxPropositionsFromDisk();
+
+                    verify(mockMessagingCacheUtilities, times(1)).getCachedInboxPropositions();
+                });
+    }
+
+    @Test
+    public void test_hydrateInboxPropositionsFromDisk_EmptyCachedInbox_DoesNothing() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions())
+                            .thenReturn(new HashMap<>());
+
+                    edgePersonalizationResponseHandler.hydrateInboxPropositionsFromDisk();
+
+                    verify(mockMessagingCacheUtilities, times(1)).getCachedInboxPropositions();
+                });
+    }
+
+    @Test
+    public void test_hydrateInboxPropositionsFromDisk_Disabled_DoesNothing() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // disable offline availability
+                    Map<String, Object> configState = new HashMap<>();
+                    configState.put("messaging.contentCardOfflineAvailable", false);
+                    SharedStateResult configResult =
+                            new SharedStateResult(SharedStateStatus.SET, configState);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(configResult);
+
+                    edgePersonalizationResponseHandler.hydrateInboxPropositionsFromDisk();
+
+                    // verify cache is not read
+                    verify(mockMessagingCacheUtilities, times(0)).getCachedInboxPropositions();
+                });
+    }
+
+    // ========================================================================================
+    // hydrateAllPersistedContentCards
+    // ========================================================================================
+    @Test
+    public void test_hydrateAllPersistedContentCards_CallsBothHydrateMethods() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup - no cached data
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(null);
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions()).thenReturn(null);
+
+                    // test
+                    edgePersonalizationResponseHandler.hydrateAllPersistedContentCards();
+
+                    // verify both caches were read
+                    verify(mockMessagingCacheUtilities, times(1))
+                            .getCachedContentCardPropositions();
+                    verify(mockMessagingCacheUtilities, times(1)).getCachedInboxPropositions();
+                });
+    }
+
+    // ========================================================================================
+    // clearPersistedContentCardAndInboxPropositions
+    // ========================================================================================
+    @Test
+    public void test_clearPersistedContentCardAndInboxPropositions_DelegatesToCacheUtilities() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    edgePersonalizationResponseHandler
+                            .clearPersistedContentCardAndInboxPropositions();
+
+                    verify(mockMessagingCacheUtilities, times(1))
+                            .clearPersistedContentCardAndInboxCaches();
+                });
+    }
+
+    // ========================================================================================
+    // retrievePersistedPropositions
+    // ========================================================================================
+    @Test
+    public void test_retrievePersistedPropositions_NullSurfaces_ReturnsEmptyMap() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.retrievePersistedPropositions(null);
+
+                    assertNotNull(result);
+                    assertTrue(result.isEmpty());
+                });
+    }
+
+    @Test
+    public void test_retrievePersistedPropositions_EmptySurfaces_ReturnsEmptyMap() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.retrievePersistedPropositions(
+                                    new ArrayList<>());
+
+                    assertNotNull(result);
+                    assertTrue(result.isEmpty());
+                });
+    }
+
+    @Test
+    public void test_retrievePersistedPropositions_BothCachesNull_ReturnsEmptyMap() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(null);
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions()).thenReturn(null);
+
+                    List<Surface> surfaces = new ArrayList<>();
+                    surfaces.add(new Surface("apifeed"));
+
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.retrievePersistedPropositions(
+                                    surfaces);
+
+                    assertNotNull(result);
+                    assertTrue(result.isEmpty());
+                });
+    }
+
+    @Test
+    public void test_retrievePersistedPropositions_SurfaceInContentCardCacheOnly() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surface = new Surface("apifeed");
+
+                    // content card cache has propositions for this surface
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Map<String, Object>> payload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Proposition prop = Proposition.fromEventData(payload.get(0));
+                    List<Proposition> ccPropositions = new ArrayList<>();
+                    ccPropositions.add(prop);
+                    Map<Surface, List<Proposition>> cachedCC = new HashMap<>();
+                    cachedCC.put(surface, ccPropositions);
+
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(cachedCC);
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions()).thenReturn(null);
+
+                    // test
+                    List<Surface> surfaces = new ArrayList<>();
+                    surfaces.add(surface);
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.retrievePersistedPropositions(
+                                    surfaces);
+
+                    // verify
+                    assertNotNull(result);
+                    assertEquals(1, result.size());
+                    assertTrue(result.containsKey(surface));
+                    assertEquals(1, result.get(surface).size());
+                });
+    }
+
+    @Test
+    public void test_retrievePersistedPropositions_SurfaceInInboxCacheOnly() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surface = new Surface("apifeed");
+
+                    // inbox cache has propositions for this surface
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Map<String, Object>> payload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Proposition prop = Proposition.fromEventData(payload.get(0));
+                    List<Proposition> inboxPropositions = new ArrayList<>();
+                    inboxPropositions.add(prop);
+                    Map<Surface, List<Proposition>> cachedInbox = new HashMap<>();
+                    cachedInbox.put(surface, inboxPropositions);
+
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(null);
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions())
+                            .thenReturn(cachedInbox);
+
+                    // test
+                    List<Surface> surfaces = new ArrayList<>();
+                    surfaces.add(surface);
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.retrievePersistedPropositions(
+                                    surfaces);
+
+                    // verify
+                    assertNotNull(result);
+                    assertEquals(1, result.size());
+                    assertTrue(result.containsKey(surface));
+                    assertEquals(1, result.get(surface).size());
+                });
+    }
+
+    @Test
+    public void test_retrievePersistedPropositions_SurfaceInBothCaches_MergesPropositions() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surface = new Surface("apifeed");
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+
+                    // content card cache
+                    List<Map<String, Object>> ccPayload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Proposition ccProp = Proposition.fromEventData(ccPayload.get(0));
+                    Map<Surface, List<Proposition>> cachedCC = new HashMap<>();
+                    cachedCC.put(surface, new ArrayList<>(Collections.singletonList(ccProp)));
+
+                    // inbox cache
+                    List<Map<String, Object>> inboxPayload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Proposition inboxProp = Proposition.fromEventData(inboxPayload.get(0));
+                    Map<Surface, List<Proposition>> cachedInbox = new HashMap<>();
+                    cachedInbox.put(surface, new ArrayList<>(Collections.singletonList(inboxProp)));
+
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(cachedCC);
+                    when(mockMessagingCacheUtilities.getCachedInboxPropositions())
+                            .thenReturn(cachedInbox);
+
+                    // test
+                    List<Surface> surfaces = new ArrayList<>();
+                    surfaces.add(surface);
+                    Map<Surface, List<Proposition>> result =
+                            edgePersonalizationResponseHandler.retrievePersistedPropositions(
+                                    surfaces);
+
+                    // verify - both propositions merged
+                    assertNotNull(result);
+                    assertEquals(1, result.size());
+                    assertTrue(result.containsKey(surface));
+                    assertEquals(2, result.get(surface).size());
+                });
+    }
+
+    // ========================================================================================
+    // dispatchPropositionsResponse
+    // ========================================================================================
+    @Test
+    public void test_dispatchPropositionsResponse_NullPropositions_DispatchesEmptyList() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Event requestEvent =
+                            new Event.Builder(
+                                            "request",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(new HashMap<>())
+                                    .build();
+
+                    edgePersonalizationResponseHandler.dispatchPropositionsResponse(
+                            null, requestEvent);
+
+                    verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                    Event dispatched = eventArgumentCaptor.getValue();
+                    assertNotNull(dispatched);
+                    assertEquals(
+                            MessagingTestConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE,
+                            dispatched.getName());
+                    assertEquals(EventType.MESSAGING, dispatched.getType());
+                    assertEquals(EventSource.RESPONSE_CONTENT, dispatched.getSource());
+
+                    List<Map<String, Object>> propositions =
+                            (List<Map<String, Object>>)
+                                    dispatched
+                                            .getEventData()
+                                            .get(
+                                                    MessagingConstants.EventDataKeys.Messaging
+                                                            .Inbound.Key.PROPOSITIONS);
+                    assertNotNull(propositions);
+                    assertTrue("propositions list should be empty", propositions.isEmpty());
+                });
+    }
+
+    @Test
+    public void test_dispatchPropositionsResponse_WithPropositions_DispatchesConvertedData() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surface = new Surface("apifeed");
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Map<String, Object>> payload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Proposition prop = Proposition.fromEventData(payload.get(0));
+
+                    Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                    propositions.put(surface, Collections.singletonList(prop));
+
+                    Event requestEvent =
+                            new Event.Builder(
+                                            "request",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(new HashMap<>())
+                                    .build();
+
+                    edgePersonalizationResponseHandler.dispatchPropositionsResponse(
+                            propositions, requestEvent);
+
+                    verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                    Event dispatched = eventArgumentCaptor.getValue();
+                    assertNotNull(dispatched);
+
+                    List<Map<String, Object>> dispatchedPropositions =
+                            (List<Map<String, Object>>)
+                                    dispatched
+                                            .getEventData()
+                                            .get(
+                                                    MessagingConstants.EventDataKeys.Messaging
+                                                            .Inbound.Key.PROPOSITIONS);
+                    assertNotNull(dispatchedPropositions);
+                    assertFalse(
+                            "propositions list should not be empty",
+                            dispatchedPropositions.isEmpty());
+                    assertEquals(1, dispatchedPropositions.size());
+                });
+    }
 }

@@ -594,4 +594,339 @@ public class MessagingCacheUtilitiesTests {
                                     eq(MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY));
                 });
     }
+
+    // ========================================================================================================
+    // Content card proposition caching
+    // ========================================================================================================
+
+    @Test
+    public void testGetCachedContentCardPropositions_returnsNull_whenNoCachedData() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    // test
+                    Map<Surface, List<Proposition>> result =
+                            messagingCacheUtilities.getCachedContentCardPropositions();
+
+                    // verify
+                    assertNull(result);
+                });
+    }
+
+    @Test
+    public void testGetCachedContentCardPropositions_returnsPropositions_whenCachedDataExists() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - serialize proposition data for content card cache key
+                    InputStream contentCardInputStream = createPropositionInputStream();
+                    CacheResult contentCardCacheResult = Mockito.mock(CacheResult.class);
+                    when(contentCardCacheResult.getData()).thenReturn(contentCardInputStream);
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(contentCardCacheResult);
+
+                    // test
+                    Map<Surface, List<Proposition>> result =
+                            messagingCacheUtilities.getCachedContentCardPropositions();
+
+                    // verify
+                    assertNotNull(result);
+                    assertEquals(1, result.size());
+                });
+    }
+
+    @Test
+    public void testCacheContentCardPropositions_cachesPropositions() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - return null for existing cache (no merge needed)
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    final List<Proposition> list = new ArrayList<>();
+                    list.add(proposition);
+                    final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                    propositions.put(Surface.fromUriString("mobileapp://mockPackageName"), list);
+
+                    // test
+                    messagingCacheUtilities.cacheContentCardPropositions(
+                            propositions, Collections.emptyList());
+
+                    // verify
+                    verify(mockCacheService, times(1))
+                            .set(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    any());
+                });
+    }
+
+    @Test
+    public void testCacheContentCardPropositions_withSurfacesToRemove_removesCache() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - return null for existing cache
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    Surface surface = Surface.fromUriString("mobileapp://mockPackageName");
+                    final List<Proposition> list = new ArrayList<>();
+                    list.add(proposition);
+                    final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                    propositions.put(surface, list);
+
+                    // test - remove the same surface we're adding
+                    messagingCacheUtilities.cacheContentCardPropositions(
+                            propositions, Arrays.asList(surface));
+
+                    // verify - since the only surface was removed, cache is deleted
+                    verify(mockCacheService, times(1))
+                            .remove(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY));
+                });
+    }
+
+    @Test
+    public void testCacheContentCardPropositions_emptyPropositions_removesCache() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    // test
+                    messagingCacheUtilities.cacheContentCardPropositions(
+                            new HashMap<>(), Collections.emptyList());
+
+                    // verify - cache removed since empty
+                    verify(mockCacheService, times(1))
+                            .remove(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY));
+                });
+    }
+
+    @Test
+    public void testCacheContentCardPropositions_mergesWithExistingCache() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup - existing cached propositions
+                    InputStream existingCacheStream = createPropositionInputStream();
+                    CacheResult existingCacheResult = Mockito.mock(CacheResult.class);
+                    when(existingCacheResult.getData()).thenReturn(existingCacheStream);
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(existingCacheResult);
+
+                    // new propositions for a different surface
+                    Surface newSurface = Surface.fromUriString("mobileapp://newSurface");
+                    final List<Proposition> list = new ArrayList<>();
+                    list.add(proposition);
+                    final Map<Surface, List<Proposition>> newPropositions = new HashMap<>();
+                    newPropositions.put(newSurface, list);
+
+                    // test
+                    messagingCacheUtilities.cacheContentCardPropositions(
+                            newPropositions, Collections.emptyList());
+
+                    // verify - cache was set (merged)
+                    verify(mockCacheService, times(1))
+                            .set(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    any());
+                });
+    }
+
+    // ========================================================================================================
+    // Inbox proposition caching
+    // ========================================================================================================
+
+    @Test
+    public void testGetCachedInboxPropositions_returnsNull_whenNoCachedData() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    // test
+                    Map<Surface, List<Proposition>> result =
+                            messagingCacheUtilities.getCachedInboxPropositions();
+
+                    // verify
+                    assertNull(result);
+                });
+    }
+
+    @Test
+    public void testGetCachedInboxPropositions_returnsPropositions_whenCachedDataExists() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    InputStream inboxInputStream = createPropositionInputStream();
+                    CacheResult inboxCacheResult = Mockito.mock(CacheResult.class);
+                    when(inboxCacheResult.getData()).thenReturn(inboxInputStream);
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(inboxCacheResult);
+
+                    // test
+                    Map<Surface, List<Proposition>> result =
+                            messagingCacheUtilities.getCachedInboxPropositions();
+
+                    // verify
+                    assertNotNull(result);
+                    assertEquals(1, result.size());
+                });
+    }
+
+    @Test
+    public void testCacheInboxPropositions_cachesPropositions() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    final List<Proposition> list = new ArrayList<>();
+                    list.add(proposition);
+                    final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                    propositions.put(Surface.fromUriString("mobileapp://mockPackageName"), list);
+
+                    // test
+                    messagingCacheUtilities.cacheInboxPropositions(
+                            propositions, Collections.emptyList());
+
+                    // verify
+                    verify(mockCacheService, times(1))
+                            .set(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    any());
+                });
+    }
+
+    @Test
+    public void testCacheInboxPropositions_emptyPropositions_removesCache() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockCacheService.get(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                            .thenReturn(null);
+
+                    // test
+                    messagingCacheUtilities.cacheInboxPropositions(
+                            new HashMap<>(), Collections.emptyList());
+
+                    // verify
+                    verify(mockCacheService, times(1))
+                            .remove(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY));
+                });
+    }
+
+    // ========================================================================================================
+    // clearPersistedContentCardAndInboxCaches
+    // ========================================================================================================
+
+    @Test
+    public void testClearPersistedContentCardAndInboxCaches() {
+        runWithMockedServiceProvider(
+                () -> {
+                    // test
+                    messagingCacheUtilities.clearPersistedContentCardAndInboxCaches();
+
+                    // verify both content card and inbox caches are removed
+                    verify(mockCacheService, times(1))
+                            .remove(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY));
+                    verify(mockCacheService, times(1))
+                            .remove(
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(
+                                            MessagingTestConstants
+                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY));
+                });
+    }
+
+    // ========================================================================================================
+    // Helper method for creating proposition InputStreams
+    // ========================================================================================================
+
+    private InputStream createPropositionInputStream() {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            final List<Proposition> propositions = new ArrayList<>();
+            propositions.add(proposition);
+            final Map<Surface, List<Proposition>> payload = new HashMap<>();
+            payload.put(Surface.fromUriString("mobileapp://mockPackageName"), propositions);
+            oos.writeObject(payload);
+            oos.flush();
+            InputStream result = new ByteArrayInputStream(baos.toByteArray());
+            oos.close();
+            baos.close();
+            return result;
+        } catch (IOException e) {
+            return null;
+        }
+    }
 }
