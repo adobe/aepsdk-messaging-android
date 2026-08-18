@@ -39,7 +39,6 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -88,8 +87,13 @@ class EdgePersonalizationResponseHandler {
     // holds content cards that the user has qualified for
     private Map<Surface, List<Proposition>> contentCardsBySurface = new HashMap<>();
 
-    // tracks the origin (NETWORK or DISK) of content card rules per proposition id
-    private final Map<String, CardOrigin> contentCardOriginByProposition = new HashMap<>();
+    // Surfaces that have been refreshed from a live network response this session. In-memory only
+    // (never persisted) and empty on every launch, so a card served after a cold start — before any
+    // successful network refresh — is correctly reported as served from the persisted cache. Maintained
+    // in exactly one place on the network path (removeOrReplaceContentCards: insert on refresh, remove
+    // on eviction) and cleared with the content card state. Disk hydration deliberately does NOT add to
+    // it. Used to derive servedFromPersistentCache at interaction time.
+    private final java.util.Set<Surface> networkRefreshedSurfaces = new java.util.HashSet<>();
 
     // tracks event ids where a non-recoverable edge error was received
     private final java.util.Set<String> nonRecoverableErrorEventIds = new java.util.HashSet<>();
@@ -155,7 +159,10 @@ class EdgePersonalizationResponseHandler {
                                 cachedPropositions,
                                 surfaces,
                                 extensionApi,
-                                isContentCardOfflineAvailable());
+                                // this constructor only loads cached IAM rules; content card
+                                // persistence is handled separately, so the offline flag is
+                                // irrelevant here (matches iOS which passes false).
+                                false);
                 final Map<Surface, List<LaunchRule>> inAppRules =
                         parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
                 // register any in-app propositions which were previously cached
@@ -760,61 +767,29 @@ class EdgePersonalizationResponseHandler {
         messagingCacheUtilities.cachePropositions(
                 parsedPropositions.propositionsToPersist, surfacesToRemove);
 
-        // disk-first write strategy: persist content card and inbox propositions to disk
-        // before updating in-memory state, ensuring crash consistency
+        // disk-first write strategy: persist content card propositions to disk
+        // before updating in-memory state, ensuring crash consistency.
+        // Always pass even when empty with surfaces to remove — ensures old entries get cleaned up.
         if (offlineAvailable) {
-            if (!MapUtils.isNullOrEmpty(parsedPropositions.contentCardPropositionsToPersist)) {
-                messagingCacheUtilities.cacheContentCardPropositions(
-                        parsedPropositions.contentCardPropositionsToPersist, surfacesToRemove);
-            }
-            if (!MapUtils.isNullOrEmpty(parsedPropositions.inboxPropositionsToPersist)) {
-                messagingCacheUtilities.cacheInboxPropositions(
-                        parsedPropositions.inboxPropositionsToPersist, surfacesToRemove);
-            }
+            messagingCacheUtilities.cacheContentCardPropositions(
+                    parsedPropositions.contentCardPropositionsToPersist, surfacesToRemove);
+        } else {
+            // Feature disabled — clear stale persisted data. This method is only called on
+            // success (non-recoverable errors skip applyPropositionChangeForEventId entirely),
+            // so it is always safe to wipe the cache here.
+            messagingCacheUtilities.clearPersistedContentCardCache();
         }
 
-        // apply rules
-        updateRulesEngines(
-                parsedPropositions.surfaceRulesBySchemaType, requestedSurfaces, offlineAvailable);
-
-        // mark all content card propositions from this network response as NETWORK origin
-        if (offlineAvailable) {
-            for (final Map.Entry<Surface, List<Proposition>> entry :
-                    inProgressPropositions.entrySet()) {
-                for (final Proposition proposition : entry.getValue()) {
-                    contentCardOriginByProposition.put(
-                            proposition.getUniqueId(), CardOrigin.NETWORK);
-                }
-            }
-            // prune origin entries for propositions no longer in the content card cache
-            pruneContentCardOrigins();
-        }
+        // apply rules. Content card provenance is tracked per-surface in networkRefreshedSurfaces,
+        // maintained by removeOrReplaceContentCards (invoked via updateRulesEngines below); no
+        // per-proposition tagging is needed on the network path.
+        updateRulesEngines(parsedPropositions.surfaceRulesBySchemaType, requestedSurfaces);
     }
 
     private void updateRulesEngines(
             @NonNull final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
-            @NonNull final List<Surface> requestedSurfaces,
-            final boolean offlineAvailable) {
-        // When offline availability is enabled, prevent disk-origin surfaces from being clobbered
-        // by network responses that don't include content card rules for those surfaces.
-        // Build the set of surfaces to process for content card rules, excluding disk-origin
-        // surfaces that don't have new content card rules in the response.
-        final List<Surface> ccRequestedSurfaces;
-        if (offlineAvailable) {
-            ccRequestedSurfaces = new ArrayList<>(requestedSurfaces);
-            final Map<Surface, List<LaunchRule>> ccNewRules =
-                    surfaceRulesBySchemaType.get(SchemaType.CONTENT_CARD);
-            final Iterator<Surface> it = ccRequestedSurfaces.iterator();
-            while (it.hasNext()) {
-                final Surface surface = it.next();
-                final boolean hasNewRules = ccNewRules != null && ccNewRules.containsKey(surface);
-                if (!hasNewRules && hasDiskOriginContentCards(surface)) {
-                    it.remove();
-                }
-            }
-        } else {
-            ccRequestedSurfaces = requestedSurfaces;
-        }
+            @NonNull final List<Surface> requestedSurfaces) {
+        final List<Surface> ccRequestedSurfaces = requestedSurfaces;
 
         // process rules from response
         processRulesForSchemaType(
@@ -1003,10 +978,18 @@ class EdgePersonalizationResponseHandler {
         final Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                 getPropositionsFromContentCardRulesEngine(event);
 
-        // Clear any requested surface that returned no qualified propositions in this response.
-        // This ensures cards removed server-side are also evicted from the local cache.
+        // Only touch surfaces explicitly part of this network request. The content card rules engine
+        // re-evaluates ALL loaded rules on every call, so the qualified map may include surfaces that
+        // were hydrated from disk for a different request; leaving those untouched keeps them out of
+        // networkRefreshedSurfaces so their cards keep reporting servedFromPersistentCache = true.
+        //
+        // This is also the single place that maintains networkRefreshedSurfaces: a requested surface
+        // that returned content cards is marked network-refreshed for this session; a requested surface
+        // that returned nothing is evicted and removed from the set.
         for (final Surface surface : requestedSurfaces) {
-            if (!qualifiedContentCardsBySurface.containsKey(surface)) {
+            final List<Proposition> propositions = qualifiedContentCardsBySurface.get(surface);
+            if (propositions == null) {
+                // Requested surface returned no content cards — evict it (campaign ended server-side).
                 final List<Proposition> evictedPropositions = contentCardsBySurface.remove(surface);
                 if (evictedPropositions != null) {
                     for (final Proposition proposition : evictedPropositions) {
@@ -1014,14 +997,10 @@ class EdgePersonalizationResponseHandler {
                                 .removeContentCardSchemaData(proposition.getActivityId());
                     }
                 }
+                networkRefreshedSurfaces.remove(surface);
+                continue;
             }
-        }
 
-        // Fully replace cached propositions for surfaces that have qualified content cards
-        for (final Map.Entry<Surface, List<Proposition>> entry :
-                qualifiedContentCardsBySurface.entrySet()) {
-            final List<Proposition> propositions = entry.getValue();
-            final Surface surface = entry.getKey();
             List<Proposition> existingPropositionsArray = contentCardsBySurface.get(surface);
             if (existingPropositionsArray == null) {
                 existingPropositionsArray = new ArrayList<>();
@@ -1054,6 +1033,8 @@ class EdgePersonalizationResponseHandler {
             }
 
             contentCardsBySurface.put(surface, newPropositionsArray);
+            // Mark this surface as refreshed from a live network response this session.
+            networkRefreshedSurfaces.add(surface);
             sendTriggersForNewPropositions(newPropositionItems);
             logContentCardCountChange(surface, startingCount, newPropositionsArray.size());
         }
@@ -1304,10 +1285,6 @@ class EdgePersonalizationResponseHandler {
      * @param event the edge error response {@link Event}
      */
     void handleEdgeErrorResponse(final Event event) {
-        if (!isContentCardOfflineAvailable()) {
-            return;
-        }
-
         final String requestEventId = InternalMessagingUtils.getRequestEventId(event);
         if (StringUtils.isNullOrEmpty(requestEventId)
                 || !requestedSurfacesForEventId.containsKey(requestEventId)) {
@@ -1341,10 +1318,6 @@ class EdgePersonalizationResponseHandler {
      * response first.
      */
     void hydrateContentCardRulesEngineFromDisk() {
-        if (!isContentCardOfflineAvailable()) {
-            return;
-        }
-
         final Map<Surface, List<Proposition>> cachedContentCards =
                 messagingCacheUtilities.getCachedContentCardPropositions();
         if (MapUtils.isNullOrEmpty(cachedContentCards)) {
@@ -1376,14 +1349,27 @@ class EdgePersonalizationResponseHandler {
             final List<LaunchRule> allCCRules = collectRulesFrom(contentCardRulesBySurface);
             contentCardRulesEngine.replaceRules(allCCRules);
 
-            // seed content cards into qualified cache
+            // Seed the qualified cache directly from disk. We deliberately do NOT go through
+            // removeOrReplaceContentCards here: disk-hydrated surfaces must stay out of
+            // networkRefreshedSurfaces (so their cards report servedFromPersistentCache = true), and
+            // boot-seeded cards must not fire spurious TRIGGER analytics events.
             final Event seedEvent =
                     new Event.Builder(
                                     "Hydrate content cards from disk",
                                     EventType.MESSAGING,
                                     EventSource.REQUEST_CONTENT)
                             .build();
-            removeOrReplaceContentCards(seedEvent, surfaces);
+            final Map<Surface, List<Proposition>> diskQualified =
+                    getPropositionsFromContentCardRulesEngine(seedEvent);
+            for (final Map.Entry<Surface, List<Proposition>> entry : diskQualified.entrySet()) {
+                if (!surfaces.contains(entry.getKey())) {
+                    continue;
+                }
+                contentCardsBySurface.put(entry.getKey(), entry.getValue());
+                for (final Proposition proposition : entry.getValue()) {
+                    storeContentCardInMapper(proposition);
+                }
+            }
         }
 
         // load event-history rules (disqualify/dismiss) into the main rules engine
@@ -1408,61 +1394,32 @@ class EdgePersonalizationResponseHandler {
         allMainRules.addAll(collectRulesFrom(eventHistoryRulesBySurface));
         launchRulesEngine.replaceRules(allMainRules);
 
-        // mark all hydrated propositions as DISK origin
-        for (final Map.Entry<Surface, List<Proposition>> entry : cachedContentCards.entrySet()) {
-            for (final Proposition proposition : entry.getValue()) {
-                contentCardOriginByProposition.put(proposition.getUniqueId(), CardOrigin.DISK);
-            }
-        }
-    }
-
-    /** Hydrates inbox propositions from persisted disk cache into in-memory propositions. */
-    void hydrateInboxPropositionsFromDisk() {
-        if (!isContentCardOfflineAvailable()) {
-            return;
-        }
-
-        final Map<Surface, List<Proposition>> cachedInbox =
-                messagingCacheUtilities.getCachedInboxPropositions();
-        if (MapUtils.isNullOrEmpty(cachedInbox)) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "No persisted inbox propositions found for hydration.");
-            return;
-        }
-
-        Log.debug(
-                MessagingConstants.LOG_TAG,
-                SELF_TAG,
-                "Hydrating in-memory propositions from %d persisted inbox surface(s).",
-                cachedInbox.size());
-
-        for (final Map.Entry<Surface, List<Proposition>> entry : cachedInbox.entrySet()) {
-            inMemoryPropositions =
-                    MessagingUtils.updatePropositionMapForSurface(
-                            entry.getKey(), entry.getValue(), inMemoryPropositions);
-        }
+        // Disk-hydrated surfaces are intentionally NOT added to networkRefreshedSurfaces, so any card
+        // served for them reports servedFromPersistentCache = true until a live network response
+        // refreshes the surface this session.
     }
 
     /**
-     * Hydrates all persisted content cards and inbox propositions from disk. Called during
-     * boot-time setup before the initial network fetch.
+     * Hydrates all persisted content cards from disk. Called during boot-time setup before the
+     * initial network fetch.
      */
     void hydrateAllPersistedContentCards() {
         hydrateContentCardRulesEngineFromDisk();
-        hydrateInboxPropositionsFromDisk();
     }
 
     /**
      * Enriches the provided proposition interaction XDM with per-item {@code
      * servedFromPersistentCache} flags for DISPLAY events only.
      *
-     * <p>When a disk-loaded proposition is displayed, each item within that proposition receives
-     * {@code data.characteristics.servedFromPersistentCache = true} in the XDM at: {@code
-     * _experience.decisioning.propositions[].items[].data.characteristics.servedFromPersistentCache}
+     * <p>For each currently-qualified content card in the display event, every item receives {@code
+     * data.characteristics.servedFromPersistentCache} at {@code
+     * _experience.decisioning.propositions[].items[].data.characteristics.servedFromPersistentCache}.
+     * The value is {@code true} when the card's surface has NOT been refreshed from a live network
+     * response this session (i.e. it is being served from the persisted disk cache), and {@code
+     * false} once a network response has refreshed that surface.
      *
-     * <p>Non-DISPLAY events (interact, dismiss, trigger) are not enriched.
+     * <p>Only qualified content card propositions are annotated; IAM, CBE, and inbox propositions,
+     * and non-DISPLAY events (interact, dismiss, trigger), are left untouched.
      *
      * @param propositionInteractionXdm the XDM map to enrich
      * @return the enriched XDM map (same reference, mutated in place)
@@ -1470,7 +1427,7 @@ class EdgePersonalizationResponseHandler {
     @SuppressWarnings("unchecked")
     Map<String, Object> enrichWithContentCardOrigin(
             final Map<String, Object> propositionInteractionXdm) {
-        if (!isContentCardOfflineAvailable() || MapUtils.isNullOrEmpty(propositionInteractionXdm)) {
+        if (MapUtils.isNullOrEmpty(propositionInteractionXdm)) {
             return propositionInteractionXdm;
         }
 
@@ -1506,6 +1463,19 @@ class EdgePersonalizationResponseHandler {
                                             .PROPOSITIONS);
             if (propositions == null || propositions.isEmpty()) return propositionInteractionXdm;
 
+            // Map each qualified content card proposition id to its surface so provenance can be
+            // derived from networkRefreshedSurfaces. Presence in this map also scopes enrichment to
+            // content cards only (IAM / CBE / inbox propositions are absent and left untouched).
+            final Map<String, Surface> surfaceByPropositionId = new HashMap<>();
+            for (final Map.Entry<Surface, List<Proposition>> entry :
+                    contentCardsBySurface.entrySet()) {
+                for (final Proposition proposition : entry.getValue()) {
+                    if (!surfaceByPropositionId.containsKey(proposition.getUniqueId())) {
+                        surfaceByPropositionId.put(proposition.getUniqueId(), entry.getKey());
+                    }
+                }
+            }
+
             for (final Map<String, Object> propositionMap : propositions) {
                 final String propositionId =
                         DataReader.optString(
@@ -1514,8 +1484,13 @@ class EdgePersonalizationResponseHandler {
                                 null);
                 if (propositionId == null) continue;
 
-                final CardOrigin origin = contentCardOriginByProposition.get(propositionId);
-                if (origin != CardOrigin.DISK) continue;
+                // Only annotate propositions that are currently qualified content cards.
+                final Surface surface = surfaceByPropositionId.get(propositionId);
+                if (surface == null) continue;
+
+                // A content card is served from the persisted cache when its surface has NOT been
+                // refreshed from a live network response this session.
+                final boolean servedFromCache = !networkRefreshedSurfaces.contains(surface);
 
                 // enrich each item with servedFromPersistentCache per-item
                 final List<Map<String, Object>> items =
@@ -1552,7 +1527,7 @@ class EdgePersonalizationResponseHandler {
                     characteristics.put(
                             MessagingConstants.EventDataKeys.Messaging.Inbound.Key
                                     .SERVED_FROM_PERSISTENT_CACHE,
-                            true);
+                            servedFromCache);
                 }
             }
         } catch (final ClassCastException ignored) {
@@ -1563,131 +1538,19 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Returns {@code true} if any content card for the given surface has {@link CardOrigin#DISK}
-     * origin. Used to protect disk-loaded surfaces from being clobbered by network responses that
-     * don't include content card rules for those surfaces.
-     *
-     * @param surface the surface to check
-     * @return {@code true} if the surface has disk-origin content cards
-     */
-    private boolean hasDiskOriginContentCards(final Surface surface) {
-        final List<Proposition> propositions = contentCardsBySurface.get(surface);
-        if (MessagingUtils.isNullOrEmpty(propositions)) {
-            return false;
-        }
-        for (final Proposition proposition : propositions) {
-            if (contentCardOriginByProposition.get(proposition.getUniqueId()) == CardOrigin.DISK) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Removes entries from {@code contentCardOriginByProposition} for propositions that are no
-     * longer in the qualified content cards cache.
-     */
-    private void pruneContentCardOrigins() {
-        final java.util.Set<String> activePropositionIds = new java.util.HashSet<>();
-        for (final List<Proposition> propositions : contentCardsBySurface.values()) {
-            for (final Proposition proposition : propositions) {
-                activePropositionIds.add(proposition.getUniqueId());
-            }
-        }
-        contentCardOriginByProposition.keySet().retainAll(activePropositionIds);
-    }
-
-    /**
-     * Clears all in-memory content card state (qualified cards, rules, and origin tracking) and
-     * persisted content card and inbox caches. Used during identity reset.
+     * Clears all in-memory content card state (qualified cards and rules) and the persisted content
+     * card cache. Used by both the public {@code clearPersistedPropositions} API and identity reset.
      */
     void clearContentCards() {
         contentCardsBySurface.clear();
         contentCardRulesBySurface.clear();
-        contentCardOriginByProposition.clear();
+        networkRefreshedSurfaces.clear();
         contentCardRulesEngine.replaceRules(new ArrayList<>());
-        messagingCacheUtilities.clearPersistedContentCardAndInboxCaches();
+        messagingCacheUtilities.clearPersistedContentCardCache();
         Log.debug(
                 MessagingConstants.LOG_TAG,
                 SELF_TAG,
                 "Content card state and persisted caches have been cleared.");
-    }
-
-    /**
-     * Clears only the persisted content card and inbox caches without affecting in-memory state.
-     * Called when the public API clearPersistedPropositions is invoked.
-     */
-    void clearPersistedContentCardAndInboxPropositions() {
-        messagingCacheUtilities.clearPersistedContentCardAndInboxCaches();
-    }
-
-    /**
-     * Retrieves persisted content card and inbox propositions from disk for the given surfaces.
-     *
-     * @param surfaces the surfaces to retrieve persisted propositions for
-     * @return a map of surface to proposition list from the persisted cache
-     */
-    Map<Surface, List<Proposition>> retrievePersistedPropositions(final List<Surface> surfaces) {
-        final Map<Surface, List<Proposition>> result = new HashMap<>();
-        if (MessagingUtils.isNullOrEmpty(surfaces)) {
-            return result;
-        }
-
-        final Map<Surface, List<Proposition>> cachedCC =
-                messagingCacheUtilities.getCachedContentCardPropositions();
-        final Map<Surface, List<Proposition>> cachedInbox =
-                messagingCacheUtilities.getCachedInboxPropositions();
-
-        for (final Surface surface : surfaces) {
-            if (cachedCC != null && cachedCC.containsKey(surface)) {
-                result.put(surface, cachedCC.get(surface));
-            }
-            if (cachedInbox != null && cachedInbox.containsKey(surface)) {
-                final List<Proposition> existing = result.get(surface);
-                if (existing != null) {
-                    existing.addAll(cachedInbox.get(surface));
-                } else {
-                    result.put(surface, new ArrayList<>(cachedInbox.get(surface)));
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Dispatches a response event with the provided propositions for the given request event. Used
-     * by the serial work dispatcher to return persisted propositions.
-     *
-     * @param propositions the propositions to dispatch
-     * @param event the request event to respond to
-     */
-    void dispatchPropositionsResponse(
-            final Map<Surface, List<Proposition>> propositions, final Event event) {
-        final Map<String, Object> eventData = new HashMap<>();
-        final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
-        if (!MapUtils.isNullOrEmpty(propositions)) {
-            for (final Map.Entry<Surface, List<Proposition>> propositionEntry :
-                    propositions.entrySet()) {
-                for (final Proposition proposition : propositionEntry.getValue()) {
-                    convertedPropositions.add(proposition.toEventData());
-                }
-            }
-        }
-        eventData.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS,
-                convertedPropositions);
-
-        final Event responseEvent =
-                new Event.Builder(
-                                MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE,
-                                EventType.MESSAGING,
-                                EventSource.RESPONSE_CONTENT)
-                        .setEventData(eventData)
-                        .inResponseToEvent(event)
-                        .build();
-
-        extensionApi.dispatch(responseEvent);
     }
 
     void setSerialWorkDispatcher(final SerialWorkDispatcher<Event> serialWorkDispatcher) {
@@ -1768,12 +1631,12 @@ class EdgePersonalizationResponseHandler {
     }
 
     @VisibleForTesting
-    Map<String, CardOrigin> getContentCardOriginByProposition() {
-        return contentCardOriginByProposition;
+    java.util.Set<String> getNonRecoverableErrorEventIds() {
+        return nonRecoverableErrorEventIds;
     }
 
     @VisibleForTesting
-    java.util.Set<String> getNonRecoverableErrorEventIds() {
-        return nonRecoverableErrorEventIds;
+    java.util.Set<Surface> getNetworkRefreshedSurfaces() {
+        return networkRefreshedSurfaces;
     }
 }

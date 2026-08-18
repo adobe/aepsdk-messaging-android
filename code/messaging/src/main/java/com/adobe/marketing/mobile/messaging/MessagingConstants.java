@@ -29,7 +29,6 @@ public final class MessagingConstants {
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CONTENT_CARD_CACHE_SUBDIRECTORY = "contentCardImages";
     static final String CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY = "contentCardPropositions";
-    static final String INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY = "inboxPropositions";
     static final String HTTP_HEADER_IF_MODIFIED_SINCE = "If-Modified-Since";
     static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
@@ -223,7 +222,6 @@ public final class MessagingConstants {
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
             static final String PROPOSITION_INTERACTION = "propositioninteraction";
-            static final String USE_PERSISTED_CONTENT_CARDS = "usepersistedcontentcards";
             static final String CLEAR_PERSISTED_PROPOSITIONS = "clearpersistedpropositions";
             static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
 

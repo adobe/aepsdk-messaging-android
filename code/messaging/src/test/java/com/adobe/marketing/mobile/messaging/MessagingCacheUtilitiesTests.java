@@ -773,206 +773,23 @@ public class MessagingCacheUtilitiesTests {
     }
 
     // ========================================================================================================
-    // Inbox proposition caching
+    // clearPersistedContentCardCache
     // ========================================================================================================
 
     @Test
-    public void testGetCachedInboxPropositions_returnsNull_whenNoCachedData() {
-        runWithMockedServiceProvider(
-                () -> {
-                    // setup
-                    when(mockCacheService.get(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
-                            .thenReturn(null);
-
-                    // test
-                    Map<Surface, List<Proposition>> result =
-                            messagingCacheUtilities.getCachedInboxPropositions();
-
-                    // verify
-                    assertNull(result);
-                });
-    }
-
-    @Test
-    public void testGetCachedInboxPropositions_returnsPropositions_whenCachedDataExists() {
-        runWithMockedServiceProvider(
-                () -> {
-                    // setup
-                    InputStream inboxInputStream = createPropositionInputStream();
-                    CacheResult inboxCacheResult = Mockito.mock(CacheResult.class);
-                    when(inboxCacheResult.getData()).thenReturn(inboxInputStream);
-                    when(mockCacheService.get(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
-                            .thenReturn(inboxCacheResult);
-
-                    // test
-                    Map<Surface, List<Proposition>> result =
-                            messagingCacheUtilities.getCachedInboxPropositions();
-
-                    // verify
-                    assertNotNull(result);
-                    assertEquals(1, result.size());
-                });
-    }
-
-    @Test
-    public void testCacheInboxPropositions_cachesPropositions() {
-        runWithMockedServiceProvider(
-                () -> {
-                    // setup
-                    when(mockCacheService.get(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
-                            .thenReturn(null);
-
-                    final List<Proposition> list = new ArrayList<>();
-                    list.add(proposition);
-                    final Map<Surface, List<Proposition>> propositions = new HashMap<>();
-                    propositions.put(Surface.fromUriString("mobileapp://mockPackageName"), list);
-
-                    // test
-                    messagingCacheUtilities.cacheInboxPropositions(
-                            propositions, Collections.emptyList());
-
-                    // verify
-                    verify(mockCacheService, times(1))
-                            .set(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY),
-                                    any());
-                });
-    }
-
-    @Test
-    public void testCacheInboxPropositions_emptyPropositions_removesCache() {
-        runWithMockedServiceProvider(
-                () -> {
-                    // setup
-                    when(mockCacheService.get(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
-                            .thenReturn(null);
-
-                    // test
-                    messagingCacheUtilities.cacheInboxPropositions(
-                            new HashMap<>(), Collections.emptyList());
-
-                    // verify
-                    verify(mockCacheService, times(1))
-                            .remove(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY));
-                });
-    }
-
-    // ========================================================================================================
-    // clearPersistedContentCardAndInboxCaches
-    // ========================================================================================================
-
-    @Test
-    public void testClearPersistedContentCardAndInboxCaches() {
+    public void testClearPersistedContentCardCache() {
         runWithMockedServiceProvider(
                 () -> {
                     // test
-                    messagingCacheUtilities.clearPersistedContentCardAndInboxCaches();
+                    messagingCacheUtilities.clearPersistedContentCardCache();
 
-                    // verify both content card and inbox caches are removed
+                    // verify the content card cache is removed
                     verify(mockCacheService, times(1))
                             .remove(
                                     eq(MessagingTestConstants.CACHE_BASE_DIR),
                                     eq(
                                             MessagingTestConstants
                                                     .CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY));
-                    verify(mockCacheService, times(1))
-                            .remove(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY));
-                });
-    }
-
-    @Test
-    public void testCacheInboxPropositions_withSurfacesToRemove_removesCache() {
-        runWithMockedServiceProvider(
-                () -> {
-                    // setup - return null for existing cache
-                    when(mockCacheService.get(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
-                            .thenReturn(null);
-
-                    Surface surface = Surface.fromUriString("mobileapp://mockPackageName");
-                    final List<Proposition> list = new ArrayList<>();
-                    list.add(proposition);
-                    final Map<Surface, List<Proposition>> propositions = new HashMap<>();
-                    propositions.put(surface, list);
-
-                    // test - remove the same surface we're adding
-                    messagingCacheUtilities.cacheInboxPropositions(
-                            propositions, Arrays.asList(surface));
-
-                    // verify - since the only surface was removed, cache is deleted
-                    verify(mockCacheService, times(1))
-                            .remove(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY));
-                });
-    }
-
-    @Test
-    public void testCacheInboxPropositions_mergesWithExistingCache() {
-        runWithMockedServiceProvider(
-                () -> {
-                    // setup - existing cached inbox propositions
-                    InputStream existingCacheStream = createPropositionInputStream();
-                    CacheResult existingCacheResult = Mockito.mock(CacheResult.class);
-                    when(existingCacheResult.getData()).thenReturn(existingCacheStream);
-                    when(mockCacheService.get(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
-                            .thenReturn(existingCacheResult);
-
-                    // new propositions for a different surface
-                    Surface newSurface = Surface.fromUriString("mobileapp://newInboxSurface");
-                    final List<Proposition> list = new ArrayList<>();
-                    list.add(proposition);
-                    final Map<Surface, List<Proposition>> newPropositions = new HashMap<>();
-                    newPropositions.put(newSurface, list);
-
-                    // test
-                    messagingCacheUtilities.cacheInboxPropositions(
-                            newPropositions, Collections.emptyList());
-
-                    // verify - cache was set (merged)
-                    verify(mockCacheService, times(1))
-                            .set(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY),
-                                    any());
                 });
     }
 
@@ -1228,36 +1045,6 @@ public class MessagingCacheUtilitiesTests {
                     // test
                     Map<Surface, List<Proposition>> result =
                             messagingCacheUtilities.getCachedContentCardPropositions();
-
-                    // verify - IOException returns null gracefully
-                    assertNull(result);
-                });
-    }
-
-    @Test
-    public void testGetCachedInboxPropositions_returnsNull_whenIOExceptionOccurs() {
-        runWithMockedServiceProvider(
-                () -> {
-                    // setup - return a CacheResult with a broken InputStream
-                    InputStream brokenStream =
-                            new InputStream() {
-                                @Override
-                                public int read() throws IOException {
-                                    throw new IOException("Simulated IO error");
-                                }
-                            };
-                    CacheResult brokenCacheResult = Mockito.mock(CacheResult.class);
-                    when(brokenCacheResult.getData()).thenReturn(brokenStream);
-                    when(mockCacheService.get(
-                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
-                                    eq(
-                                            MessagingTestConstants
-                                                    .INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY)))
-                            .thenReturn(brokenCacheResult);
-
-                    // test
-                    Map<Surface, List<Proposition>> result =
-                            messagingCacheUtilities.getCachedInboxPropositions();
 
                     // verify - IOException returns null gracefully
                     assertNull(result);

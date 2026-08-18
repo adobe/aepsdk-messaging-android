@@ -194,18 +194,7 @@ public final class MessagingExtension extends Extension {
                     new SerialWorkDispatcher<>(
                             "MessagingEvents",
                             event -> {
-                                if (InternalMessagingUtils.isGetPropositionsEvent(event)
-                                        && InternalMessagingUtils.isUsePersistedContentCards(
-                                                event)) {
-                                    // retrieve persisted content cards from disk
-                                    final List<Surface> surfaces =
-                                            InternalMessagingUtils.getSurfaces(event);
-                                    final Map<Surface, List<Proposition>> persistedPropositions =
-                                            edgePersonalizationResponseHandler
-                                                    .retrievePersistedPropositions(surfaces);
-                                    edgePersonalizationResponseHandler.dispatchPropositionsResponse(
-                                            persistedPropositions, event);
-                                } else if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
+                                if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
                                     edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
                                             InternalMessagingUtils.getSurfaces(event), event);
                                 } else if (event.getType().equals(EventType.EDGE)) {
@@ -518,9 +507,10 @@ public final class MessagingExtension extends Extension {
                     "Cannot track proposition item, proposition interaction XDM is not available.");
             return;
         }
-        // enrich tracking XDM with content card origin (servedFromPersistentCache)
-        edgePersonalizationResponseHandler.enrichWithContentCardOrigin(propositionInteractionXdm);
-        sendPropositionInteraction(propositionInteractionXdm);
+        // enrich tracking XDM with content card origin (servedFromPersistentCache) for display events
+        sendPropositionInteraction(
+                edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
+                        propositionInteractionXdm));
     }
 
     void handlePushToken(final Event event) {

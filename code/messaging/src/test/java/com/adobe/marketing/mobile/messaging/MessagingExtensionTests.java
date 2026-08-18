@@ -397,56 +397,6 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_serialWorkDispatcher_offerRetrieveMessageEvent_withPersistedContentCards() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    // setup - event with USE_PERSISTED_CONTENT_CARDS=true
-                    Event event =
-                            new Event.Builder(
-                                            "Test Get persisted propositions",
-                                            EventType.MESSAGING,
-                                            EventSource.REQUEST_CONTENT)
-                                    .setEventData(
-                                            new HashMap<String, Object>() {
-                                                {
-                                                    put(
-                                                            MessagingTestConstants.EventDataKeys
-                                                                    .Messaging.GET_PROPOSITIONS,
-                                                            true);
-                                                    put(
-                                                            MessagingTestConstants.EventDataKeys
-                                                                    .Messaging
-                                                                    .USE_PERSISTED_CONTENT_CARDS,
-                                                            true);
-                                                }
-                                            })
-                                    .build();
-
-                    // stub retrievePersistedPropositions to return empty map
-                    when(mockEdgePersonalizationResponseHandler.retrievePersistedPropositions(
-                                    any()))
-                            .thenReturn(new HashMap<>());
-
-                    // test
-                    messagingExtension.onRegistered();
-                    try {
-                        messagingExtension.getSerialWorkDispatcher().offer(event);
-                        Thread.sleep(100);
-                    } catch (InterruptedException exception) {
-                        fail(exception.getLocalizedMessage());
-                    }
-
-                    // verify - persisted path called, NOT in-memory path
-                    verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .retrievePersistedPropositions(any());
-                    verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .dispatchPropositionsResponse(any(), eq(event));
-                    verify(mockEdgePersonalizationResponseHandler, times(0))
-                            .retrieveInMemoryPropositions(any(), any());
-                });
-    }
-
-    @Test
     public void test_serialWorkDispatcher_offerEdgeContentCompletedEvent() {
         runUsingMockedServiceProvider(
                 () -> {
@@ -2523,6 +2473,11 @@ public class MessagingExtensionTests {
                                             EventSource.REQUEST_CONTENT)
                                     .setEventData(eventData)
                                     .build();
+
+                    // enrichWithContentCardOrigin returns the (possibly enriched) XDM; the mock
+                    // must echo its argument so the track path forwards the interaction data.
+                    when(mockEdgePersonalizationResponseHandler.enrichWithContentCardOrigin(any()))
+                            .thenAnswer(invocation -> invocation.getArgument(0));
 
                     // test
                     messagingExtension.processEvent(trackingEvent);

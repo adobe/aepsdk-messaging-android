@@ -19,7 +19,6 @@ public class MessagingTestConstants {
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY = "contentCardPropositions";
-    static final String INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY = "inboxPropositions";
     static final String CONTENT_CARD_TEST_CACHE_SUBDIRECTORY = "contentCardTestImages";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CACHE_BASE_DIR = "messaging";
@@ -191,7 +190,6 @@ public class MessagingTestConstants {
             public static final String PROPOSITION_INTERACTION = "propositioninteraction";
             public static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
             public static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
-            public static final String USE_PERSISTED_CONTENT_CARDS = "usepersistedcontentcards";
             public static final String CLEAR_PERSISTED_PROPOSITIONS = "clearpersistedpropositions";
 
 

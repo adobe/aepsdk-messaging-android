@@ -494,53 +494,18 @@ final class MessagingCacheUtilities {
                 "Content card");
     }
 
-    // ========================================================================================================
-    // Inbox proposition caching
-    // ========================================================================================================
-
     /**
-     * Retrieves cached inbox propositions.
-     *
-     * @return a {@code Map<Surface, List<Proposition>>} containing cached inbox propositions, or
-     *     null if none found.
+     * Clears the persisted content card proposition cache. Does not affect the IAM propositions
+     * cache.
      */
-    Map<Surface, List<Proposition>> getCachedInboxPropositions() {
-        return getCachedPropositionsForKey(
-                MessagingConstants.INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY,
-                "Unable to find cached inbox propositions.");
-    }
-
-    /**
-     * Caches inbox propositions.
-     *
-     * @param newPropositions the inbox propositions to cache
-     * @param surfacesToRemove surfaces to remove from the inbox cache
-     */
-    void cacheInboxPropositions(
-            final Map<Surface, List<Proposition>> newPropositions,
-            final List<Surface> surfacesToRemove) {
-        cachePropositionsForKey(
-                MessagingConstants.INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY,
-                newPropositions,
-                surfacesToRemove,
-                "Inbox");
-    }
-
-    /**
-     * Clears all persisted content card and inbox proposition caches. Does not affect the IAM
-     * propositions cache.
-     */
-    void clearPersistedContentCardAndInboxCaches() {
+    void clearPersistedContentCardCache() {
         cacheService.remove(
                 MessagingConstants.CACHE_BASE_DIR,
                 MessagingConstants.CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY);
-        cacheService.remove(
-                MessagingConstants.CACHE_BASE_DIR,
-                MessagingConstants.INBOX_PROPOSITIONS_CACHE_SUBDIRECTORY);
         Log.trace(
                 MessagingConstants.LOG_TAG,
                 SELF_TAG,
-                "Content card and inbox proposition caches have been deleted.");
+                "Content card proposition cache has been deleted.");
     }
 
     // ========================================================================================================

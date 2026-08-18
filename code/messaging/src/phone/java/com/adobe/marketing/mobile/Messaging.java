@@ -74,7 +74,6 @@ public final class Messaging {
     private static final String RESPONSE_ERROR = "responseerror";
     private static final String SCOPE = "scope";
     private static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
-    private static final String USE_PERSISTED_CONTENT_CARDS = "usepersistedcontentcards";
     private static final String CLEAR_PERSISTED_PROPOSITIONS = "clearpersistedpropositions";
     private static final String CLEAR_PERSISTED_PROPOSITIONS_EVENT_NAME =
             "Clear persisted propositions";
@@ -446,129 +445,6 @@ public final class Messaging {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(GET_PROPOSITIONS_EVENT, true);
         eventData.put(SURFACES, validSurfacesFlattened);
-
-        final Event getPropositionsEvent =
-                new Event.Builder(
-                                GET_PROPOSITIONS, EventType.MESSAGING, EventSource.REQUEST_CONTENT)
-                        .setEventData(eventData)
-                        .build();
-
-        MobileCore.dispatchEventWithResponseCallback(
-                getPropositionsEvent,
-                GET_PROPOSITIONS_TIMEOUT_MILLIS,
-                new AdobeCallbackWithError<Event>() {
-                    @Override
-                    public void fail(final AdobeError adobeError) {
-                        failWithError(callback, adobeError);
-                    }
-
-                    @Override
-                    public void call(final Event event) {
-                        try {
-                            final Map<String, Object> eventData = event.getEventData();
-                            if (MapUtils.isNullOrEmpty(eventData)) {
-                                failWithError(callback, AdobeError.UNEXPECTED_ERROR);
-                                return;
-                            }
-
-                            if (eventData.containsKey(RESPONSE_ERROR)) {
-                                final int errorCode = DataReader.getInt(eventData, RESPONSE_ERROR);
-                                failWithError(callback, convertToAdobeError(errorCode));
-                                return;
-                            }
-
-                            Map<Surface, List<Proposition>> requestedPropositionsMap =
-                                    new HashMap<>();
-                            final List<Map<String, Object>> retrievedPropositions =
-                                    DataReader.optTypedListOfMap(
-                                            Object.class,
-                                            eventData,
-                                            PROPOSITIONS,
-                                            Collections.emptyList());
-                            if (retrievedPropositions == null || retrievedPropositions.isEmpty()) {
-                                failWithError(callback, AdobeError.UNEXPECTED_ERROR);
-                                return;
-                            }
-
-                            for (final Map<String, Object> propositionMap : retrievedPropositions) {
-                                final Proposition proposition =
-                                        Proposition.fromEventData(propositionMap);
-                                if (proposition != null) {
-                                    final Surface surface =
-                                            MessagingUtils.scopeToSurface(proposition.getScope());
-                                    requestedPropositionsMap =
-                                            MessagingUtils.updatePropositionMapForSurface(
-                                                    surface, proposition, requestedPropositionsMap);
-                                }
-                            }
-
-                            callback.call(requestedPropositionsMap);
-                        } catch (final DataReaderException ignored) {
-                            failWithError(callback, AdobeError.UNEXPECTED_ERROR);
-                        }
-                    }
-                });
-    }
-
-    /**
-     * Dispatches an event to retrieve the previously fetched (and cached) content card or code
-     * based content from the SDK for the provided surfaces. When {@code usePersistedContentCards}
-     * is {@code true}, the SDK returns propositions from the on-disk persistence layer instead of
-     * the in-memory cache. This enables offline availability of content cards before the initial
-     * network fetch completes.
-     *
-     * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving
-     *     previously fetched propositions
-     * @param usePersistedContentCards If {@code true}, retrieves propositions from the persisted
-     *     disk cache; if {@code false}, behaves identically to {@link
-     *     #getPropositionsForSurfaces(List, AdobeCallback)}
-     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface,
-     *     List<Proposition>>} containing previously fetched content card or code based content
-     */
-    public static void getPropositionsForSurfaces(
-            @NonNull final List<Surface> surfaces,
-            final boolean usePersistedContentCards,
-            @NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
-        if (!usePersistedContentCards) {
-            getPropositionsForSurfaces(surfaces, callback);
-            return;
-        }
-
-        if (callback == null) {
-            Log.warning(
-                    LOG_TAG,
-                    CLASS_NAME,
-                    "Cannot get propositions as the provided callback is null.");
-            return;
-        }
-
-        if (surfaces == null || surfaces.isEmpty()) {
-            Log.warning(
-                    LOG_TAG,
-                    CLASS_NAME,
-                    "Cannot get propositions as the provided list of surfaces is null or empty.");
-            return;
-        }
-
-        final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
-        for (final Surface surface : surfaces) {
-            if (surface.isValid()) {
-                validSurfacesFlattened.add(surface.toEventData());
-            }
-        }
-
-        if (validSurfacesFlattened.isEmpty()) {
-            Log.warning(
-                    LOG_TAG,
-                    CLASS_NAME,
-                    "Cannot get propositions as the provided list of surfaces has no valid items.");
-            return;
-        }
-
-        final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(GET_PROPOSITIONS_EVENT, true);
-        eventData.put(SURFACES, validSurfacesFlattened);
-        eventData.put(USE_PERSISTED_CONTENT_CARDS, true);
 
         final Event getPropositionsEvent =
                 new Event.Builder(

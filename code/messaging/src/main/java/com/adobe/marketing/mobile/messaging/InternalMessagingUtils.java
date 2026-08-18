@@ -376,23 +376,6 @@ class InternalMessagingUtils {
                         event.getSource());
     }
 
-    /**
-     * Determines if the passed in {@code Event} is a use persisted content cards event.
-     *
-     * @param event A Messaging Request Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event requests persisted content cards.
-     */
-    static boolean isUsePersistedContentCards(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            return false;
-        }
-
-        return DataReader.optBoolean(
-                event.getEventData(),
-                MessagingConstants.EventDataKeys.Messaging.USE_PERSISTED_CONTENT_CARDS,
-                false);
-    }
-
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================

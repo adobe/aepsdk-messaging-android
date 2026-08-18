@@ -42,9 +42,6 @@ public class ParsedPropositions {
     // content card propositions to persist to disk when offline availability is enabled
     Map<Surface, List<Proposition>> contentCardPropositionsToPersist = new HashMap<>();
 
-    // inbox propositions to persist to disk when offline availability is enabled
-    Map<Surface, List<Proposition>> inboxPropositionsToPersist = new HashMap<>();
-
     ParsedPropositions(
             final Map<Surface, List<Proposition>> propositions,
             final List<Surface> requestedSurfaces,
@@ -161,11 +158,6 @@ public class ParsedPropositions {
                         propositionsToCache =
                                 MessagingUtils.updatePropositionMapForSurface(
                                         surface, proposition, propositionsToCache);
-                        if (contentCardOfflineAvailable) {
-                            inboxPropositionsToPersist =
-                                    MessagingUtils.updatePropositionMapForSurface(
-                                            surface, proposition, inboxPropositionsToPersist);
-                        }
                         break;
                     default:
                         break;
