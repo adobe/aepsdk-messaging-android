@@ -381,6 +381,21 @@ public final class MessagingExtension extends Extension {
                             + " remote.");
             edgePersonalizationResponseHandler.fetchPropositions(eventToProcess, null);
         } else if (InternalMessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
+            // Only user-triggered update requests are gated on network availability. Boot-time and
+            // refresh fetches are intentionally allowed through — Edge handles offline gracefully.
+            if (!edgePersonalizationResponseHandler.isInternetAvailable()) {
+                Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Skipping proposition update - device network is unavailable.");
+                final CompletionHandler handler =
+                        completionHandlerForOriginatingEventId(
+                                eventToProcess.getUniqueIdentifier());
+                if (handler != null) {
+                    handler.handle.call(false);
+                }
+                return;
+            }
             // validate update propositions event then retrieve propositions via an Edge extension
             // event
             Log.debug(
@@ -507,7 +522,8 @@ public final class MessagingExtension extends Extension {
                     "Cannot track proposition item, proposition interaction XDM is not available.");
             return;
         }
-        // enrich tracking XDM with content card origin (servedFromPersistentCache) for display events
+        // enrich tracking XDM with content card origin (servedFromPersistentCache) for display
+        // events
         sendPropositionInteraction(
                 edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
                         propositionInteractionXdm));

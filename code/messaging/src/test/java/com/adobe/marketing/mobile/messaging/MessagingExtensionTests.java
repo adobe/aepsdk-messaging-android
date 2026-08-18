@@ -2401,6 +2401,8 @@ public class MessagingExtensionTests {
                             .thenReturn(MessagingTestConstants.EventType.MESSAGING);
                     when(mockEvent.getSource())
                             .thenReturn(MessagingTestConstants.EventSource.REQUEST_CONTENT);
+                    when(mockEdgePersonalizationResponseHandler.isInternetAvailable())
+                            .thenReturn(true);
 
                     // test
                     messagingExtension.processEvent(mockEvent);
@@ -2420,6 +2422,43 @@ public class MessagingExtensionTests {
                     sortedList.sort(null);
                     assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
                     assertEquals("mobileapp://mockPackageName/promos/feed2", sortedList.get(1));
+                });
+    }
+
+    @Test
+    public void test_processEvent_updatePropositionsEvent_networkUnavailable_skipsFetch() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup - an update propositions event while the device is offline
+                    List<Map<String, Object>> surfaces = new ArrayList<>();
+                    Map<String, Object> surface1 = new HashMap<>();
+                    surface1.put("uri", "mobileapp://mockPackageName/promos/feed1");
+                    surfaces.add(surface1);
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("updatepropositions", true);
+                    eventData.put("surfaces", surfaces);
+                    Event mockEvent = mock(Event.class);
+                    when(mockEvent.getEventData()).thenReturn(eventData);
+                    when(mockEvent.getType())
+                            .thenReturn(MessagingTestConstants.EventType.MESSAGING);
+                    when(mockEvent.getSource())
+                            .thenReturn(MessagingTestConstants.EventSource.REQUEST_CONTENT);
+                    when(mockEvent.getUniqueIdentifier()).thenReturn("offlineUpdateEventId");
+                    when(mockEdgePersonalizationResponseHandler.isInternetAvailable())
+                            .thenReturn(false);
+
+                    // register a completion handler for this event so we can assert it gets false
+                    AdobeCallback<Boolean> callback = Mockito.mock(AdobeCallback.class);
+                    MessagingExtension.addCompletionHandler(
+                            new CompletionHandler("offlineUpdateEventId", callback));
+
+                    // test
+                    messagingExtension.processEvent(mockEvent);
+
+                    // verify - no network fetch, and the caller's completion handler gets false
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .fetchPropositions(any(Event.class), any(), any(), any());
+                    verify(callback, times(1)).call(false);
                 });
     }
 

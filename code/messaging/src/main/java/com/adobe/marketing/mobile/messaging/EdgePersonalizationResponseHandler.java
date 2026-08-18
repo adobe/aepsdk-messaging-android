@@ -89,9 +89,12 @@ class EdgePersonalizationResponseHandler {
 
     // Surfaces that have been refreshed from a live network response this session. In-memory only
     // (never persisted) and empty on every launch, so a card served after a cold start — before any
-    // successful network refresh — is correctly reported as served from the persisted cache. Maintained
-    // in exactly one place on the network path (removeOrReplaceContentCards: insert on refresh, remove
-    // on eviction) and cleared with the content card state. Disk hydration deliberately does NOT add to
+    // successful network refresh — is correctly reported as served from the persisted cache.
+    // Maintained
+    // in exactly one place on the network path (removeOrReplaceContentCards: insert on refresh,
+    // remove
+    // on eviction) and cleared with the content card state. Disk hydration deliberately does NOT
+    // add to
     // it. Used to derive servedFromPersistentCache at interaction time.
     private final java.util.Set<Surface> networkRefreshedSurfaces = new java.util.HashSet<>();
 
@@ -181,7 +184,9 @@ class EdgePersonalizationResponseHandler {
 
     /**
      * Reads the {@code messaging.contentCardOfflineAvailable} flag from Configuration shared state.
-     * Defaults to {@code true} when the configuration is unavailable (matching iOS behavior).
+     * Defaults to {@code false} when the key is absent — disk persistence is opt-in. Apps must
+     * explicitly set {@code messaging.contentCardOfflineAvailable = true} in their configuration to
+     * enable content card persistence across sessions.
      *
      * @return {@code true} if offline content card availability is enabled
      */
@@ -194,12 +199,39 @@ class EdgePersonalizationResponseHandler {
                             false,
                             SharedStateResolution.LAST_SET);
             if (result == null || result.getValue() == null) {
-                return true;
+                return false;
             }
             return DataReader.optBoolean(
                     result.getValue(),
                     MessagingConstants.SharedState.Configuration.CONTENT_CARD_OFFLINE_AVAILABLE,
-                    true);
+                    false);
+        } catch (final Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Determines whether the device currently has internet connectivity, used to short-circuit
+     * user-triggered proposition fetches when offline. Fails open (returns {@code true}) when
+     * connectivity cannot be determined, so a fetch is never wrongly suppressed.
+     *
+     * @return {@code true} if internet is available or connectivity is indeterminate
+     */
+    boolean isInternetAvailable() {
+        try {
+            final android.content.Context context =
+                    ServiceProvider.getInstance().getAppContextService().getApplicationContext();
+            if (context == null) {
+                return true;
+            }
+            final android.net.ConnectivityManager connectivityManager =
+                    (android.net.ConnectivityManager)
+                            context.getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+            if (connectivityManager == null) {
+                return true;
+            }
+            return com.adobe.marketing.mobile.internal.util.NetworkUtils.isInternetAvailable(
+                    connectivityManager);
         } catch (final Exception e) {
             return true;
         }
@@ -978,18 +1010,24 @@ class EdgePersonalizationResponseHandler {
         final Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                 getPropositionsFromContentCardRulesEngine(event);
 
-        // Only touch surfaces explicitly part of this network request. The content card rules engine
-        // re-evaluates ALL loaded rules on every call, so the qualified map may include surfaces that
-        // were hydrated from disk for a different request; leaving those untouched keeps them out of
+        // Only touch surfaces explicitly part of this network request. The content card rules
+        // engine
+        // re-evaluates ALL loaded rules on every call, so the qualified map may include surfaces
+        // that
+        // were hydrated from disk for a different request; leaving those untouched keeps them out
+        // of
         // networkRefreshedSurfaces so their cards keep reporting servedFromPersistentCache = true.
         //
-        // This is also the single place that maintains networkRefreshedSurfaces: a requested surface
-        // that returned content cards is marked network-refreshed for this session; a requested surface
+        // This is also the single place that maintains networkRefreshedSurfaces: a requested
+        // surface
+        // that returned content cards is marked network-refreshed for this session; a requested
+        // surface
         // that returned nothing is evicted and removed from the set.
         for (final Surface surface : requestedSurfaces) {
             final List<Proposition> propositions = qualifiedContentCardsBySurface.get(surface);
             if (propositions == null) {
-                // Requested surface returned no content cards — evict it (campaign ended server-side).
+                // Requested surface returned no content cards — evict it (campaign ended
+                // server-side).
                 final List<Proposition> evictedPropositions = contentCardsBySurface.remove(surface);
                 if (evictedPropositions != null) {
                     for (final Proposition proposition : evictedPropositions) {
@@ -1351,7 +1389,8 @@ class EdgePersonalizationResponseHandler {
 
             // Seed the qualified cache directly from disk. We deliberately do NOT go through
             // removeOrReplaceContentCards here: disk-hydrated surfaces must stay out of
-            // networkRefreshedSurfaces (so their cards report servedFromPersistentCache = true), and
+            // networkRefreshedSurfaces (so their cards report servedFromPersistentCache = true),
+            // and
             // boot-seeded cards must not fire spurious TRIGGER analytics events.
             final Event seedEvent =
                     new Event.Builder(
@@ -1394,7 +1433,8 @@ class EdgePersonalizationResponseHandler {
         allMainRules.addAll(collectRulesFrom(eventHistoryRulesBySurface));
         launchRulesEngine.replaceRules(allMainRules);
 
-        // Disk-hydrated surfaces are intentionally NOT added to networkRefreshedSurfaces, so any card
+        // Disk-hydrated surfaces are intentionally NOT added to networkRefreshedSurfaces, so any
+        // card
         // served for them reports servedFromPersistentCache = true until a live network response
         // refreshes the surface this session.
     }
@@ -1539,7 +1579,8 @@ class EdgePersonalizationResponseHandler {
 
     /**
      * Clears all in-memory content card state (qualified cards and rules) and the persisted content
-     * card cache. Used by both the public {@code clearPersistedPropositions} API and identity reset.
+     * card cache. Used by both the public {@code clearPersistedPropositions} API and identity
+     * reset.
      */
     void clearContentCards() {
         contentCardsBySurface.clear();

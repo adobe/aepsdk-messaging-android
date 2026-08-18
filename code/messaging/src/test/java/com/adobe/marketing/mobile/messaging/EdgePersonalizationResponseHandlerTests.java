@@ -36,6 +36,7 @@ import static org.mockito.Mockito.withSettings;
 
 import android.app.Application;
 import android.content.Context;
+import android.net.ConnectivityManager;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
@@ -47,10 +48,12 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.SharedStateStatus;
+import com.adobe.marketing.mobile.internal.util.NetworkUtils;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
+import com.adobe.marketing.mobile.services.AppContextService;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Networking;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -4174,7 +4177,7 @@ public class EdgePersonalizationResponseHandlerTests {
     // Fix #6: isContentCardOfflineAvailable — Config-driven flag
     // ========================================================================================
     @Test
-    public void test_isContentCardOfflineAvailable_DefaultsTrue_WhenNoConfig() {
+    public void test_isContentCardOfflineAvailable_DefaultsFalse_WhenNoConfig() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup: return null shared state (no config)
@@ -4185,14 +4188,14 @@ public class EdgePersonalizationResponseHandlerTests {
                                     eq(SharedStateResolution.LAST_SET)))
                             .thenReturn(null);
 
-                    assertTrue(
-                            "should default to true when config is unavailable",
+                    assertFalse(
+                            "should default to false when config is unavailable",
                             edgePersonalizationResponseHandler.isContentCardOfflineAvailable());
                 });
     }
 
     @Test
-    public void test_isContentCardOfflineAvailable_DefaultsTrue_WhenConfigValueMissing() {
+    public void test_isContentCardOfflineAvailable_DefaultsFalse_WhenConfigValueMissing() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup: config shared state exists but doesn't have the key
@@ -4207,8 +4210,8 @@ public class EdgePersonalizationResponseHandlerTests {
                                     eq(SharedStateResolution.LAST_SET)))
                             .thenReturn(result);
 
-                    assertTrue(
-                            "should default to true when config key is missing",
+                    assertFalse(
+                            "should default to false when config key is missing",
                             edgePersonalizationResponseHandler.isContentCardOfflineAvailable());
                 });
     }
@@ -4256,7 +4259,7 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_isContentCardOfflineAvailable_DefaultsTrue_WhenExceptionThrown() {
+    public void test_isContentCardOfflineAvailable_DefaultsFalse_WhenExceptionThrown() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockExtensionApi.getSharedState(
@@ -4266,9 +4269,54 @@ public class EdgePersonalizationResponseHandlerTests {
                                     eq(SharedStateResolution.LAST_SET)))
                             .thenThrow(new RuntimeException("test exception"));
 
-                    assertTrue(
-                            "should default to true when exception occurs",
+                    assertFalse(
+                            "should default to false when exception occurs",
                             edgePersonalizationResponseHandler.isContentCardOfflineAvailable());
+                });
+    }
+
+    // ========================================================================================
+    // isInternetAvailable — network gating for user-triggered fetches
+    // ========================================================================================
+    @Test
+    public void test_isInternetAvailable_returnsFalse_whenNetworkUtilsReportsNoInternet() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<NetworkUtils> networkUtils =
+                            Mockito.mockStatic(NetworkUtils.class)) {
+                        AppContextService mockAppContextService = mock(AppContextService.class);
+                        Context mockContext = mock(Context.class);
+                        ConnectivityManager mockConnectivityManager =
+                                mock(ConnectivityManager.class);
+                        when(mockServiceProvider.getAppContextService())
+                                .thenReturn(mockAppContextService);
+                        when(mockAppContextService.getApplicationContext()).thenReturn(mockContext);
+                        when(mockContext.getSystemService(Context.CONNECTIVITY_SERVICE))
+                                .thenReturn(mockConnectivityManager);
+                        networkUtils
+                                .when(
+                                        () ->
+                                                NetworkUtils.isInternetAvailable(
+                                                        mockConnectivityManager))
+                                .thenReturn(false);
+
+                        assertFalse(
+                                "should report no internet when NetworkUtils says so",
+                                edgePersonalizationResponseHandler.isInternetAvailable());
+                    }
+                });
+    }
+
+    @Test
+    public void test_isInternetAvailable_failsOpen_whenApplicationContextUnavailable() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // no app context service available — should fail open (assume available)
+                    when(mockServiceProvider.getAppContextService()).thenReturn(null);
+
+                    assertTrue(
+                            "should fail open (return true) when connectivity is indeterminate",
+                            edgePersonalizationResponseHandler.isInternetAvailable());
                 });
     }
 
@@ -4317,7 +4365,8 @@ public class EdgePersonalizationResponseHandlerTests {
                                 .replaceRules(rulesListCaptor.capture());
 
                         // verify the hydrated surface was NOT marked network-refreshed, so its
-                        // cards report servedFromPersistentCache = true until a live network refresh
+                        // cards report servedFromPersistentCache = true until a live network
+                        // refresh
                         assertFalse(
                                 "disk-hydrated surface must not be in networkRefreshedSurfaces",
                                 edgePersonalizationResponseHandler
@@ -4412,7 +4461,8 @@ public class EdgePersonalizationResponseHandlerTests {
     // ========================================================================================
 
     @Test
-    public void test_enrichWithContentCardOrigin_NetworkRefreshedSurface_SetsServedFromCacheFalse() {
+    public void
+            test_enrichWithContentCardOrigin_NetworkRefreshedSurface_SetsServedFromCacheFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     // seed a qualified content card and mark its surface network-refreshed
@@ -4510,7 +4560,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         @SuppressWarnings("unchecked")
                         Map<String, PropositionInfo> propositionInfoMap =
                                 (Map<String, PropositionInfo>)
-                                        propositionInfoField.get(edgePersonalizationResponseHandler);
+                                        propositionInfoField.get(
+                                                edgePersonalizationResponseHandler);
                         propositionInfoMap.put("183639c4-cb37-458e-a8ef-4e130d767ebf", info);
                     } catch (Exception e) {
                         fail("Failed to set propositionInfo via reflection: " + e.getMessage());
