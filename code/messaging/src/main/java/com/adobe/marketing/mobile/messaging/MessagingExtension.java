@@ -381,32 +381,7 @@ public final class MessagingExtension extends Extension {
                             + " remote.");
             edgePersonalizationResponseHandler.fetchPropositions(eventToProcess, null);
         } else if (InternalMessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
-            // Only user-triggered update requests are gated on network availability. Boot-time and
-            // refresh fetches are intentionally allowed through — Edge handles offline gracefully.
-            if (!edgePersonalizationResponseHandler.isInternetAvailable()) {
-                Log.debug(
-                        MessagingConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Skipping proposition update - device network is unavailable.");
-                final CompletionHandler handler =
-                        completionHandlerForOriginatingEventId(
-                                eventToProcess.getUniqueIdentifier());
-                if (handler != null) {
-                    handler.handle.call(false);
-                }
-                return;
-            }
-            // validate update propositions event then retrieve propositions via an Edge extension
-            // event
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Processing request to retrieve propositions from the remote.");
-            edgePersonalizationResponseHandler.fetchPropositions(
-                    eventToProcess,
-                    InternalMessagingUtils.getSurfaces(eventToProcess),
-                    InternalMessagingUtils.getUpdatePropositionsXdm(eventToProcess),
-                    InternalMessagingUtils.getUpdatePropositionsData(eventToProcess));
+            handleUpdatePropositionsEvent(eventToProcess);
         } else if (InternalMessagingUtils.isGetPropositionsEvent(eventToProcess)) {
             // Queue the get propositions event in the
             // edgePersonalizationResponseHandler.serialWorkDispatcher to ensure any prior update
@@ -499,6 +474,39 @@ public final class MessagingExtension extends Extension {
         } else if (InternalMessagingUtils.isEdgeErrorResponseEvent(eventToProcess)) {
             // handle edge error response for offline content card availability
             edgePersonalizationResponseHandler.handleEdgeErrorResponse(eventToProcess);
+        }
+    }
+
+    /**
+     * Handles a user-triggered update propositions event. Only these explicit requests are gated on
+     * network availability; boot-time and refresh fetches are intentionally allowed through since
+     * Edge handles offline gracefully. When the device is offline, the fetch is skipped and the
+     * caller's completion handler (if any) is invoked with {@code false}.
+     *
+     * @param event the update propositions {@link Event} to process
+     */
+    private void handleUpdatePropositionsEvent(final Event event) {
+        if (edgePersonalizationResponseHandler.isInternetAvailable()) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Processing request to retrieve propositions from the remote.");
+            edgePersonalizationResponseHandler.fetchPropositions(
+                    event,
+                    InternalMessagingUtils.getSurfaces(event),
+                    InternalMessagingUtils.getUpdatePropositionsXdm(event),
+                    InternalMessagingUtils.getUpdatePropositionsData(event));
+            return;
+        }
+
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Skipping proposition update - device network is unavailable.");
+        final CompletionHandler handler =
+                completionHandlerForOriginatingEventId(event.getUniqueIdentifier());
+        if (handler != null) {
+            handler.handle.call(false);
         }
     }
 
