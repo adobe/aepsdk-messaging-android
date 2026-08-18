@@ -210,7 +210,8 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    // Test seam: when non-null, overrides the device connectivity check so instrumented tests (which
+    // Test seam: when non-null, overrides the device connectivity check so instrumented tests
+    // (which
     // mock the network at the SDK level, not the OS ConnectivityManager) aren't gated by a CI
     // emulator reporting no validated internet. Always null in production.
     @VisibleForTesting static Boolean internetAvailableOverrideForTesting = null;

@@ -77,7 +77,8 @@ public class MessagingPublicAPITests {
     @Before
     public void setup() throws Exception {
         // Instrumented tests mock the Edge network response at the SDK level; the device
-        // ConnectivityManager on CI emulators can report no validated internet, which would cause the
+        // ConnectivityManager on CI emulators can report no validated internet, which would cause
+        // the
         // network-availability guard to skip update fetches. Force the check to report available.
         EdgePersonalizationResponseHandler.internetAvailableOverrideForTesting = true;
         MessagingTestUtils.setEdgeIdentityPersistence(
