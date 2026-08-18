@@ -164,7 +164,7 @@ class EdgePersonalizationResponseHandler {
                                 extensionApi,
                                 // this constructor only loads cached IAM rules; content card
                                 // persistence is handled separately, so the offline flag is
-                                // irrelevant here (matches iOS which passes false).
+                                // irrelevant here.
                                 false);
                 final Map<Surface, List<LaunchRule>> inAppRules =
                         parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
@@ -210,6 +210,11 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
+    // Test seam: when non-null, overrides the device connectivity check so instrumented tests (which
+    // mock the network at the SDK level, not the OS ConnectivityManager) aren't gated by a CI
+    // emulator reporting no validated internet. Always null in production.
+    @VisibleForTesting static Boolean internetAvailableOverrideForTesting = null;
+
     /**
      * Determines whether the device currently has internet connectivity, used to short-circuit
      * user-triggered proposition fetches when offline. Fails open (returns {@code true}) when
@@ -218,6 +223,9 @@ class EdgePersonalizationResponseHandler {
      * @return {@code true} if internet is available or connectivity is indeterminate
      */
     boolean isInternetAvailable() {
+        if (internetAvailableOverrideForTesting != null) {
+            return internetAvailableOverrideForTesting;
+        }
         try {
             final android.content.Context context =
                     ServiceProvider.getInstance().getAppContextService().getApplicationContext();
@@ -764,7 +772,7 @@ class EdgePersonalizationResponseHandler {
         // clear pending propositions
         inProgressPropositions.clear();
 
-        // call the handler if we have one, passing false on failure (matching iOS behavior)
+        // call the handler if we have one, passing false on failure
         final CompletionHandler handler = parent.completionHandlerForEdgeRequestEventId(eventId);
         if (handler != null) {
             handler.handle.call(!requestFailed);
@@ -1331,7 +1339,7 @@ class EdgePersonalizationResponseHandler {
 
         // Treat the error as non-recoverable unless the status code is explicitly in the
         // recoverable set. Missing or zero status is conservatively treated as non-recoverable
-        // (matching iOS behavior) to preserve the last-known-good state.
+        // to preserve the last-known-good state.
         final int status =
                 DataReader.optInt(
                         event.getEventData(), MessagingConstants.EventDataKeys.EdgeError.STATUS, 0);
@@ -1485,7 +1493,7 @@ class EdgePersonalizationResponseHandler {
                                             .DECISIONING);
             if (decisioning == null) return propositionInteractionXdm;
 
-            // only enrich DISPLAY events (matching iOS behavior)
+            // only enrich DISPLAY events
             final Map<String, Object> propositionEventType =
                     (Map<String, Object>)
                             decisioning.get(

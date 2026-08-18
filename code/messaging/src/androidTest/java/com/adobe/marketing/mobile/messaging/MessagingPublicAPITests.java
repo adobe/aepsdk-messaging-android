@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,6 +76,10 @@ public class MessagingPublicAPITests {
 
     @Before
     public void setup() throws Exception {
+        // Instrumented tests mock the Edge network response at the SDK level; the device
+        // ConnectivityManager on CI emulators can report no validated internet, which would cause the
+        // network-availability guard to skip update fetches. Force the check to report available.
+        EdgePersonalizationResponseHandler.internetAvailableOverrideForTesting = true;
         MessagingTestUtils.setEdgeIdentityPersistence(
                 MessagingTestUtils.createIdentityMap("ECID", "mockECID"),
                 TestHelper.getDefaultApplication());
@@ -106,6 +111,12 @@ public class MessagingPublicAPITests {
                         MessagingTestConstants.EventType.EDGE, EventSource.CONTENT_COMPLETE, 5000);
         assertEquals(1, dispatchedEvents.size());
         resetTestExpectations();
+    }
+
+    @After
+    public void tearDown() {
+        // reset the network-availability test override so it never leaks across test classes
+        EdgePersonalizationResponseHandler.internetAvailableOverrideForTesting = null;
     }
 
     // --------------------------------------------------------------------------------------------
