@@ -641,12 +641,17 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        // If offline availability is disabled and stale content card data still exists on disk,
-        // evict it from persistence.
-        if (!isContentCardOfflineAvailable()
-                && !MapUtils.isNullOrEmpty(
-                        messagingCacheUtilities.getCachedContentCardPropositions())) {
-            messagingCacheUtilities.clearPersistedContentCardCache();
+        // When offline availability is disabled, drop content cards for surfaces that were not
+        // refreshed from the network this session (i.e. loaded from disk at boot), and evict the
+        // stale disk cache. This handles disabling the flag at runtime. Only content card state is
+        // affected — inbox and code-based propositions live in a separate store and are always
+        // served for the requested surfaces.
+        if (!isContentCardOfflineAvailable()) {
+            contentCardsBySurface.keySet().retainAll(networkRefreshedSurfaces);
+            if (!MapUtils.isNullOrEmpty(
+                    messagingCacheUtilities.getCachedContentCardPropositions())) {
+                messagingCacheUtilities.clearPersistedContentCardCache();
+            }
         }
 
         // get a copy of qualified content cards and filter by requested surfaces
@@ -1396,36 +1401,19 @@ class EdgePersonalizationResponseHandler {
         // load proposition info for tracking
         propositionInfo.putAll(parsedPropositions.propositionInfoToCache);
 
-        // load content card rules
+        // load content card rules into the rules engine only.
+        //
+        // Disk-hydrated cards are intentionally NOT written to contentCardsBySurface here.
+        // contentCardsBySurface is a network-only store: only removeOrReplaceContentCards (on the
+        // network path) writes to it. Keeping disk cards out of it leaves networkRefreshedSurfaces
+        // as the single, unambiguous source of card origin, and avoids spurious TRIGGER analytics
+        // events for boot-seeded disk cards.
         final Map<Surface, List<LaunchRule>> ccRules =
                 parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.CONTENT_CARD);
         if (ccRules != null) {
             contentCardRulesBySurface.putAll(ccRules);
             final List<LaunchRule> allCCRules = collectRulesFrom(contentCardRulesBySurface);
             contentCardRulesEngine.replaceRules(allCCRules);
-
-            // Seed the qualified cache directly from disk. We deliberately do NOT go through
-            // removeOrReplaceContentCards here: disk-hydrated surfaces must stay out of
-            // networkRefreshedSurfaces (so their cards report servedFromPersistentCache = true),
-            // and
-            // boot-seeded cards must not fire spurious TRIGGER analytics events.
-            final Event seedEvent =
-                    new Event.Builder(
-                                    "Hydrate content cards from disk",
-                                    EventType.MESSAGING,
-                                    EventSource.REQUEST_CONTENT)
-                            .build();
-            final Map<Surface, List<Proposition>> diskQualified =
-                    getPropositionsFromContentCardRulesEngine(seedEvent);
-            for (final Map.Entry<Surface, List<Proposition>> entry : diskQualified.entrySet()) {
-                if (!surfaces.contains(entry.getKey())) {
-                    continue;
-                }
-                contentCardsBySurface.put(entry.getKey(), entry.getValue());
-                for (final Proposition proposition : entry.getValue()) {
-                    storeContentCardInMapper(proposition);
-                }
-            }
         }
 
         // load event-history rules (disqualify/dismiss) into the main rules engine
@@ -1596,8 +1584,7 @@ class EdgePersonalizationResponseHandler {
 
     /**
      * Clears all in-memory content card state (qualified cards and rules) and the persisted content
-     * card cache. Used by both the public {@code clearPersistedPropositions} API and identity
-     * reset.
+     * card cache. Used by both the public {@code clearCachedPropositions} API and identity reset.
      */
     void clearContentCards() {
         contentCardsBySurface.clear();

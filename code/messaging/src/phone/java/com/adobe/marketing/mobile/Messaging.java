@@ -76,7 +76,7 @@ public final class Messaging {
     private static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
     private static final String CLEAR_PERSISTED_PROPOSITIONS = "clearpersistedpropositions";
     private static final String CLEAR_PERSISTED_PROPOSITIONS_EVENT_NAME =
-            "Clear persisted propositions";
+            "Clear cached propositions";
     private static final String EVENT_TYPE_PUSH_TRACKING_RECEIVED = "pushTracking.receive";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
@@ -516,7 +516,7 @@ public final class Messaging {
      *
      * <p>Use this method to clear stale offline content cards, for example after a user logs out.
      */
-    public static void clearPersistedPropositions() {
+    public static void clearCachedPropositions() {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(CLEAR_PERSISTED_PROPOSITIONS, true);
 

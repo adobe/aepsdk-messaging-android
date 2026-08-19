@@ -2321,6 +2321,12 @@ public class EdgePersonalizationResponseHandlerTests {
                                 surface, MessagingTestUtils.generateQualifiedContentCards(config));
                         edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
                                 qualifiedContentCards);
+                        // the qualified cards represent a network refresh for this surface, so mark
+                        // it network-refreshed (get filters out non-network surfaces when the
+                        // offline flag is off)
+                        edgePersonalizationResponseHandler
+                                .getNetworkRefreshedSurfaces()
+                                .add(surface);
 
                         reset(mockExtensionApi);
                         ArgumentCaptor<Event> localCaptor = ArgumentCaptor.forClass(Event.class);
@@ -4658,6 +4664,74 @@ public class EdgePersonalizationResponseHandlerTests {
     // ========================================================================================
 
     @Test
+    public void test_applyPropositionChange_flagOn_persistsContentCardsToDisk() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
+                                .thenCallRealMethod();
+
+                        // enable offline availability
+                        Map<String, Object> configState = new HashMap<>();
+                        configState.put("messaging.contentCardOfflineAvailable", true);
+                        SharedStateResult configResult =
+                                new SharedStateResult(SharedStateStatus.SET, configState);
+                        when(mockExtensionApi.getSharedState(
+                                        eq("com.adobe.module.configuration"),
+                                        any(),
+                                        eq(false),
+                                        eq(SharedStateResolution.LAST_SET)))
+                                .thenReturn(configResult);
+
+                        // simulate a network response returning 6 content cards for the surface
+                        Surface surface = new Surface("apifeed");
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 6;
+                        List<Map<String, Object>> payload =
+                                MessagingTestUtils.generateContentCardPayload(config);
+                        Map<String, Object> notificationData = new HashMap<>();
+                        notificationData.put("payload", payload);
+                        notificationData.put("requestEventId", "PERSIST_ON_EVENT_ID");
+                        Event notificationEvent = mock(Event.class);
+                        when(notificationEvent.getEventData()).thenReturn(notificationData);
+
+                        edgePersonalizationResponseHandler.setMessagesRequestEventId(
+                                "PERSIST_ON_EVENT_ID",
+                                new ArrayList<Surface>() {
+                                    {
+                                        add(surface);
+                                    }
+                                });
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                notificationEvent);
+
+                        // process completed (success path)
+                        Map<String, Object> completedEventData = new HashMap<>();
+                        completedEventData.put(ENDING_EVENT_ID, "PERSIST_ON_EVENT_ID");
+                        Event completedEvent = mock(Event.class);
+                        when(completedEvent.getEventData()).thenReturn(completedEventData);
+                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(
+                                completedEvent);
+
+                        // verify all 6 content cards were written to the disk cache and nothing was
+                        // cleared
+                        ArgumentCaptor<Map<Surface, List<Proposition>>> captor =
+                                ArgumentCaptor.forClass(Map.class);
+                        verify(mockMessagingCacheUtilities, times(1))
+                                .cacheContentCardPropositions(captor.capture(), any());
+                        int totalPersisted = 0;
+                        for (List<Proposition> props : captor.getValue().values()) {
+                            totalPersisted += props.size();
+                        }
+                        assertEquals(6, totalPersisted);
+                        verify(mockMessagingCacheUtilities, times(0))
+                                .clearPersistedContentCardCache();
+                    }
+                });
+    }
+
+    @Test
     public void test_applyPropositionChange_flagOff_requestSucceeded_clearsDisk() {
         runUsingMockedServiceProvider(
                 () -> {
@@ -4754,6 +4828,231 @@ public class EdgePersonalizationResponseHandlerTests {
                         verify(mockMessagingCacheUtilities, times(0))
                                 .clearPersistedContentCardCache();
                     }
+                });
+    }
+
+    // ========================================================================================
+    // retrieveInMemoryPropositions (getPropositions) — offline flag gating
+    // ========================================================================================
+
+    @Test
+    public void
+            test_retrieveInMemoryPropositions_flagOff_withPersistedCards_clearsPersistedCache() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // offline availability disabled
+                    Map<String, Object> configState = new HashMap<>();
+                    configState.put("messaging.contentCardOfflineAvailable", false);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(new SharedStateResult(SharedStateStatus.SET, configState));
+
+                    // stale content card data still exists on disk
+                    Surface surface = new Surface("apifeed");
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Map<String, Object>> payload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Map<Surface, List<Proposition>> cachedCC = new HashMap<>();
+                    cachedCC.put(
+                            surface,
+                            Collections.singletonList(Proposition.fromEventData(payload.get(0))));
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(cachedCC);
+
+                    // test — get path
+                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                            Collections.singletonList(surface), mock(Event.class));
+
+                    // verify the persisted content card cache was cleared
+                    verify(mockMessagingCacheUtilities, times(1)).clearPersistedContentCardCache();
+                });
+    }
+
+    @Test
+    public void test_retrieveInMemoryPropositions_flagOff_noPersistedCards_doesNotClear() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configState = new HashMap<>();
+                    configState.put("messaging.contentCardOfflineAvailable", false);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(new SharedStateResult(SharedStateStatus.SET, configState));
+
+                    // no content card data on disk — nothing to clear
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(null);
+
+                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                            Collections.singletonList(new Surface("apifeed")), mock(Event.class));
+
+                    verify(mockMessagingCacheUtilities, times(0)).clearPersistedContentCardCache();
+                });
+    }
+
+    @Test
+    public void test_retrieveInMemoryPropositions_flagOn_doesNotClear() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // offline availability enabled — must never clear on get
+                    Map<String, Object> configState = new HashMap<>();
+                    configState.put("messaging.contentCardOfflineAvailable", true);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(new SharedStateResult(SharedStateStatus.SET, configState));
+
+                    // even with data on disk
+                    Surface surface = new Surface("apifeed");
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Map<String, Object>> payload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Map<Surface, List<Proposition>> cachedCC = new HashMap<>();
+                    cachedCC.put(
+                            surface,
+                            Collections.singletonList(Proposition.fromEventData(payload.get(0))));
+                    when(mockMessagingCacheUtilities.getCachedContentCardPropositions())
+                            .thenReturn(cachedCC);
+
+                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                            Collections.singletonList(surface), mock(Event.class));
+
+                    verify(mockMessagingCacheUtilities, times(0)).clearPersistedContentCardCache();
+                });
+    }
+
+    @Test
+    public void test_retrieveInMemoryPropositions_flagOff_evictsDiskOriginContentCards() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // offline availability disabled
+                    Map<String, Object> configState = new HashMap<>();
+                    configState.put("messaging.contentCardOfflineAvailable", false);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(new SharedStateResult(SharedStateStatus.SET, configState));
+
+                    // seed the qualified cache with one network-origin surface and one disk-origin
+                    // surface
+                    Surface networkSurface = new Surface("network");
+                    Surface diskSurface = new Surface("disk");
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    Proposition networkProp =
+                            Proposition.fromEventData(
+                                    MessagingTestUtils.generateContentCardPayload(config).get(0));
+                    Proposition diskProp =
+                            Proposition.fromEventData(
+                                    MessagingTestUtils.generateContentCardPayload(config).get(0));
+                    edgePersonalizationResponseHandler
+                            .getQualifiedContentCardsBySurface()
+                            .put(networkSurface, Collections.singletonList(networkProp));
+                    edgePersonalizationResponseHandler
+                            .getQualifiedContentCardsBySurface()
+                            .put(diskSurface, Collections.singletonList(diskProp));
+
+                    // only the network surface was refreshed from Edge this session
+                    edgePersonalizationResponseHandler
+                            .getNetworkRefreshedSurfaces()
+                            .add(networkSurface);
+
+                    List<Surface> requested = new ArrayList<>();
+                    requested.add(networkSurface);
+                    requested.add(diskSurface);
+
+                    // test — get path
+                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                            requested, mock(Event.class));
+
+                    // verify only the network-refreshed surface's card is served; the disk-origin
+                    // surface is excluded
+                    verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                    Map<String, Object> eventData = eventArgumentCaptor.getValue().getEventData();
+                    List<Map<String, Object>> propositions =
+                            DataReader.optTypedListOfMap(
+                                    Object.class, eventData, "propositions", null);
+                    assertEquals(1, propositions.size());
+
+                    // verify the disk-origin surface was durably evicted from the in-memory cache,
+                    // while the network-refreshed surface remains
+                    assertFalse(
+                            "disk-origin surface must be evicted from the qualified cache",
+                            edgePersonalizationResponseHandler
+                                    .getQualifiedContentCardsBySurface()
+                                    .containsKey(diskSurface));
+                    assertTrue(
+                            "network-refreshed surface must remain in the qualified cache",
+                            edgePersonalizationResponseHandler
+                                    .getQualifiedContentCardsBySurface()
+                                    .containsKey(networkSurface));
+                });
+    }
+
+    @Test
+    public void test_retrieveInMemoryPropositions_flagOn_servesAllRequestedSurfaces() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // offline availability enabled
+                    Map<String, Object> configState = new HashMap<>();
+                    configState.put("messaging.contentCardOfflineAvailable", true);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(new SharedStateResult(SharedStateStatus.SET, configState));
+
+                    // seed the qualified cache with one network-origin surface and one disk-origin
+                    // surface
+                    Surface networkSurface = new Surface("network");
+                    Surface diskSurface = new Surface("disk");
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    Proposition networkProp =
+                            Proposition.fromEventData(
+                                    MessagingTestUtils.generateContentCardPayload(config).get(0));
+                    Proposition diskProp =
+                            Proposition.fromEventData(
+                                    MessagingTestUtils.generateContentCardPayload(config).get(0));
+                    edgePersonalizationResponseHandler
+                            .getQualifiedContentCardsBySurface()
+                            .put(networkSurface, Collections.singletonList(networkProp));
+                    edgePersonalizationResponseHandler
+                            .getQualifiedContentCardsBySurface()
+                            .put(diskSurface, Collections.singletonList(diskProp));
+
+                    // only the network surface was refreshed this session; the disk surface is not
+                    edgePersonalizationResponseHandler
+                            .getNetworkRefreshedSurfaces()
+                            .add(networkSurface);
+
+                    List<Surface> requested = new ArrayList<>();
+                    requested.add(networkSurface);
+                    requested.add(diskSurface);
+
+                    // test — get path
+                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                            requested, mock(Event.class));
+
+                    // verify both surfaces are served regardless of network-refresh state
+                    verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                    Map<String, Object> eventData = eventArgumentCaptor.getValue().getEventData();
+                    List<Map<String, Object>> propositions =
+                            DataReader.optTypedListOfMap(
+                                    Object.class, eventData, "propositions", null);
+                    assertEquals(2, propositions.size());
                 });
     }
 }

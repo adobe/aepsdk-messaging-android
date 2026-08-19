@@ -1912,24 +1912,24 @@ public class MessagingTests {
     }
 
     // ========================================================================================
-    // clearPersistedPropositions
+    // clearCachedPropositions
     // ========================================================================================
     @Test
-    public void test_clearPersistedPropositions_dispatchesCorrectEvent() {
+    public void test_clearCachedPropositions_dispatchesCorrectEvent() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(
                 eventCaptor,
                 null,
                 () -> {
                     // test
-                    Messaging.clearPersistedPropositions();
+                    Messaging.clearCachedPropositions();
 
                     // verify
                     MobileCore.dispatchEvent(eventCaptor.capture());
 
                     Event event = eventCaptor.getAllValues().get(0);
                     assertNotNull(event);
-                    assertEquals("Clear persisted propositions", event.getName());
+                    assertEquals("Clear cached propositions", event.getName());
                     assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
                     assertEquals(
                             MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());

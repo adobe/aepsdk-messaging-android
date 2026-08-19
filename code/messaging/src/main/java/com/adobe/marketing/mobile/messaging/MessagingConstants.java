@@ -382,7 +382,7 @@ public final class MessagingConstants {
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
         static final String TRACK_PROPOSITIONS = "Track propositions";
         static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
-        static final String CLEAR_PERSISTED_PROPOSITIONS = "Clear persisted propositions";
+        static final String CLEAR_PERSISTED_PROPOSITIONS = "Clear cached propositions";
 
         private EventName() {}
     }
