@@ -4573,6 +4573,23 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail("Failed to set propositionInfo via reflection: " + e.getMessage());
                     }
 
+                    // the network response delivered content card rules for the surface
+                    try {
+                        java.lang.reflect.Field ccRulesField =
+                                EdgePersonalizationResponseHandler.class.getDeclaredField(
+                                        "contentCardRulesBySurface");
+                        ccRulesField.setAccessible(true);
+                        @SuppressWarnings("unchecked")
+                        Map<Surface, List<LaunchRule>> ccRules =
+                                (Map<Surface, List<LaunchRule>>)
+                                        ccRulesField.get(edgePersonalizationResponseHandler);
+                        ccRules.put(surface, Collections.singletonList(mock(LaunchRule.class)));
+                    } catch (Exception e) {
+                        fail(
+                                "Failed to set contentCardRulesBySurface via reflection: "
+                                        + e.getMessage());
+                    }
+
                     // rules engine returns a qualifying content card for the surface
                     Map<Surface, List<PropositionItem>> evaluateResult = new HashMap<>();
                     evaluateResult.put(
@@ -4580,7 +4597,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     when(mockContentCardRulesEngine.evaluate(any(Event.class)))
                             .thenReturn(evaluateResult);
 
-                    // test — a requested surface that returns content cards is network-refreshed
+                    // test — a requested surface whose rules were delivered is network-refreshed
                     edgePersonalizationResponseHandler.removeOrReplaceContentCards(
                             mock(Event.class), Collections.singletonList(surface));
 

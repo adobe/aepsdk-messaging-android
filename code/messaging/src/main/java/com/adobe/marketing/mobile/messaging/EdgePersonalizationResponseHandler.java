@@ -1040,16 +1040,30 @@ class EdgePersonalizationResponseHandler {
         // of
         // networkRefreshedSurfaces so their cards keep reporting servedFromPersistentCache = true.
         //
-        // This is also the single place that maintains networkRefreshedSurfaces: a requested
-        // surface
-        // that returned content cards is marked network-refreshed for this session; a requested
-        // surface
-        // that returned nothing is evicted and removed from the set.
+        // This is also the single place that maintains networkRefreshedSurfaces. A surface is
+        // marked network-refreshed when this network response delivered content card rules for it
+        // — not when a card qualifies. Trigger-gated content cards qualify later (via
+        // addOrReplaceContentCards on a matching event), so keying off rule delivery keeps those
+        // surfaces marked network-refreshed until the campaign is removed server-side.
         for (final Surface surface : requestedSurfaces) {
+            final List<LaunchRule> deliveredRules = contentCardRulesBySurface.get(surface);
             final List<Proposition> propositions = qualifiedContentCardsBySurface.get(surface);
+            final boolean hasNetworkRules = deliveredRules != null && !deliveredRules.isEmpty();
+
+            // Mark network-refreshed when this response delivered content card rules for the
+            // surface OR a card qualified immediately. Content cards are always rule-based, so
+            // hasNetworkRules covers every case; the qualified-card check is a defensive fallback
+            // that guarantees this never regresses the previous qualification-based behavior.
+            if (hasNetworkRules || propositions != null) {
+                networkRefreshedSurfaces.add(surface);
+            } else {
+                networkRefreshedSurfaces.remove(surface);
+            }
+
             if (propositions == null) {
-                // Requested surface returned no content cards — evict it (campaign ended
-                // server-side).
+                // Requested surface has no currently-qualified content cards (campaign ended
+                // server-side, or a trigger-gated card has not qualified yet). Evict any stale
+                // cached cards; the surface's network-refreshed state is governed above.
                 final List<Proposition> evictedPropositions = contentCardsBySurface.remove(surface);
                 if (evictedPropositions != null) {
                     for (final Proposition proposition : evictedPropositions) {
@@ -1057,7 +1071,6 @@ class EdgePersonalizationResponseHandler {
                                 .removeContentCardSchemaData(proposition.getActivityId());
                     }
                 }
-                networkRefreshedSurfaces.remove(surface);
                 continue;
             }
 
@@ -1093,8 +1106,6 @@ class EdgePersonalizationResponseHandler {
             }
 
             contentCardsBySurface.put(surface, newPropositionsArray);
-            // Mark this surface as refreshed from a live network response this session.
-            networkRefreshedSurfaces.add(surface);
             sendTriggersForNewPropositions(newPropositionItems);
             logContentCardCountChange(surface, startingCount, newPropositionsArray.size());
         }

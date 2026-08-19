@@ -2619,10 +2619,10 @@ public class MessagingExtensionTests {
     }
 
     // ========================================================================================
-    // processEvent clearPersistedPropositionsEvent
+    // processEvent clearCachedPropositionsEvent
     // ========================================================================================
     @Test
-    public void test_processEvent_clearPersistedPropositionsEvent() {
+    public void test_processEvent_clearCachedPropositionsEvent() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup
@@ -2633,7 +2633,7 @@ public class MessagingExtensionTests {
                             true);
                     Event clearEvent =
                             new Event.Builder(
-                                            "Clear persisted propositions",
+                                            "Clear cached propositions",
                                             EventType.MESSAGING,
                                             EventSource.REQUEST_CONTENT)
                                     .setEventData(eventData)
