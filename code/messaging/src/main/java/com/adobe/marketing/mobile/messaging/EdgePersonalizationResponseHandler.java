@@ -641,6 +641,14 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
+        // If offline availability is disabled and stale content card data still exists on disk,
+        // evict it from persistence. 
+        if (!isContentCardOfflineAvailable()
+                && !MapUtils.isNullOrEmpty(
+                        messagingCacheUtilities.getCachedContentCardPropositions())) {
+            messagingCacheUtilities.clearPersistedContentCardCache();
+        }
+
         // get a copy of qualified content cards and filter by requested surfaces
         final Map<Surface, List<Proposition>> requestedContentCards =
                 new HashMap<>(contentCardsBySurface);
