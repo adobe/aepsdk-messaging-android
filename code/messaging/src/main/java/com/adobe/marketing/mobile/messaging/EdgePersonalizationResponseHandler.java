@@ -642,7 +642,7 @@ class EdgePersonalizationResponseHandler {
         }
 
         // If offline availability is disabled and stale content card data still exists on disk,
-        // evict it from persistence. 
+        // evict it from persistence.
         if (!isContentCardOfflineAvailable()
                 && !MapUtils.isNullOrEmpty(
                         messagingCacheUtilities.getCachedContentCardPropositions())) {
