@@ -34,6 +34,7 @@ import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -383,15 +384,38 @@ public final class MessagingExtension extends Extension {
         } else if (InternalMessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
             handleUpdatePropositionsEvent(eventToProcess);
         } else if (InternalMessagingUtils.isGetPropositionsEvent(eventToProcess)) {
-            // Queue the get propositions event in the
-            // edgePersonalizationResponseHandler.serialWorkDispatcher to ensure any prior update
-            // requests are completed
-            // before it is processed.
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
                     "Processing request to get cached proposition content.");
-            serialWorkDispatcher.offer(eventToProcess);
+            final List<Surface> requestedSurfaces =
+                    InternalMessagingUtils.getSurfaces(eventToProcess);
+            // Collect every surface currently being fetched by any in-flight update request.
+            final List<Surface> surfacesInProgress = new ArrayList<>();
+            for (final List<Surface> surfaces :
+                    edgePersonalizationResponseHandler.getRequestedSurfacesForEventId().values()) {
+                surfacesInProgress.addAll(surfaces);
+            }
+            // Queue behind the serialWorkDispatcher only when a requested surface overlaps an
+            // in-flight update — so the get is fulfilled from the latest network content.
+            // If no overlap exists, serve immediately from cache without blocking on unrelated
+            // update requests for different surfaces (e.g. the boot-time IAM fetch).
+            if (!Collections.disjoint(requestedSurfaces, surfacesInProgress)) {
+                Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Queuing get propositions request; one or more requested surfaces are"
+                                + " currently being updated.");
+                serialWorkDispatcher.offer(eventToProcess);
+            } else {
+                Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "No requested surface overlaps an in-flight update — serving get"
+                                + " propositions immediately from cache.");
+                edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                        requestedSurfaces, eventToProcess);
+            }
         } else if (InternalMessagingUtils.isTrackingPropositionsEvent(eventToProcess)) {
             // handle an event to track propositions
             Log.debug(

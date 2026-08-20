@@ -2468,25 +2468,118 @@ public class MessagingExtensionTests {
     // ========================================================================================
 
     @Test
-    public void test_processEvent_getPropositionsEvent() {
+    public void test_processEvent_getPropositionsEvent_sameSurface_queuesEvent() {
         runUsingMockedServiceProvider(
                 () -> {
-                    // setup
+                    // setup - an in-flight update is in progress for the same surface
                     messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
-                    Map<String, Object> eventData = new HashMap<>();
+                    final Surface surface = new Surface("card/ms");
+                    final Map<String, List<Surface>> inFlight = new HashMap<>();
+                    inFlight.put(
+                            "edgeEventId",
+                            new ArrayList<Surface>() {
+                                {
+                                    add(surface);
+                                }
+                            });
+                    when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
+                            .thenReturn(inFlight);
+
+                    final List<Map<String, Object>> surfaceList = new ArrayList<>();
+                    surfaceList.add(surface.toEventData());
+                    final Map<String, Object> eventData = new HashMap<>();
                     eventData.put("getpropositions", true);
-                    Event mockEvent = mock(Event.class);
-                    when(mockEvent.getEventData()).thenReturn(eventData);
-                    when(mockEvent.getType())
-                            .thenReturn(MessagingTestConstants.EventType.MESSAGING);
-                    when(mockEvent.getSource())
-                            .thenReturn(MessagingTestConstants.EventSource.REQUEST_CONTENT);
+                    eventData.put("surfaces", surfaceList);
+                    final Event getEvent =
+                            new Event.Builder(
+                                            "Get propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
 
                     // test
-                    messagingExtension.processEvent(mockEvent);
+                    messagingExtension.processEvent(getEvent);
 
-                    // verify
-                    verify(mockSerialWorkDispatcher, times(1)).offer(mockEvent);
+                    // verify — get is queued because its surface overlaps the in-flight update
+                    verify(mockSerialWorkDispatcher, times(1)).offer(getEvent);
+                    verify(mockEdgePersonalizationResponseHandler, never())
+                            .retrieveInMemoryPropositions(any(), any());
+                });
+    }
+
+    @Test
+    public void test_processEvent_getPropositionsEvent_differentSurface_servedImmediately() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup - an in-flight update is in progress for a DIFFERENT surface
+                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
+                    final Surface updateSurface = new Surface("card/ms");
+                    final Surface getSurface = new Surface("largeImageCards");
+                    final Map<String, List<Surface>> inFlight = new HashMap<>();
+                    inFlight.put(
+                            "edgeEventId",
+                            new ArrayList<Surface>() {
+                                {
+                                    add(updateSurface);
+                                }
+                            });
+                    when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
+                            .thenReturn(inFlight);
+
+                    final List<Map<String, Object>> surfaceList = new ArrayList<>();
+                    surfaceList.add(getSurface.toEventData());
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("getpropositions", true);
+                    eventData.put("surfaces", surfaceList);
+                    final Event getEvent =
+                            new Event.Builder(
+                                            "Get propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(getEvent);
+
+                    // verify — no overlap, served immediately from cache without touching the queue
+                    verify(mockSerialWorkDispatcher, never()).offer(any());
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .retrieveInMemoryPropositions(any(), eq(getEvent));
+                });
+    }
+
+    @Test
+    public void test_processEvent_getPropositionsEvent_noInFlightUpdate_servedImmediately() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup - no in-flight update at all (empty map)
+                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
+                    when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
+                            .thenReturn(new HashMap<>());
+
+                    final Surface surface = new Surface("card/ms");
+                    final List<Map<String, Object>> surfaceList = new ArrayList<>();
+                    surfaceList.add(surface.toEventData());
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("getpropositions", true);
+                    eventData.put("surfaces", surfaceList);
+                    final Event getEvent =
+                            new Event.Builder(
+                                            "Get propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(getEvent);
+
+                    // verify — nothing in flight, served immediately
+                    verify(mockSerialWorkDispatcher, never()).offer(any());
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .retrieveInMemoryPropositions(any(), eq(getEvent));
                 });
     }
 
