@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.11.0";
+    private static final String EXTENSION_VERSION = "3.12.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -74,6 +74,9 @@ public final class Messaging {
     private static final String RESPONSE_ERROR = "responseerror";
     private static final String SCOPE = "scope";
     private static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
+    private static final String CLEAR_PERSISTED_PROPOSITIONS = "clearpersistedpropositions";
+    private static final String CLEAR_PERSISTED_PROPOSITIONS_EVENT_NAME =
+            "Clear cached propositions";
     private static final String EVENT_TYPE_PUSH_TRACKING_RECEIVED = "pushTracking.receive";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
@@ -504,6 +507,28 @@ public final class Messaging {
                         }
                     }
                 });
+    }
+
+    /**
+     * Clears all content card state — both in-memory (qualified cards, rules, origin tracking) and
+     * persisted disk caches. This does not affect the IAM (in-app message) cache or code-based
+     * experiences.
+     *
+     * <p>Use this method to clear stale offline content cards, for example after a user logs out.
+     */
+    public static void clearCachedPropositions() {
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(CLEAR_PERSISTED_PROPOSITIONS, true);
+
+        final Event clearEvent =
+                new Event.Builder(
+                                CLEAR_PERSISTED_PROPOSITIONS_EVENT_NAME,
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+
+        MobileCore.dispatchEvent(clearEvent);
     }
 
     /**

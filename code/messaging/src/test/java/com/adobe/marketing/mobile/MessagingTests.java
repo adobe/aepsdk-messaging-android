@@ -1910,4 +1910,95 @@ public class MessagingTests {
                     assertEquals(0, dispatchCount(eventCaptor));
                 });
     }
+
+    // ========================================================================================
+    // clearCachedPropositions
+    // ========================================================================================
+    @Test
+    public void test_clearCachedPropositions_dispatchesCorrectEvent() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    // test
+                    Messaging.clearCachedPropositions();
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+
+                    Event event = eventCaptor.getAllValues().get(0);
+                    assertNotNull(event);
+                    assertEquals("Clear cached propositions", event.getName());
+                    assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+                    assertEquals(
+                            MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
+                    Map<String, Object> eventData = event.getEventData();
+                    assertNotNull(eventData);
+                    Assert.assertTrue(
+                            (Boolean)
+                                    eventData.get(
+                                            MessagingTestConstants.EventDataKeys.Messaging
+                                                    .CLEAR_PERSISTED_PROPOSITIONS));
+                });
+    }
+
+    // ========================================================================================
+    // updatePropositionsForSurfaces (with callback)
+    // ========================================================================================
+    @Test
+    public void
+            test_updatePropositionsForSurfaces_withCallback_dispatchesEventAndRegistersHandler() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("promos/feed1"));
+                    final AdobeCallback<Boolean> mockCallback = mock(AdobeCallback.class);
+
+                    // test
+                    Messaging.updatePropositionsForSurfaces(surfacePaths, mockCallback);
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+
+                    Event event = eventCaptor.getAllValues().get(0);
+                    assertNotNull(event);
+                    assertEquals(
+                            MessagingTestConstants.EventName.UPDATE_PROPOSITIONS, event.getName());
+                    assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+                    assertEquals(
+                            MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
+                    Map<String, Object> eventData = event.getEventData();
+                    assertNotNull(eventData);
+                    Assert.assertTrue(
+                            (Boolean)
+                                    eventData.get(
+                                            MessagingTestConstants.EventDataKeys.Messaging
+                                                    .UPDATE_PROPOSITIONS));
+                });
+    }
+
+    @Test
+    public void test_updatePropositionsForSurfaces_withNullCallback_doesNotRegisterHandler() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("promos/feed1"));
+
+                    // test with null callback
+                    Messaging.updatePropositionsForSurfaces(surfacePaths, null);
+
+                    // verify event is still dispatched
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+                    Event event = eventCaptor.getAllValues().get(0);
+                    assertNotNull(event);
+                    assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+                });
+    }
 }

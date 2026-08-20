@@ -543,6 +543,89 @@ public class MessagingExtensionTests {
 
     @Test
     public void
+            test_readyForEvent_callsHydrateContentCardRulesEngineFromDisk_whenSharedStatesReady() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockExtensionApi.getSharedState(
+                                    eq(
+                                            MessagingTestConstants.SharedState.Configuration
+                                                    .EXTENSION_NAME),
+                                    any(Event.class),
+                                    anyBoolean(),
+                                    any(SharedStateResolution.class)))
+                            .thenReturn(mockConfigData);
+                    when(mockExtensionApi.getXDMSharedState(
+                                    eq(
+                                            MessagingTestConstants.SharedState.EdgeIdentity
+                                                    .EXTENSION_NAME),
+                                    any(Event.class),
+                                    anyBoolean(),
+                                    any(SharedStateResolution.class)))
+                            .thenReturn(mockEdgeIdentityData);
+
+                    Event testEvent =
+                            new Event.Builder(
+                                            "Test event",
+                                            EventType.CONFIGURATION,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .build();
+
+                    // test - first readyForEvent triggers hydration
+                    assertTrue(messagingExtension.readyForEvent(testEvent));
+
+                    // verify hydrateContentCardRulesEngineFromDisk is called exactly once
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .hydrateContentCardRulesEngineFromDisk();
+                });
+    }
+
+    @Test
+    public void
+            test_readyForEvent_hydrateContentCardRulesEngineFromDisk_notCalledAgainOnSubsequentEvents() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockExtensionApi.getSharedState(
+                                    eq(
+                                            MessagingTestConstants.SharedState.Configuration
+                                                    .EXTENSION_NAME),
+                                    any(Event.class),
+                                    anyBoolean(),
+                                    any(SharedStateResolution.class)))
+                            .thenReturn(mockConfigData);
+                    when(mockExtensionApi.getXDMSharedState(
+                                    eq(
+                                            MessagingTestConstants.SharedState.EdgeIdentity
+                                                    .EXTENSION_NAME),
+                                    any(Event.class),
+                                    anyBoolean(),
+                                    any(SharedStateResolution.class)))
+                            .thenReturn(mockEdgeIdentityData);
+
+                    Event testEvent1 =
+                            new Event.Builder(
+                                            "Test event 1",
+                                            EventType.CONFIGURATION,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .build();
+                    Event testEvent2 =
+                            new Event.Builder(
+                                            "Test event 2",
+                                            EventType.CONFIGURATION,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .build();
+
+                    // test - call readyForEvent twice
+                    messagingExtension.readyForEvent(testEvent1);
+                    messagingExtension.readyForEvent(testEvent2);
+
+                    // verify hydrateContentCardRulesEngineFromDisk called only on the first event
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .hydrateContentCardRulesEngineFromDisk();
+                });
+    }
+
+    @Test
+    public void
             test_readyForEvent_when_eventReceived_and_configurationSharedStateNotReady_then_readyForEventIsFalse() {
         // setup
         runUsingMockedServiceProvider(
@@ -2319,6 +2402,8 @@ public class MessagingExtensionTests {
                             .thenReturn(MessagingTestConstants.EventType.MESSAGING);
                     when(mockEvent.getSource())
                             .thenReturn(MessagingTestConstants.EventSource.REQUEST_CONTENT);
+                    when(mockEdgePersonalizationResponseHandler.isInternetAvailable())
+                            .thenReturn(true);
 
                     // test
                     messagingExtension.processEvent(mockEvent);
@@ -2341,30 +2426,160 @@ public class MessagingExtensionTests {
                 });
     }
 
-    // ========================================================================================
-    // processEvent getPropositionsEvent
-    // ========================================================================================
-
     @Test
-    public void test_processEvent_getPropositionsEvent() {
+    public void test_processEvent_updatePropositionsEvent_networkUnavailable_skipsFetch() {
         runUsingMockedServiceProvider(
                 () -> {
-                    // setup
-                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
+                    // setup - an update propositions event while the device is offline
+                    List<Map<String, Object>> surfaces = new ArrayList<>();
+                    Map<String, Object> surface1 = new HashMap<>();
+                    surface1.put("uri", "mobileapp://mockPackageName/promos/feed1");
+                    surfaces.add(surface1);
                     Map<String, Object> eventData = new HashMap<>();
-                    eventData.put("getpropositions", true);
+                    eventData.put("updatepropositions", true);
+                    eventData.put("surfaces", surfaces);
                     Event mockEvent = mock(Event.class);
                     when(mockEvent.getEventData()).thenReturn(eventData);
                     when(mockEvent.getType())
                             .thenReturn(MessagingTestConstants.EventType.MESSAGING);
                     when(mockEvent.getSource())
                             .thenReturn(MessagingTestConstants.EventSource.REQUEST_CONTENT);
+                    when(mockEvent.getUniqueIdentifier()).thenReturn("offlineUpdateEventId");
+                    when(mockEdgePersonalizationResponseHandler.isInternetAvailable())
+                            .thenReturn(false);
+
+                    // register a completion handler for this event so we can assert it gets false
+                    AdobeCallback<Boolean> callback = Mockito.mock(AdobeCallback.class);
+                    MessagingExtension.addCompletionHandler(
+                            new CompletionHandler("offlineUpdateEventId", callback));
 
                     // test
                     messagingExtension.processEvent(mockEvent);
 
-                    // verify
-                    verify(mockSerialWorkDispatcher, times(1)).offer(mockEvent);
+                    // verify - no network fetch, and the caller's completion handler gets false
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .fetchPropositions(any(Event.class), any(), any(), any());
+                    verify(callback, times(1)).call(false);
+                });
+    }
+
+    // ========================================================================================
+    // processEvent getPropositionsEvent
+    // ========================================================================================
+
+    @Test
+    public void test_processEvent_getPropositionsEvent_sameSurface_queuesEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup - an in-flight update is in progress for the same surface
+                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
+                    final Surface surface = new Surface("card/ms");
+                    final Map<String, List<Surface>> inFlight = new HashMap<>();
+                    inFlight.put(
+                            "edgeEventId",
+                            new ArrayList<Surface>() {
+                                {
+                                    add(surface);
+                                }
+                            });
+                    when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
+                            .thenReturn(inFlight);
+
+                    final List<Map<String, Object>> surfaceList = new ArrayList<>();
+                    surfaceList.add(surface.toEventData());
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("getpropositions", true);
+                    eventData.put("surfaces", surfaceList);
+                    final Event getEvent =
+                            new Event.Builder(
+                                            "Get propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(getEvent);
+
+                    // verify — get is queued because its surface overlaps the in-flight update
+                    verify(mockSerialWorkDispatcher, times(1)).offer(getEvent);
+                    verify(mockEdgePersonalizationResponseHandler, never())
+                            .retrieveInMemoryPropositions(any(), any());
+                });
+    }
+
+    @Test
+    public void test_processEvent_getPropositionsEvent_differentSurface_servedImmediately() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup - an in-flight update is in progress for a DIFFERENT surface
+                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
+                    final Surface updateSurface = new Surface("card/ms");
+                    final Surface getSurface = new Surface("largeImageCards");
+                    final Map<String, List<Surface>> inFlight = new HashMap<>();
+                    inFlight.put(
+                            "edgeEventId",
+                            new ArrayList<Surface>() {
+                                {
+                                    add(updateSurface);
+                                }
+                            });
+                    when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
+                            .thenReturn(inFlight);
+
+                    final List<Map<String, Object>> surfaceList = new ArrayList<>();
+                    surfaceList.add(getSurface.toEventData());
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("getpropositions", true);
+                    eventData.put("surfaces", surfaceList);
+                    final Event getEvent =
+                            new Event.Builder(
+                                            "Get propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(getEvent);
+
+                    // verify — no overlap, served immediately from cache without touching the queue
+                    verify(mockSerialWorkDispatcher, never()).offer(any());
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .retrieveInMemoryPropositions(any(), eq(getEvent));
+                });
+    }
+
+    @Test
+    public void test_processEvent_getPropositionsEvent_noInFlightUpdate_servedImmediately() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup - no in-flight update at all (empty map)
+                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
+                    when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
+                            .thenReturn(new HashMap<>());
+
+                    final Surface surface = new Surface("card/ms");
+                    final List<Map<String, Object>> surfaceList = new ArrayList<>();
+                    surfaceList.add(surface.toEventData());
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("getpropositions", true);
+                    eventData.put("surfaces", surfaceList);
+                    final Event getEvent =
+                            new Event.Builder(
+                                            "Get propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(getEvent);
+
+                    // verify — nothing in flight, served immediately
+                    verify(mockSerialWorkDispatcher, never()).offer(any());
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .retrieveInMemoryPropositions(any(), eq(getEvent));
                 });
     }
 
@@ -2391,6 +2606,11 @@ public class MessagingExtensionTests {
                                             EventSource.REQUEST_CONTENT)
                                     .setEventData(eventData)
                                     .build();
+
+                    // enrichWithContentCardOrigin returns the (possibly enriched) XDM; the mock
+                    // must echo its argument so the track path forwards the interaction data.
+                    when(mockEdgePersonalizationResponseHandler.enrichWithContentCardOrigin(any()))
+                            .thenAnswer(invocation -> invocation.getArgument(0));
 
                     // test
                     messagingExtension.processEvent(trackingEvent);
@@ -2489,6 +2709,60 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
                             .handleProcessCompletedEvent(mockEvent);
+                });
+    }
+
+    // ========================================================================================
+    // processEvent clearCachedPropositionsEvent
+    // ========================================================================================
+    @Test
+    public void test_processEvent_clearCachedPropositionsEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingTestConstants.EventDataKeys.Messaging
+                                    .CLEAR_PERSISTED_PROPOSITIONS,
+                            true);
+                    Event clearEvent =
+                            new Event.Builder(
+                                            "Clear cached propositions",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(clearEvent);
+
+                    // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(1)).clearContentCards();
+                });
+    }
+
+    // ========================================================================================
+    // processEvent edgeErrorResponseEvent
+    // ========================================================================================
+    @Test
+    public void test_processEvent_edgeErrorResponseEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    Event errorEvent =
+                            new Event.Builder(
+                                            "Edge error response",
+                                            MessagingTestConstants.EventType.EDGE,
+                                            MessagingTestConstants.EventSource.EDGE_ERROR_RESPONSE)
+                                    .setEventData(new HashMap<>())
+                                    .build();
+
+                    // test
+                    messagingExtension.processEvent(errorEvent);
+
+                    // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .handleEdgeErrorResponse(errorEvent);
                 });
     }
 
