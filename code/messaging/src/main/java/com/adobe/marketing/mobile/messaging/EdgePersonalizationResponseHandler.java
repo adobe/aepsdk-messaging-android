@@ -1464,14 +1464,6 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Hydrates all persisted content cards from disk. Called during boot-time setup before the
-     * initial network fetch.
-     */
-    void hydrateAllPersistedContentCards() {
-        hydrateContentCardRulesEngineFromDisk();
-    }
-
-    /**
      * Enriches the provided proposition interaction XDM with per-item {@code
      * servedFromPersistentCache} flags for DISPLAY events only.
      *

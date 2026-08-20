@@ -542,7 +542,8 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_readyForEvent_callsHydrateAllPersistedContentCards_whenSharedStatesReady() {
+    public void
+            test_readyForEvent_callsHydrateContentCardRulesEngineFromDisk_whenSharedStatesReady() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockExtensionApi.getSharedState(
@@ -572,15 +573,15 @@ public class MessagingExtensionTests {
                     // test - first readyForEvent triggers hydration
                     assertTrue(messagingExtension.readyForEvent(testEvent));
 
-                    // verify hydrateAllPersistedContentCards is called exactly once
+                    // verify hydrateContentCardRulesEngineFromDisk is called exactly once
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .hydrateAllPersistedContentCards();
+                            .hydrateContentCardRulesEngineFromDisk();
                 });
     }
 
     @Test
     public void
-            test_readyForEvent_hydrateAllPersistedContentCards_notCalledAgainOnSubsequentEvents() {
+            test_readyForEvent_hydrateContentCardRulesEngineFromDisk_notCalledAgainOnSubsequentEvents() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockExtensionApi.getSharedState(
@@ -617,9 +618,9 @@ public class MessagingExtensionTests {
                     messagingExtension.readyForEvent(testEvent1);
                     messagingExtension.readyForEvent(testEvent2);
 
-                    // verify hydrateAllPersistedContentCards called only on the first event
+                    // verify hydrateContentCardRulesEngineFromDisk called only on the first event
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .hydrateAllPersistedContentCards();
+                            .hydrateContentCardRulesEngineFromDisk();
                 });
     }
 

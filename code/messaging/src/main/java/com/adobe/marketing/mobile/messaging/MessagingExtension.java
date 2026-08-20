@@ -243,7 +243,7 @@ public final class MessagingExtension extends Extension {
         // hydrate content cards from disk before the initial network fetch
         // to provide offline availability
         if (!initialMessageFetchComplete) {
-            edgePersonalizationResponseHandler.hydrateAllPersistedContentCards();
+            edgePersonalizationResponseHandler.hydrateContentCardRulesEngineFromDisk();
             edgePersonalizationResponseHandler.fetchPropositions(event, null);
             initialMessageFetchComplete = true;
         }

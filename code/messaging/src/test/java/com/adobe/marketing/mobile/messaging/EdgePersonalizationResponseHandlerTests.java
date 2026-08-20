@@ -4443,10 +4443,10 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     // ========================================================================================
-    // hydrateAllPersistedContentCards
+    // hydrateContentCardRulesEngineFromDisk
     // ========================================================================================
     @Test
-    public void test_hydrateAllPersistedContentCards_CallsContentCardHydration() {
+    public void test_hydrateContentCardRulesEngineFromDisk_readsContentCardCache() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup - no cached data
@@ -4454,7 +4454,7 @@ public class EdgePersonalizationResponseHandlerTests {
                             .thenReturn(null);
 
                     // test
-                    edgePersonalizationResponseHandler.hydrateAllPersistedContentCards();
+                    edgePersonalizationResponseHandler.hydrateContentCardRulesEngineFromDisk();
 
                     // verify content card cache was read (inbox cache no longer persisted)
                     verify(mockMessagingCacheUtilities, times(1))
