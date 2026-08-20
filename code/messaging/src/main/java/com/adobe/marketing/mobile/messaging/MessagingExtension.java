@@ -393,9 +393,7 @@ public final class MessagingExtension extends Extension {
             // Collect every surface currently being fetched by any in-flight update request.
             final List<Surface> surfacesInProgress = new ArrayList<>();
             for (final List<Surface> surfaces :
-                    edgePersonalizationResponseHandler
-                            .getRequestedSurfacesForEventId()
-                            .values()) {
+                    edgePersonalizationResponseHandler.getRequestedSurfacesForEventId().values()) {
                 surfacesInProgress.addAll(surfaces);
             }
             // Queue behind the serialWorkDispatcher only when a requested surface overlaps an

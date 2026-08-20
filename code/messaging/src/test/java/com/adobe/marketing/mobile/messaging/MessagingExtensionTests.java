@@ -2475,7 +2475,13 @@ public class MessagingExtensionTests {
                     messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
                     final Surface surface = new Surface("card/ms");
                     final Map<String, List<Surface>> inFlight = new HashMap<>();
-                    inFlight.put("edgeEventId", new ArrayList<Surface>() {{ add(surface); }});
+                    inFlight.put(
+                            "edgeEventId",
+                            new ArrayList<Surface>() {
+                                {
+                                    add(surface);
+                                }
+                            });
                     when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
                             .thenReturn(inFlight);
 
@@ -2511,7 +2517,13 @@ public class MessagingExtensionTests {
                     final Surface updateSurface = new Surface("card/ms");
                     final Surface getSurface = new Surface("largeImageCards");
                     final Map<String, List<Surface>> inFlight = new HashMap<>();
-                    inFlight.put("edgeEventId", new ArrayList<Surface>() {{ add(updateSurface); }});
+                    inFlight.put(
+                            "edgeEventId",
+                            new ArrayList<Surface>() {
+                                {
+                                    add(updateSurface);
+                                }
+                            });
                     when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId())
                             .thenReturn(inFlight);
 
