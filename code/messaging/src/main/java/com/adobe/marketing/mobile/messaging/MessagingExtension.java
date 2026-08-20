@@ -168,6 +168,12 @@ public final class MessagingExtension extends Extension {
                         MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
                         this::processEvent);
 
+        // register listener for edge error responses (offline content card availability)
+        getApi().registerEventListener(
+                        MessagingConstants.EventType.EDGE,
+                        MessagingConstants.EventSource.EDGE_ERROR_RESPONSE,
+                        this::processEvent);
+
         // register listener for handling debug events
         getApi().registerEventListener(EventType.SYSTEM, EventSource.DEBUG, this::handleDebugEvent);
 
@@ -234,8 +240,10 @@ public final class MessagingExtension extends Extension {
             return false;
         }
 
-        // fetch propositions on initial launch once we have configuration and identity state set
+        // hydrate content cards from disk before the initial network fetch
+        // to provide offline availability
         if (!initialMessageFetchComplete) {
+            edgePersonalizationResponseHandler.hydrateContentCardRulesEngineFromDisk();
             edgePersonalizationResponseHandler.fetchPropositions(event, null);
             initialMessageFetchComplete = true;
         }
@@ -373,17 +381,7 @@ public final class MessagingExtension extends Extension {
                             + " remote.");
             edgePersonalizationResponseHandler.fetchPropositions(eventToProcess, null);
         } else if (InternalMessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
-            // validate update propositions event then retrieve propositions via an Edge extension
-            // event
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Processing request to retrieve propositions from the remote.");
-            edgePersonalizationResponseHandler.fetchPropositions(
-                    eventToProcess,
-                    InternalMessagingUtils.getSurfaces(eventToProcess),
-                    InternalMessagingUtils.getUpdatePropositionsXdm(eventToProcess),
-                    InternalMessagingUtils.getUpdatePropositionsData(eventToProcess));
+            handleUpdatePropositionsEvent(eventToProcess);
         } else if (InternalMessagingUtils.isGetPropositionsEvent(eventToProcess)) {
             // Queue the get propositions event in the
             // edgePersonalizationResponseHandler.serialWorkDispatcher to ensure any prior update
@@ -433,6 +431,13 @@ public final class MessagingExtension extends Extension {
                 return;
             }
             handleTrackingInfo(eventToProcess, receivedDatasetId);
+        } else if (InternalMessagingUtils.isClearPersistedPropositionsEvent(eventToProcess)) {
+            // handle clear persisted propositions request — full wipe of in-memory + disk state
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Processing request to clear persisted propositions.");
+            edgePersonalizationResponseHandler.clearContentCards();
         } else if (InternalMessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState =
@@ -466,6 +471,42 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isEdgeErrorResponseEvent(eventToProcess)) {
+            // handle edge error response for offline content card availability
+            edgePersonalizationResponseHandler.handleEdgeErrorResponse(eventToProcess);
+        }
+    }
+
+    /**
+     * Handles a user-triggered update propositions event. Only these explicit requests are gated on
+     * network availability; boot-time and refresh fetches are intentionally allowed through since
+     * Edge handles offline gracefully. When the device is offline, the fetch is skipped and the
+     * caller's completion handler (if any) is invoked with {@code false}.
+     *
+     * @param event the update propositions {@link Event} to process
+     */
+    private void handleUpdatePropositionsEvent(final Event event) {
+        if (edgePersonalizationResponseHandler.isInternetAvailable()) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Processing request to retrieve propositions from the remote.");
+            edgePersonalizationResponseHandler.fetchPropositions(
+                    event,
+                    InternalMessagingUtils.getSurfaces(event),
+                    InternalMessagingUtils.getUpdatePropositionsXdm(event),
+                    InternalMessagingUtils.getUpdatePropositionsData(event));
+            return;
+        }
+
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Skipping proposition update - device network is unavailable.");
+        final CompletionHandler handler =
+                completionHandlerForOriginatingEventId(event.getUniqueIdentifier());
+        if (handler != null) {
+            handler.handle.call(false);
         }
     }
 
@@ -489,7 +530,11 @@ public final class MessagingExtension extends Extension {
                     "Cannot track proposition item, proposition interaction XDM is not available.");
             return;
         }
-        sendPropositionInteraction(propositionInteractionXdm);
+        // enrich tracking XDM with content card origin (servedFromPersistentCache) for display
+        // events
+        sendPropositionInteraction(
+                edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
+                        propositionInteractionXdm));
     }
 
     void handlePushToken(final Event event) {
@@ -603,6 +648,8 @@ public final class MessagingExtension extends Extension {
         createMessagingSharedState(null, resetIdentitiesEvent);
         // remove the push token from the named collection
         InternalMessagingUtils.persistPushToken(null);
+        // clear content card state and persisted caches on identity reset
+        edgePersonalizationResponseHandler.clearContentCards();
     }
 
     /**
