@@ -1487,19 +1487,22 @@ class EdgePersonalizationResponseHandler {
             return propositionInteractionXdm;
         }
 
+        // The XDM arrives via the Event hub, which delivers deeply-immutable copies of event data.
+        // Work on a deep mutable copy so per-item enrichment can write servedFromPersistentCache
+        // without throwing UnsupportedOperationException on the nested maps/lists.
+        final Map<String, Object> xdm = deepMutableCopy(propositionInteractionXdm);
+
         try {
             final Map<String, Object> experience =
-                    (Map<String, Object>)
-                            propositionInteractionXdm.get(
-                                    MessagingConstants.TrackingKeys.EXPERIENCE);
-            if (experience == null) return propositionInteractionXdm;
+                    (Map<String, Object>) xdm.get(MessagingConstants.TrackingKeys.EXPERIENCE);
+            if (experience == null) return xdm;
 
             final Map<String, Object> decisioning =
                     (Map<String, Object>)
                             experience.get(
                                     MessagingConstants.EventDataKeys.Messaging.Inbound.Key
                                             .DECISIONING);
-            if (decisioning == null) return propositionInteractionXdm;
+            if (decisioning == null) return xdm;
 
             // only enrich DISPLAY events
             final Map<String, Object> propositionEventType =
@@ -1509,7 +1512,7 @@ class EdgePersonalizationResponseHandler {
                                             .PROPOSITION_EVENT_TYPE);
             if (propositionEventType == null
                     || !propositionEventType.containsKey(MessagingConstants.TrackingKeys.DISPLAY)) {
-                return propositionInteractionXdm;
+                return xdm;
             }
 
             final List<Map<String, Object>> propositions =
@@ -1517,7 +1520,7 @@ class EdgePersonalizationResponseHandler {
                             decisioning.get(
                                     MessagingConstants.EventDataKeys.Messaging.Inbound.Key
                                             .PROPOSITIONS);
-            if (propositions == null || propositions.isEmpty()) return propositionInteractionXdm;
+            if (propositions == null || propositions.isEmpty()) return xdm;
 
             // Map each qualified content card proposition id to its surface so provenance can be
             // derived from networkRefreshedSurfaces. Presence in this map also scopes enrichment to
@@ -1556,7 +1559,7 @@ class EdgePersonalizationResponseHandler {
                                                 .ITEMS);
                 if (items == null) continue;
 
-                for (final Map<String, Object> item : items) {
+                for (Map<String, Object> item : items) {
                     Map<String, Object> data =
                             (Map<String, Object>)
                                     item.get(
@@ -1586,11 +1589,38 @@ class EdgePersonalizationResponseHandler {
                             servedFromCache);
                 }
             }
-        } catch (final ClassCastException ignored) {
-            // if the XDM structure is unexpected, skip enrichment
+        } catch (final Exception ignored) {
+            // if the XDM structure is unexpected, skip enrichment and return the copy as-is so
+            // proposition interaction tracking still proceeds
         }
 
-        return propositionInteractionXdm;
+        return xdm;
+    }
+
+    /**
+     * Recursively copies a map/list structure into fully mutable {@link HashMap}s and {@link
+     * ArrayList}s. Used to defensively copy immutable event data before enrichment mutates it.
+     *
+     * @param value the value to copy
+     * @return a deep, mutable copy of {@code value}
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T deepMutableCopy(final T value) {
+        if (value instanceof Map) {
+            final Map<String, Object> copy = new HashMap<>();
+            for (final Map.Entry<String, Object> entry :
+                    ((Map<String, Object>) value).entrySet()) {
+                copy.put(entry.getKey(), deepMutableCopy(entry.getValue()));
+            }
+            return (T) copy;
+        } else if (value instanceof List) {
+            final List<Object> copy = new ArrayList<>();
+            for (final Object element : (List<Object>) value) {
+                copy.add(deepMutableCopy(element));
+            }
+            return (T) copy;
+        }
+        return value;
     }
 
     /**

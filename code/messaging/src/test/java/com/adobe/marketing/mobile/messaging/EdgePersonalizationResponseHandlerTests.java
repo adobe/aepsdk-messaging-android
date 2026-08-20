@@ -4541,6 +4541,81 @@ public class EdgePersonalizationResponseHandlerTests {
                 });
     }
 
+    // Recursively wraps maps/lists as unmodifiable to mimic the immutable event data delivered by
+    // the Event hub.
+    @SuppressWarnings("unchecked")
+    private static Object deepUnmodifiable(final Object value) {
+        if (value instanceof Map) {
+            Map<String, Object> copy = new HashMap<>();
+            for (Map.Entry<String, Object> e : ((Map<String, Object>) value).entrySet()) {
+                copy.put(e.getKey(), deepUnmodifiable(e.getValue()));
+            }
+            return Collections.unmodifiableMap(copy);
+        } else if (value instanceof List) {
+            List<Object> copy = new ArrayList<>();
+            for (Object element : (List<Object>) value) {
+                copy.add(deepUnmodifiable(element));
+            }
+            return Collections.unmodifiableList(copy);
+        }
+        return value;
+    }
+
+    @Test
+    public void test_enrichWithContentCardOrigin_realDisplayXdm_setsServedFromPersistentCache() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Surface surface = new Surface("apifeed");
+                    MessageTestConfig config = new MessageTestConfig();
+                    config.count = 1;
+                    List<Map<String, Object>> payload =
+                            MessagingTestUtils.generateContentCardPayload(config);
+                    Proposition prop = Proposition.fromEventData(payload.get(0));
+
+                    // place the card in the qualified cache and mark its surface network-refreshed
+                    Map<Surface, List<Proposition>> cards = new HashMap<>();
+                    cards.put(surface, Collections.singletonList(prop));
+                    edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(cards);
+                    edgePersonalizationResponseHandler.getNetworkRefreshedSurfaces().add(surface);
+
+                    // build the DISPLAY interaction XDM exactly the way production does
+                    PropositionItem item = prop.getItems().get(0);
+                    Map<String, Object> xdm =
+                            item.generateInteractionXdm(
+                                    com.adobe.marketing.mobile.MessagingEdgeEventType.DISPLAY);
+                    assertNotNull("production display XDM should be generated", xdm);
+
+                    // mimic the Event hub, which delivers deeply-immutable event data — enrichment
+                    // must not throw when writing into the nested item maps
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> immutableXdm = (Map<String, Object>) deepUnmodifiable(xdm);
+
+                    Map<String, Object> enriched =
+                            edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
+                                    immutableXdm);
+
+                    // dig into _experience.decisioning.propositions[0].items[0].data.characteristics
+                    Map<String, Object> experience =
+                            (Map<String, Object>) enriched.get("_experience");
+                    Map<String, Object> decisioning =
+                            (Map<String, Object>) experience.get("decisioning");
+                    List<Map<String, Object>> props =
+                            (List<Map<String, Object>>) decisioning.get("propositions");
+                    List<Map<String, Object>> items =
+                            (List<Map<String, Object>>) props.get(0).get("items");
+                    assertNotNull("display XDM must contain items", items);
+                    Map<String, Object> data = (Map<String, Object>) items.get(0).get("data");
+                    assertNotNull("item should have data after enrichment", data);
+                    Map<String, Object> characteristics =
+                            (Map<String, Object>) data.get("characteristics");
+                    assertNotNull("characteristics should be present", characteristics);
+                    assertEquals(
+                            "network-refreshed card should report servedFromPersistentCache=false",
+                            false,
+                            characteristics.get("servedFromPersistentCache"));
+                });
+    }
+
     @Test
     public void test_removeOrReplaceContentCards_marksSurfaceNetworkRefreshed() {
         runUsingMockedServiceProvider(
