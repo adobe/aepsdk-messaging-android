@@ -148,7 +148,8 @@ public class ParsedPropositionsTests {
                                 add(mockSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -191,7 +192,8 @@ public class ParsedPropositionsTests {
                                 add(mockSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -289,7 +291,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -409,7 +412,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -529,7 +533,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -586,7 +591,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -634,7 +640,8 @@ public class ParsedPropositionsTests {
                                 add(mockContentCardSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -685,7 +692,8 @@ public class ParsedPropositionsTests {
                                 add(mockCodeBasedSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -723,7 +731,8 @@ public class ParsedPropositionsTests {
                                 add(mockInboxSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -761,7 +770,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -802,7 +812,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -850,7 +861,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -900,7 +912,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -950,7 +963,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -1000,7 +1014,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -1048,7 +1063,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);
@@ -1099,7 +1115,8 @@ public class ParsedPropositionsTests {
                                 add(mockInAppSurface);
                             }
                         },
-                        mockExtensionApi);
+                        mockExtensionApi,
+                        true);
 
         // verify
         Assert.assertNotNull(parsedPropositions);

@@ -39,10 +39,14 @@ public class ParsedPropositions {
     final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType =
             new HashMap<>();
 
+    // content card propositions to persist to disk when offline availability is enabled
+    Map<Surface, List<Proposition>> contentCardPropositionsToPersist = new HashMap<>();
+
     ParsedPropositions(
             final Map<Surface, List<Proposition>> propositions,
             final List<Surface> requestedSurfaces,
-            final ExtensionApi extensionApi) {
+            final ExtensionApi extensionApi,
+            final boolean contentCardOfflineAvailable) {
         for (final List<Proposition> propositionList : propositions.values()) {
             // sort the propositions by rank before processing
             Collections.sort(
@@ -123,6 +127,13 @@ public class ParsedPropositions {
                                             PropositionInfo.createFromProposition(proposition);
                                     propositionInfoToCache.put(
                                             consequence.getId(), contentCardPropositionInfo);
+                                    if (contentCardOfflineAvailable) {
+                                        contentCardPropositionsToPersist =
+                                                MessagingUtils.updatePropositionMapForSurface(
+                                                        surface,
+                                                        proposition,
+                                                        contentCardPropositionsToPersist);
+                                    }
                                     mergeRules(parsedRule, surface, SchemaType.CONTENT_CARD);
                                     break;
                                 case EVENT_HISTORY_OPERATION:
@@ -138,8 +149,12 @@ public class ParsedPropositions {
                         break;
                     case JSON_CONTENT:
                     case HTML_CONTENT:
-                    case INBOX:
                     case DEFAULT_CONTENT:
+                        propositionsToCache =
+                                MessagingUtils.updatePropositionMapForSurface(
+                                        surface, proposition, propositionsToCache);
+                        break;
+                    case INBOX:
                         propositionsToCache =
                                 MessagingUtils.updatePropositionMapForSurface(
                                         surface, proposition, propositionsToCache);

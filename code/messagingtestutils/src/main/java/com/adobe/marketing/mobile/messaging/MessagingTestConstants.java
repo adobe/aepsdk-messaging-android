@@ -18,6 +18,7 @@ public class MessagingTestConstants {
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
+    static final String CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY = "contentCardPropositions";
     static final String CONTENT_CARD_TEST_CACHE_SUBDIRECTORY = "contentCardTestImages";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CACHE_BASE_DIR = "messaging";
@@ -69,6 +70,7 @@ public class MessagingTestConstants {
         public static final String NOTIFICATION = "com.adobe.eventSource.notification";
         public static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
         static final String EVENT_HISTORY_WRITE = "com.adobe.eventSource.eventHistoryWrite";
+        public static final String EDGE_ERROR_RESPONSE = "com.adobe.eventSource.errorResponseContent";
 
         private EventSource() {
         }
@@ -188,6 +190,7 @@ public class MessagingTestConstants {
             public static final String PROPOSITION_INTERACTION = "propositioninteraction";
             public static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
             public static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
+            public static final String CLEAR_PERSISTED_PROPOSITIONS = "clearpersistedpropositions";
 
 
             private Messaging() {
