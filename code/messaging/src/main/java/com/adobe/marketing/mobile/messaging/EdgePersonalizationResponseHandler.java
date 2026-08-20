@@ -641,23 +641,31 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        // When offline availability is disabled, drop content cards for surfaces that were not
-        // refreshed from the network this session (i.e. loaded from disk at boot), and evict the
-        // stale disk cache. This handles disabling the flag at runtime. Only content card state is
-        // affected — inbox and code-based propositions live in a separate store and are always
-        // served for the requested surfaces.
-        if (!isContentCardOfflineAvailable()) {
-            contentCardsBySurface.keySet().retainAll(networkRefreshedSurfaces);
-            if (!MapUtils.isNullOrEmpty(
-                    messagingCacheUtilities.getCachedContentCardPropositions())) {
-                messagingCacheUtilities.clearPersistedContentCardCache();
-            }
+        final boolean offlineAvailable = isContentCardOfflineAvailable();
+
+        // Offline caching disabled — reclaim disk space by evicting any stale persisted content
+        // cards left over from a prior session (when the flag was enabled). This is pure storage
+        // cleanup: it does NOT influence what is served, since the response is gated below purely
+        // by networkRefreshedSurfaces (in-memory). Skipped when the disk cache is already clean.
+        if (!offlineAvailable
+                && !MapUtils.isNullOrEmpty(
+                        messagingCacheUtilities.getCachedContentCardPropositions())) {
+            messagingCacheUtilities.clearPersistedContentCardCache();
         }
 
-        // get a copy of qualified content cards and filter by requested surfaces
+        // Get a copy of qualified content cards filtered by requested surfaces. The source
+        // contentCardsBySurface is never mutated here — we only build and filter this copy.
         final Map<Surface, List<Proposition>> requestedContentCards =
                 new HashMap<>(contentCardsBySurface);
         requestedContentCards.keySet().retainAll(requestedSurfaces);
+
+        // When offline availability is disabled, serve only content cards refreshed from the
+        // network this session; surfaces absent from networkRefreshedSurfaces are disk-origin
+        // (offline) cards and are filtered out of the response copy. When enabled, everything is
+        // served. Inbox and code-based propositions live in a separate store and are unaffected.
+        if (!offlineAvailable) {
+            requestedContentCards.keySet().retainAll(networkRefreshedSurfaces);
+        }
 
         // get a copy of in memory propositions (cbe)
         Map<Surface, List<Proposition>> requestedPropositions =
@@ -1608,8 +1616,7 @@ class EdgePersonalizationResponseHandler {
     private static <T> T deepMutableCopy(final T value) {
         if (value instanceof Map) {
             final Map<String, Object> copy = new HashMap<>();
-            for (final Map.Entry<String, Object> entry :
-                    ((Map<String, Object>) value).entrySet()) {
+            for (final Map.Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()) {
                 copy.put(entry.getKey(), deepMutableCopy(entry.getValue()));
             }
             return (T) copy;

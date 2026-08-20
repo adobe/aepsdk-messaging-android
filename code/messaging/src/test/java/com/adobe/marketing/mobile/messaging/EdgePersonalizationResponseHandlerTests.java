@@ -4594,7 +4594,8 @@ public class EdgePersonalizationResponseHandlerTests {
                             edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
                                     immutableXdm);
 
-                    // dig into _experience.decisioning.propositions[0].items[0].data.characteristics
+                    // dig into
+                    // _experience.decisioning.propositions[0].items[0].data.characteristics
                     Map<String, Object> experience =
                             (Map<String, Object>) enriched.get("_experience");
                     Map<String, Object> decisioning =
@@ -5023,7 +5024,8 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_retrieveInMemoryPropositions_flagOff_evictsDiskOriginContentCards() {
+    public void
+            test_retrieveInMemoryPropositions_flagOff_servesOnlyNetworkRefreshed_withoutMutatingCache() {
         runUsingMockedServiceProvider(
                 () -> {
                     // offline availability disabled
@@ -5077,18 +5079,19 @@ public class EdgePersonalizationResponseHandlerTests {
                                     Object.class, eventData, "propositions", null);
                     assertEquals(1, propositions.size());
 
-                    // verify the disk-origin surface was durably evicted from the in-memory cache,
-                    // while the network-refreshed surface remains
-                    assertFalse(
-                            "disk-origin surface must be evicted from the qualified cache",
-                            edgePersonalizationResponseHandler
-                                    .getQualifiedContentCardsBySurface()
-                                    .containsKey(diskSurface));
+                    // the in-memory qualified cache must NOT be mutated by the get path — both the
+                    // network and disk surfaces remain; only the response copy is filtered
                     assertTrue(
                             "network-refreshed surface must remain in the qualified cache",
                             edgePersonalizationResponseHandler
                                     .getQualifiedContentCardsBySurface()
                                     .containsKey(networkSurface));
+                    assertTrue(
+                            "disk-origin surface must remain in the qualified cache (source not"
+                                    + " mutated)",
+                            edgePersonalizationResponseHandler
+                                    .getQualifiedContentCardsBySurface()
+                                    .containsKey(diskSurface));
                 });
     }
 
