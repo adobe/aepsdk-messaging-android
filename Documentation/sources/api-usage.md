@@ -396,3 +396,31 @@ Messaging.getPropositionsForSurfaces(surfaces, new AdobeCallbackWithError<Map<Su
     }
 });
 ```
+
+### clearCachedPropositions
+
+Clears all content card state from the SDK — both the in-memory cache (qualified cards, rules, and origin tracking) and the persisted disk cache used for offline content card availability. This does not affect the in-app message (IAM) cache or code-based experiences.
+
+Use this method to clear stale offline content cards, for example after a user logs out.
+
+#### Java
+
+##### Syntax
+
+```java
+public static void clearCachedPropositions()
+```
+
+##### Example
+
+#### Kotlin
+
+```kotlin
+Messaging.clearCachedPropositions()
+```
+
+#### Java
+
+```java
+Messaging.clearCachedPropositions();
+```
