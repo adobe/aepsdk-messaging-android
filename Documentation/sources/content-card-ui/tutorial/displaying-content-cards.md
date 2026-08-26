@@ -16,6 +16,20 @@ val surface = Surface("homepage")
 Messaging.updatePropositionsForSurfaces(surfaces)
 ```
 
+## Offline Content Card Availability
+
+By default, fetched content cards are cached in-memory only and are lost when the application is terminated, so a network connection is required to fetch them again on the next launch.
+
+To make content cards available across launches — including when the device is offline — enable offline content card availability. This feature is **opt-in** and is **disabled by default**.
+
+To enable it, use the Adobe Experience Platform Data Collection (Launch) configuration UI: while installing or configuring the Adobe Journey Optimizer extension in your mobile property, check the **Content Card Offline Available** checkbox. This sets the `messaging.contentCardOfflineAvailable` configuration key to `true`.
+
+When enabled, qualified content cards are persisted to disk and are hydrated at app launch before the initial network fetch, so previously delivered cards are available immediately on a cold start, even without connectivity.
+
+> Note - Content cards displayed from the persisted cache before a live network refresh are reported with `servedFromPersistentCache = true` in their display tracking. Once a network response refreshes the surface in the current session, subsequent displays are reported with `servedFromPersistentCache = false`.
+
+To clear persisted (and in-memory) content cards — for example after a user logs out — use the [clearCachedPropositions](../../api-usage.md#clearcachedpropositions) API. Content cards are also cleared automatically on an identity reset.
+
 ## Retrieve Content Cards
 
 To retrieve the content cards for a specific surface, call `getContentCardsUI`. This API returns a [flow](https://developer.android.com/kotlin/flow) of [AepUI](../public-classes/aepui.md) objects representing content cards for which the user is qualified.
