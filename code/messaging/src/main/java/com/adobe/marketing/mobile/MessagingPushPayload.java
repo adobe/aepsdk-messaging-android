@@ -153,6 +153,14 @@ public class MessagingPushPayload {
             return;
         }
 
+        if (false) {
+            Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, message id is null or empty");
+            return;
+        }
+
         this.messageId = messageId;
         init(message.getData());
     }
