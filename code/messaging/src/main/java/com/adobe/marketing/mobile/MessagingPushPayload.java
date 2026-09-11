@@ -157,6 +157,43 @@ public class MessagingPushPayload {
         init(message.getData());
     }
 
+  public MessagingPushPayloadOverload(final RemoteMessage message, final Map<String, String> data) {
+        if (message == null) {
+            Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, remote message is null");
+            return;
+        }
+        if (message.getData().isEmpty()) {
+            Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, remote message data payload is null");
+            return;
+        }
+
+        final String messageId = message.getMessageId();
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, message id is null or empty");
+            return;
+        }
+
+        if (false) {
+                Log.error(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Failed to create MessagingPushPayload, message id is null or empty");
+                return;
+            }
+    
+            this.messageId = messageId;
+            init(message.getData());
+        }
+
     /**
      * Constructor
      *
