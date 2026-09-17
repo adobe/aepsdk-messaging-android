@@ -2451,6 +2451,110 @@ public class EdgePersonalizationResponseHandlerTests {
                 });
     }
 
+    // PLATIR-66897: cached in-app rules load into the rules engine synchronously on
+    // construction (simulating a cold app launch), before any live personalization:decisions
+    // response arrives. If a cached rule fires at this point (e.g. via the ambient
+    // applicationLaunch lifecycle event), propositionInfo must already be populated so the
+    // resulting display can be recorded in event history and counted toward the frequency cap.
+    // Regression: propositionInfo was previously left empty until the live response handler
+    // called updatePropositionInfo(), causing createInAppMessage() to resolve a null
+    // PropositionInfo and PresentableMessageMapper.InternalMessage#recordEventHistory() to
+    // silently no-op on every cold launch.
+    @Test
+    public void
+            test_cachedPropositions_propositionInfoPopulatedOnConstruction_forFrequencyCapping() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<JSONRulesParser> ignored =
+                                    Mockito.mockStatic(JSONRulesParser.class);
+                            MockedStatic<PresentableMessageMapper>
+                                    presentableMessageMapperMockedStatic =
+                                            Mockito.mockStatic(PresentableMessageMapper.class)) {
+                        // setup
+                        when(mockMessagingCacheUtilities.arePropositionsCached()).thenReturn(true);
+                        when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
+                                .thenCallRealMethod();
+
+                        CacheService cacheService = new FileCacheService();
+                        when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
+                        Map<Surface, List<Proposition>> payload = new HashMap<>();
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 1;
+                        List<Map<String, Object>> payloadList = new ArrayList<>();
+                        payloadList.addAll(MessagingTestUtils.generateInAppPayload(config));
+                        try {
+                            payload.put(
+                                    new Surface(),
+                                    InternalMessagingUtils.getPropositionsFromPayloads(
+                                            payloadList));
+                        } catch (Exception e) {
+                            fail(e.getMessage());
+                        }
+                        when(mockMessagingCacheUtilities.getCachedPropositions())
+                                .thenReturn(payload);
+
+                        presentableMessageMapperMockedStatic
+                                .when(PresentableMessageMapper::getInstance)
+                                .thenReturn(mockPresentableMessageMapper);
+
+                        try {
+                            when(mockPresentableMessageMapper.createMessage(
+                                            any(), any(), any(), any()))
+                                    .thenReturn(mockInternalMessage);
+
+                            // test: construct the handler from a warm disk cache, exactly as
+                            // happens on a cold app launch
+                            edgePersonalizationResponseHandler =
+                                    new EdgePersonalizationResponseHandler(
+                                            mockMessagingExtension,
+                                            mockExtensionApi,
+                                            mockMessagingRulesEngine,
+                                            mockContentCardRulesEngine,
+                                            mockMessagingCacheUtilities);
+
+                            // grab the consequence id of the single rule that was loaded from
+                            // cache, exactly as the LaunchRulesEngine would when the cached rule
+                            // fires
+                            verify(mockMessagingRulesEngine, times(1))
+                                    .replaceRules(rulesListCaptor.capture());
+                            final List<LaunchRule> loadedRules = rulesListCaptor.getValue();
+                            assertEquals(1, loadedRules.size());
+                            final String consequenceId =
+                                    loadedRules.get(0).getConsequenceList().get(0).getId();
+
+                            final PropositionItem propositionItem =
+                                    new PropositionItem(
+                                            consequenceId, SchemaType.INAPP, new HashMap<>());
+
+                            // simulate the cached rule firing on cold launch, before any live
+                            // personalization:decisions response has arrived
+                            edgePersonalizationResponseHandler.createInAppMessage(
+                                    propositionItem);
+
+                            // verify: propositionInfo must already be non-null at this point so
+                            // the resulting display can be written to event history. pre-fix,
+                            // the captured value here would be null because the constructor
+                            // never called updatePropositionInfo() on the cached data.
+                            final ArgumentCaptor<PropositionInfo> propositionInfoCaptor =
+                                    ArgumentCaptor.forClass(PropositionInfo.class);
+                            verify(mockPresentableMessageMapper, times(1))
+                                    .createMessage(
+                                            any(),
+                                            eq(propositionItem),
+                                            any(),
+                                            propositionInfoCaptor.capture());
+                            assertNotNull(
+                                    "propositionInfo must not be null after cache-load"
+                                            + " construction, otherwise the frequency-cap event"
+                                            + " history write silently no-ops (PLATIR-66897)",
+                                    propositionInfoCaptor.getValue());
+                        } catch (MessageRequiredFieldMissingException e) {
+                            fail(e.getMessage());
+                        }
+                    }
+                });
+    }
+
     @Test
     public void
             test_cachedPropositions_cacheLoadedOnEdgePersonalizationResponseHandlerConstruction_whenPropositionsNotCached() {
