@@ -2528,8 +2528,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                             // simulate the cached rule firing on cold launch, before any live
                             // personalization:decisions response has arrived
-                            edgePersonalizationResponseHandler.createInAppMessage(
-                                    propositionItem);
+                            edgePersonalizationResponseHandler.createInAppMessage(propositionItem);
 
                             // verify: propositionInfo must already be non-null at this point so
                             // the resulting display can be written to event history. pre-fix,
