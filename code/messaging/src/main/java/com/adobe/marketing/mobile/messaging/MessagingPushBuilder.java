@@ -78,14 +78,15 @@ class MessagingPushBuilder {
             // AJO template payload -> delegate rendering to the registered UI template plugin
             // (aepsdk-ui-android's NotificationBuilderPlugin), resolved from Core. Messaging keeps
             // ownership of posting and tracking, so the UI add-on needs no dependency on Messaging.
-            final IUiTemplatePlugin uiTemplatePlugin = MobileCore.getPlugin(IUiTemplatePlugin.class);
+            final IUiTemplatePlugin uiTemplatePlugin =
+                    MobileCore.getPlugin(IUiTemplatePlugin.class);
             if (uiTemplatePlugin == null) {
                 Log.warning(
                         MessagingPushConstants.LOG_TAG,
                         SELF_TAG,
                         "Received a push template ('%s') but no IUiTemplatePlugin is registered."
-                                + " Add the aepsdk-ui-android plugin and register it via"
-                                + " MobileCore.addPlugins(...). Falling back to a basic notification.",
+                            + " Add the aepsdk-ui-android plugin and register it via"
+                            + " MobileCore.addPlugins(...). Falling back to a basic notification.",
                         templateType);
                 // fall through to the basic push flow below
             } else {

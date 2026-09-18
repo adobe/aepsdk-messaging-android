@@ -304,7 +304,9 @@ public class MessagingPushBuilderTests {
         try (MockedConstruction<MessagingPushPayload> payloadConstruction =
                         mockConstruction(MessagingPushPayload.class);
                 MockedStatic<MobileCore> mobileCoreMock = Mockito.mockStatic(MobileCore.class)) {
-            mobileCoreMock.when(() -> MobileCore.getPlugin(IUiTemplatePlugin.class)).thenReturn(null);
+            mobileCoreMock
+                    .when(() -> MobileCore.getPlugin(IUiTemplatePlugin.class))
+                    .thenReturn(null);
 
             // test
             Notification result = MessagingPushBuilder.build(remoteMessage, context);
