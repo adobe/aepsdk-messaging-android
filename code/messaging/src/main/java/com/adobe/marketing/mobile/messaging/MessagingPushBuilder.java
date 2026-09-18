@@ -80,38 +80,54 @@ class MessagingPushBuilder {
             // ownership of posting and tracking, so the UI add-on needs no dependency on Messaging.
             final IUiTemplatePlugin uiTemplatePlugin =
                     MobileCore.getPlugin(IUiTemplatePlugin.class);
-            if (uiTemplatePlugin == null) {
-                Log.warning(
-                        MessagingPushConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Received a push template ('%s') but no IUiTemplatePlugin is registered."
+            if (uiTemplatePlugin != null) {
+                return buildTemplateNotification(
+                        uiTemplatePlugin, remoteMessage, context, templateType);
+            }
+            Log.warning(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Received a push template ('%s') but no IUiTemplatePlugin is registered."
                             + " Add the aepsdk-ui-android plugin and register it via"
                             + " MobileCore.addPlugins(...). Falling back to a basic notification.",
-                        templateType);
-                // fall through to the basic push flow below
-            } else {
-                final Notification templateNotification =
-                        uiTemplatePlugin.buildPushTemplateNotification(
-                                context,
-                                remoteMessage.getData(),
-                                MessagingPushTrackerActivity.class,
-                                NotificationInteractionReceiver.class);
-                if (templateNotification != null) {
-                    return templateNotification;
-                }
-                Log.warning(
-                        MessagingPushConstants.LOG_TAG,
-                        SELF_TAG,
-                        "IUiTemplatePlugin failed to build the '%s' template; ignoring the push"
-                                + " message.",
-                        templateType);
-                return null;
-            }
+                    templateType);
+            // fall through to the basic push flow below
         }
 
         // existing AJO push flow - untouched
         final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
         return build(payload, context);
+    }
+
+    /**
+     * Delegates rendering of an AJO template push to the registered UI template plugin.
+     *
+     * @param uiTemplatePlugin the resolved {@link IUiTemplatePlugin}
+     * @param remoteMessage the {@link RemoteMessage} received from the push notification
+     * @param context the application {@link Context}
+     * @param templateType the AJO template type carried by the payload (used for logging)
+     * @return the templated notification, or {@code null} if the plugin could not construct one
+     */
+    @Nullable private static Notification buildTemplateNotification(
+            final IUiTemplatePlugin uiTemplatePlugin,
+            final RemoteMessage remoteMessage,
+            final Context context,
+            final String templateType) {
+        final Notification templateNotification =
+                uiTemplatePlugin.buildPushTemplateNotification(
+                        context,
+                        remoteMessage.getData(),
+                        MessagingPushTrackerActivity.class,
+                        NotificationInteractionReceiver.class);
+        if (templateNotification != null) {
+            return templateNotification;
+        }
+        Log.warning(
+                MessagingPushConstants.LOG_TAG,
+                SELF_TAG,
+                "IUiTemplatePlugin failed to build the '%s' template; ignoring the push message.",
+                templateType);
+        return null;
     }
 
     /**
