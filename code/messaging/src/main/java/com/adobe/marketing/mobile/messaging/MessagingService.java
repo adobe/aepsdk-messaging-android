@@ -84,7 +84,8 @@ public class MessagingService extends FirebaseMessagingService {
         if (remoteMessage
                 .getData()
                 .containsKey(MessagingConstants.Push.PayloadKeys.LIVE_UPDATE_DATA)) {
-            final ILiveupdatePlugin liveUpdatePlugin = MobileCore.getPlugin(ILiveupdatePlugin.class);
+            final ILiveupdatePlugin liveUpdatePlugin =
+                    MobileCore.getPlugin(ILiveupdatePlugin.class);
             if (liveUpdatePlugin == null) {
                 Log.warning(
                         MessagingPushConstants.LOG_TAG,

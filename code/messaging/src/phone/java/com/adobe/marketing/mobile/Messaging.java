@@ -651,5 +651,4 @@ public final class Messaging {
             @Nullable final PushNotificationListener listener) {
         PushCallbackHandler.setListener(listener);
     }
-
 }

@@ -465,8 +465,8 @@ public final class MessagingConstants {
             public static final String INAPP_MESSAGE_ID = "adb_iam_id";
 
             /**
-             * JSON-stringified Live Update envelope. Detection key only — Messaging never
-             * reads inside it. When present and an {@link
+             * JSON-stringified Live Update envelope. Detection key only — Messaging never reads
+             * inside it. When present and an {@link
              * com.adobe.marketing.mobile.plugin.ILiveupdatePlugin} is registered via {@code
              * MobileCore.addPlugins(...)}, the raw {@link
              * com.google.firebase.messaging.RemoteMessage} is handed to the plugin.
