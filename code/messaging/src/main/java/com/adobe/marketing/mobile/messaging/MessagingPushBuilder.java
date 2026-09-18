@@ -64,7 +64,6 @@ class MessagingPushBuilder {
     @NonNull static Notification build(final MessagingPushPayload payload, final Context context) {
         final String channelId = createChannelAndGetChannelID(payload, context);
 
-        // Create the notification
         final NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context, channelId);
         builder.setContentTitle(payload.getTitle());
