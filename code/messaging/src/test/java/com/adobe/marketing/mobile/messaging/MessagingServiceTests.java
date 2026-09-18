@@ -110,7 +110,7 @@ public class MessagingServiceTests {
                 .when(
                         () ->
                                 MessagingPushBuilder.build(
-                                        any(MessagingPushPayload.class), any(Context.class)))
+                                        any(RemoteMessage.class), any(Context.class)))
                 .thenReturn(notification);
 
         // Mock ServiceProvider so that the NamedCollection returned by the data store service
@@ -472,5 +472,32 @@ public class MessagingServiceTests {
 
         // verify
         assertTrue(isHandled);
+    }
+
+    @Test
+    public void test_handleRemoteMessage_whenNotificationBuildFails_ReturnsFalse() {
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Sample Title");
+                            }
+                        });
+        pushBuilder
+                .when(
+                        () ->
+                                MessagingPushBuilder.build(
+                                        any(RemoteMessage.class), any(Context.class)))
+                .thenReturn(null);
+
+        // test
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify the push message is ignored and no notification is displayed
+        assertFalse(isHandled);
+        verify(notificationManager, times(0)).notify(anyInt(), any());
+        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), times(0));
     }
 }

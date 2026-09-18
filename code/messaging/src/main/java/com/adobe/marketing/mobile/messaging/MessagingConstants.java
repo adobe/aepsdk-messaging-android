@@ -486,6 +486,7 @@ public final class MessagingConstants {
             public static final String ACTION_URI = "adb_uri";
             public static final String ACTION_BUTTONS = "adb_act";
             public static final String INAPP_MESSAGE_ID = "adb_iam_id";
+            public static final String TEMPLATE_TYPE = "adb_template_type";
 
             /**
              * JSON-stringified Live Update envelope. Detection key only — Messaging never reads

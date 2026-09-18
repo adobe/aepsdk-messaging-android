@@ -17,7 +17,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
 import com.adobe.marketing.mobile.Messaging;
-import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.plugin.ILiveupdatePlugin;
 import com.adobe.marketing.mobile.services.Log;
@@ -101,8 +100,11 @@ public class MessagingService extends FirebaseMessagingService {
         // Standard push path — UNCHANGED from pre-Live-Update state. Reads only outer adb_*
         // keys; never peeks inside adb_liveupdate_data.
         // Build and display the notification synchronously while the FCM wakelock is active.
-        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
-        final Notification notification = MessagingPushBuilder.build(payload, context);
+        final Notification notification = MessagingPushBuilder.build(remoteMessage, context);
+        if (notification == null) {
+            // notification could not be constructed; the push message is ignored
+            return false;
+        }
 
         // display notification
         final NotificationManagerCompat notificationManager =

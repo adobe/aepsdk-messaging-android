@@ -12,10 +12,13 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,6 +33,11 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.MessagingPushPayload;
+import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.plugin.IUiTemplatePlugin;
+import com.google.firebase.messaging.RemoteMessage;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +46,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -58,6 +67,7 @@ public class MessagingPushBuilderTests {
     @Mock Context context;
     @Mock MessagingPushPayload payload;
     @Mock Notification notification;
+    @Mock RemoteMessage remoteMessage;
     @Mock PackageManager packageManager;
     @Mock Intent launchIntent;
     @Mock Uri sampleUri;
@@ -207,5 +217,127 @@ public class MessagingPushBuilderTests {
         // verify
         assertNotNull(notification);
         verify(mockNotificationBuilder, times(1)).setPriority(Notification.PRIORITY_DEFAULT);
+    }
+
+    @Test
+    public void
+            test_build_fromRemoteMessage_WhenTemplateTypePresent_AndPluginRegistered_DelegatesToPlugin() {
+        // setup
+        final Map<String, String> data =
+                new HashMap<String, String>() {
+                    {
+                        put("adb_template_type", "ajo_basic");
+                        put("adb_title", "AJO Title");
+                        put("adb_body", "AJO Body");
+                    }
+                };
+        when(remoteMessage.getData()).thenReturn(data);
+
+        final IUiTemplatePlugin uiTemplatePlugin = Mockito.mock(IUiTemplatePlugin.class);
+        when(uiTemplatePlugin.buildPushTemplateNotification(any(), any(), any(), any()))
+                .thenReturn(notification);
+
+        try (MockedStatic<MobileCore> mobileCoreMock = Mockito.mockStatic(MobileCore.class)) {
+            mobileCoreMock
+                    .when(() -> MobileCore.getPlugin(IUiTemplatePlugin.class))
+                    .thenReturn(uiTemplatePlugin);
+
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify the templated notification is built via the registered plugin
+            assertNotNull(result);
+            verify(uiTemplatePlugin)
+                    .buildPushTemplateNotification(
+                            eq(context),
+                            eq(data),
+                            eq(MessagingPushTrackerActivity.class),
+                            eq(NotificationInteractionReceiver.class));
+        }
+    }
+
+    @Test
+    public void
+            test_build_fromRemoteMessage_WhenTemplateTypePresent_AndPluginReturnsNull_ReturnsNull() {
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_template_type", "ajo_basic");
+                                put("adb_title", "AJO Title");
+                            }
+                        });
+
+        final IUiTemplatePlugin uiTemplatePlugin = Mockito.mock(IUiTemplatePlugin.class);
+        when(uiTemplatePlugin.buildPushTemplateNotification(any(), any(), any(), any()))
+                .thenReturn(null);
+
+        try (MockedStatic<MobileCore> mobileCoreMock = Mockito.mockStatic(MobileCore.class)) {
+            mobileCoreMock
+                    .when(() -> MobileCore.getPlugin(IUiTemplatePlugin.class))
+                    .thenReturn(uiTemplatePlugin);
+
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify - a plugin failure does not fall back to the legacy flow, the push is
+            // dropped
+            assertNull(result);
+        }
+    }
+
+    @Test
+    public void
+            test_build_fromRemoteMessage_WhenTemplateTypePresent_AndNoPluginRegistered_FallsBackToLegacyFlow() {
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_template_type", "ajo_basic");
+                                put("adb_title", "Sample Title");
+                                put("adb_body", "Sample Body");
+                            }
+                        });
+
+        try (MockedConstruction<MessagingPushPayload> payloadConstruction =
+                        mockConstruction(MessagingPushPayload.class);
+                MockedStatic<MobileCore> mobileCoreMock = Mockito.mockStatic(MobileCore.class)) {
+            mobileCoreMock
+                    .when(() -> MobileCore.getPlugin(IUiTemplatePlugin.class))
+                    .thenReturn(null);
+
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify the legacy payload-based flow was used when no plugin is registered
+            assertNotNull(result);
+        }
+    }
+
+    @Test
+    public void test_build_fromRemoteMessage_WhenNoTemplateType_UsesLegacyPayloadFlow() {
+        // setup - no adb_template_type key, so the legacy MessagingPushPayload flow is used
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_title", "Sample Title");
+                                put("adb_body", "Sample Body");
+                            }
+                        });
+
+        try (MockedConstruction<MessagingPushPayload> payloadConstruction =
+                        mockConstruction(MessagingPushPayload.class);
+                MockedStatic<MobileCore> mobileCoreMock = Mockito.mockStatic(MobileCore.class)) {
+            // test
+            Notification result = MessagingPushBuilder.build(remoteMessage, context);
+
+            // verify the legacy payload-based flow was used and the plugin registry was never
+            // queried, since there was no template type to resolve a plugin for
+            assertNotNull(result);
+            mobileCoreMock.verify(() -> MobileCore.getPlugin(any()), never());
+        }
     }
 }
