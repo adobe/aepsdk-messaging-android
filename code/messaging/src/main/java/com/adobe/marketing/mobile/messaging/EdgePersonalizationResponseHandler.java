@@ -772,32 +772,21 @@ class EdgePersonalizationResponseHandler {
     }
 
     private void endRequestForEventId(final String eventId) {
-        // if a non-recoverable edge error was received for this event,
-        // skip applying proposition changes to preserve last-known-good state
-        boolean requestFailed = false;
-        if (nonRecoverableErrorEventIds.remove(eventId)) {
-            requestFailed = true;
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Non-recoverable edge error received for event %s, preserving"
-                            + " last-known-good content card state.",
-                    eventId);
-        } else {
-            // update in memory propositions
-            applyPropositionChangeForEventId(eventId);
-        }
+        applyPropositionChangeForEventId(eventId);
 
         // remove event from surfaces dictionary
         requestedSurfacesForEventId.remove(eventId);
 
+        // clear the error flag for this event, if any.
+        nonRecoverableErrorEventIds.remove(eventId);
+
         // clear pending propositions
         inProgressPropositions.clear();
 
-        // call the handler if we have one, passing false on failure
+        // notify the completion handler
         final CompletionHandler handler = parent.completionHandlerForEdgeRequestEventId(eventId);
         if (handler != null) {
-            handler.handle.call(!requestFailed);
+            handler.handle.call(true);
         }
     }
 
@@ -808,17 +797,24 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
+        final boolean requestFailed = nonRecoverableErrorEventIds.contains(eventId);
         final boolean offlineAvailable = isContentCardOfflineAvailable();
         final ParsedPropositions parsedPropositions =
                 new ParsedPropositions(
                         inProgressPropositions, requestedSurfaces, extensionApi, offlineAvailable);
 
-        // we need to preserve cache for any surfaces that were not a part of this request
-        // any requested surface that is absent from the response needs to be removed from cache and
-        // persistence
+        // Decide which surfaces to evict (remove from cache/persistence).
+        // - success: a requested surface with no data was removed server-side -> evict it.
+        // - error:   we can't trust "no data" (the request failed), so evict nothing and keep the
+        //            surface's last-known-good content until a later request succeeds.
         final Set<Surface> returnedSurfaces = inProgressPropositions.keySet();
-        final List<Surface> surfacesToRemove = new ArrayList<>(requestedSurfaces);
-        surfacesToRemove.removeAll(returnedSurfaces);
+        final List<Surface> surfacesToRemove;
+        if (requestFailed) {
+            surfacesToRemove = new ArrayList<>();
+        } else {
+            surfacesToRemove = new ArrayList<>(requestedSurfaces);
+            surfacesToRemove.removeAll(returnedSurfaces);
+        }
 
         // update persistence, reporting data cache, and finally rules engine for in-app messages
         // order matters here because the rules engine must be a full replace, and when we update
@@ -835,17 +831,21 @@ class EdgePersonalizationResponseHandler {
         if (offlineAvailable) {
             messagingCacheUtilities.cacheContentCardPropositions(
                     parsedPropositions.contentCardPropositionsToPersist, surfacesToRemove);
-        } else {
-            // Feature disabled — clear stale persisted data. This method is only called on
-            // success (non-recoverable errors skip applyPropositionChangeForEventId entirely),
-            // so it is always safe to wipe the cache here.
+        } else if (!requestFailed) {
+            // feature disabled: clear the stale disk cache, but only on success (on error we keep
+            // it)
             messagingCacheUtilities.clearPersistedContentCardCache();
         }
 
         // apply rules. Content card provenance is tracked per-surface in networkRefreshedSurfaces,
         // maintained by removeOrReplaceContentCards (invoked via updateRulesEngines below); no
         // per-proposition tagging is needed on the network path.
-        updateRulesEngines(parsedPropositions.surfaceRulesBySchemaType, requestedSurfaces);
+        //
+        // On error, only reconcile the surfaces that returned data so rules for absent surfaces are
+        // left untouched (matching the "evict nothing" choice above).
+        final List<Surface> rulesEngineSurfaces =
+                requestFailed ? new ArrayList<>(returnedSurfaces) : requestedSurfaces;
+        updateRulesEngines(parsedPropositions.surfaceRulesBySchemaType, rulesEngineSurfaces);
     }
 
     private void updateRulesEngines(
