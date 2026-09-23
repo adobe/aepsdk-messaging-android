@@ -178,6 +178,10 @@ class EdgePersonalizationResponseHandler {
                         launchRulesEngine.replaceRules(rulesToReplace);
                     }
                 }
+                // populate proposition info from cache so that in-app rules loaded above can
+                // be matched back to their activityId (e.g. for event history writes) before
+                // the live personalization:decisions response arrives
+                updatePropositionInfo(parsedPropositions.propositionInfoToCache, new ArrayList<>());
             }
         }
     }
