@@ -24,14 +24,19 @@ val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
 val mavenEdgeConsentVersion: String by project
 
+// Test app only — :messaging keeps BuildConstants compileSdk/targetSdk (34).
+// Android 17 / API 37.0 is installed as platforms/android-37.0; AGP 8.2 expects platforms/android-37.
+val testAppCompileSdk = 37
+val testAppTargetSdk = 37
+
 android {
-      namespace = "com.adobe.marketing.mobile.messagingsample"
+    namespace = "com.adobe.marketing.mobile.messagingsample"
+    compileSdk = testAppCompileSdk
 
     defaultConfig {
         applicationId = "com.adobe.marketing.mobile.messagingsample"
-        compileSdk = BuildConstants.Versions.COMPILE_SDK_VERSION
         minSdk = BuildConstants.Versions.MIN_SDK_VERSION
-        targetSdk = BuildConstants.Versions.TARGET_SDK_VERSION
+        targetSdk = testAppTargetSdk
         versionCode = BuildConstants.Versions.VERSION_CODE
         versionName = BuildConstants.Versions.VERSION_NAME
     }
@@ -43,16 +48,16 @@ android {
     }
 
     buildTypes {
-        getByName(BuildConstants.BuildTypes.RELEASE)  {
+        getByName(BuildConstants.BuildTypes.RELEASE) {
             isMinifyEnabled = false
         }
     }
     buildFeatures {
         viewBinding = true
-        compose=true
+        compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion="1.4.6"
+        kotlinCompilerExtensionVersion = "1.4.6"
     }
 }
 
