@@ -16,7 +16,7 @@ import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
+// import android.os.Bundle // re-render only
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.messaging.MessagingPushConstants.NotificationAction
 import com.adobe.marketing.mobile.messaging.MessagingPushConstants.PushInteractionType
@@ -36,9 +36,13 @@ import com.adobe.marketing.mobile.services.ServiceProvider
  * - `content_click` -> [MessagingPushTrackerActivity], action [NotificationAction.OPENED]
  * - `button_click` -> [MessagingPushTrackerActivity], action [NotificationAction.BUTTON_CLICKED]
  * - `dismiss` -> [NotificationInteractionReceiver], action [NotificationAction.DISMISSED]
- * - `input_submit` -> [NotificationInteractionReceiver], action [NotificationAction.INTERACTION]
- * - `rerender` -> [NotificationInteractionReceiver], action [NotificationAction.RERENDER]; the receiver
- *   rebuilds the notification through the plugin and re-posts it
+ * - `input_submit` -> currently disabled (commented out) until a template uses it, so it takes the
+ *   fallback route below. When enabled: [NotificationInteractionReceiver], action
+ *   [NotificationAction.INTERACTION]
+ * - `rerender` -> currently disabled (commented out) until a template uses it, so it takes the
+ *   fallback route below. When enabled: [NotificationInteractionReceiver], action
+ *   `NotificationAction.RERENDER`; the receiver rebuilds the notification through the plugin and
+ *   re-posts it
  * - any other type -> fallback: with an `actionUri`, treated as an open; otherwise a silent
  *   [NotificationAction.INTERACTION]
  *
@@ -84,10 +88,12 @@ internal class MessagingPushTrackingProvider @JvmOverloads constructor(
             PushInteractionType.DISMISS ->
                 broadcastPendingIntent(context, NotificationAction.DISMISSED, interaction)
 
-            PushInteractionType.INPUT_SUBMIT ->
-                broadcastPendingIntent(context, NotificationAction.INTERACTION, interaction)
+            // Input submit is disabled until a template uses it; uncomment to enable.
+            // PushInteractionType.INPUT_SUBMIT ->
+            //     broadcastPendingIntent(context, NotificationAction.INTERACTION, interaction)
 
-            PushInteractionType.RERENDER -> rerenderPendingIntent(context, interaction)
+            // Re-render is disabled until a template uses it; uncomment to enable.
+            // PushInteractionType.RERENDER -> rerenderPendingIntent(context, interaction)
 
             else -> {
                 Log.debug(
@@ -144,28 +150,29 @@ internal class MessagingPushTrackingProvider @JvmOverloads constructor(
         )
     }
 
-    /**
-     * Builds a re-render [PendingIntent] delivered to [NotificationInteractionReceiver]. The message
-     * data and the template state travel as separate nested bundles; tracking details stay flat so the
-     * receiver can track the gesture (only when an `actionId` is set).
-     */
-    private fun rerenderPendingIntent(context: Context, interaction: PushInteraction): PendingIntent {
-        val intent = Intent(context, NotificationInteractionReceiver::class.java)
-        intent.action = NotificationAction.RERENDER
-        intent.data = identityUri(interaction)
-        interaction.actionId?.takeIf { it.isNotEmpty() }?.let {
-            intent.putExtra(Tracking.Keys.ACTION_ID, it)
-        }
-        intent.putExtra(TemplateIntent.PUSH_PAYLOAD, data.toBundle())
-        interaction.templateExtras?.let { intent.putExtra(TemplateIntent.TEMPLATE_STATE, it.toBundle()) }
-        Messaging.addPushTrackingDetails(intent, messageId, data)
-        return PendingIntent.getBroadcast(
-            context,
-            TemplateIntent.REQUEST_CODE,
-            intent,
-            pendingIntentFlags(interaction)
-        )
-    }
+    // Re-render is disabled until a template uses it; uncomment to enable.
+    // /**
+    //  * Builds a re-render [PendingIntent] delivered to [NotificationInteractionReceiver]. The message
+    //  * data and the template state travel as separate nested bundles; tracking details stay flat so the
+    //  * receiver can track the gesture (only when an `actionId` is set).
+    //  */
+    // private fun rerenderPendingIntent(context: Context, interaction: PushInteraction): PendingIntent {
+    //     val intent = Intent(context, NotificationInteractionReceiver::class.java)
+    //     intent.action = NotificationAction.RERENDER
+    //     intent.data = identityUri(interaction)
+    //     interaction.actionId?.takeIf { it.isNotEmpty() }?.let {
+    //         intent.putExtra(Tracking.Keys.ACTION_ID, it)
+    //     }
+    //     intent.putExtra(TemplateIntent.PUSH_PAYLOAD, data.toBundle())
+    //     interaction.templateExtras?.let { intent.putExtra(TemplateIntent.TEMPLATE_STATE, it.toBundle()) }
+    //     Messaging.addPushTrackingDetails(intent, messageId, data)
+    //     return PendingIntent.getBroadcast(
+    //         context,
+    //         TemplateIntent.REQUEST_CODE,
+    //         intent,
+    //         pendingIntentFlags(interaction)
+    //     )
+    // }
 
     /**
      * Attaches the action details, message data, and push tracking details (messageId + XDM) to
@@ -240,7 +247,8 @@ internal class MessagingPushTrackingProvider @JvmOverloads constructor(
             data[Tracking.Keys.NOTIFICATION_ID]?.toIntOrNull()
                 ?: MessagingPushUtils.getNotificationId(messageId)
 
-        private fun Map<String, String>.toBundle(): Bundle =
-            Bundle().also { bundle -> forEach { (key, value) -> bundle.putString(key, value) } }
+        // Re-render is disabled until a template uses it; uncomment to enable.
+        // private fun Map<String, String>.toBundle(): Bundle =
+        //     Bundle().also { bundle -> forEach { (key, value) -> bundle.putString(key, value) } }
     }
 }

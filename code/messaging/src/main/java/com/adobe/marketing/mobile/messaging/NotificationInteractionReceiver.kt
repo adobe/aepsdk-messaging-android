@@ -29,7 +29,8 @@ import java.util.concurrent.Executors
  *
  * - [NotificationAction.DISMISSED] -> [DismissInteractionHandler]
  * - [NotificationAction.INTERACTION] -> [SilentInteractionHandler]
- * - [NotificationAction.RERENDER] -> [PushTemplateRerenderHandler] (background)
+ * - `NotificationAction.RERENDER` -> `PushTemplateRerenderHandler` (background); currently disabled
+ *   (commented out) until a template uses it
  *
  * This receiver must stay `exported="false"`: the re-render path posts a notification built from the
  * intent's extras.
@@ -93,8 +94,9 @@ class NotificationInteractionReceiver @VisibleForTesting internal constructor(
         val DEFAULT_HANDLERS: Map<String, NotificationInteractionHandler> by lazy {
             mapOf(
                 NotificationAction.DISMISSED to DismissInteractionHandler(),
-                NotificationAction.INTERACTION to SilentInteractionHandler(),
-                NotificationAction.RERENDER to PushTemplateRerenderHandler()
+                NotificationAction.INTERACTION to SilentInteractionHandler()
+                // Re-render is disabled until a template uses it; uncomment to enable.
+                // NotificationAction.RERENDER to PushTemplateRerenderHandler()
             )
         }
     }

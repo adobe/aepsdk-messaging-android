@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import android.app.PendingIntent
 import android.content.Intent
 import com.adobe.marketing.mobile.messaging.MessagingPushConstants.NotificationAction
-import com.adobe.marketing.mobile.messaging.MessagingPushConstants.TemplateIntent
+// import com.adobe.marketing.mobile.messaging.MessagingPushConstants.TemplateIntent // re-render only
 import com.adobe.marketing.mobile.plugin.PushInteraction
 import com.adobe.marketing.mobile.services.AppContextService
 import com.adobe.marketing.mobile.services.ServiceProvider
@@ -108,13 +108,21 @@ class MessagingPushTrackingProviderTest {
         assertEquals(NotificationInteractionReceiver::class.java.name, intent.component?.className)
     }
 
-    @Test
-    fun `input_submit routes to the receiver as INTERACTION and honours mutability`() {
-        val pendingIntent = provider.getPendingIntent(
-            PushInteraction("input_submit", actionId = "reply", mutablePendingIntent = true)
-        )
+    // Input submit is disabled until a template uses it; uncomment to enable.
+    // @Test
+    // fun `input_submit routes to the receiver as INTERACTION and honours mutability`() {
+    //     val pendingIntent = provider.getPendingIntent(
+    //         PushInteraction("input_submit", actionId = "reply", mutablePendingIntent = true)
+    //     )
+    //
+    //     assertEquals(NotificationAction.INTERACTION, savedIntent(pendingIntent).action)
+    //     assertTrue(shadowOf(pendingIntent).flags and PendingIntent.FLAG_MUTABLE != 0)
+    // }
 
-        assertEquals(NotificationAction.INTERACTION, savedIntent(pendingIntent).action)
+    @Test
+    fun `a mutable PendingIntent is created when the interaction asks for one`() {
+        val pendingIntent = provider.getPendingIntent(PushInteraction("dismiss", mutablePendingIntent = true))
+
         assertTrue(shadowOf(pendingIntent).flags and PendingIntent.FLAG_MUTABLE != 0)
     }
 
@@ -125,33 +133,34 @@ class MessagingPushTrackingProviderTest {
         assertTrue(shadowOf(pendingIntent).flags and PendingIntent.FLAG_IMMUTABLE != 0)
     }
 
-    @Test
-    fun `rerender carries payload and state as nested bundles and tracking details flat`() {
-        val intent = savedIntent(
-            provider.getPendingIntent(
-                PushInteraction("rerender", actionId = "next", templateExtras = mapOf("adb_index" to "2"))
-            )
-        )
-
-        assertEquals(NotificationAction.RERENDER, intent.action)
-        assertEquals(NotificationInteractionReceiver::class.java.name, intent.component?.className)
-        val payload = intent.getBundleExtra(TemplateIntent.PUSH_PAYLOAD)
-        assertEquals("Title", payload?.getString("adb_title"))
-        assertEquals("42", payload?.getString("notificationId"))
-        assertEquals("2", intent.getBundleExtra(TemplateIntent.TEMPLATE_STATE)?.getString("adb_index"))
-        assertEquals("next", intent.getStringExtra("actionId"))
-        assertEquals(messageId, intent.getStringExtra("messageId"))
-        // the payload is not copied flat, so it cannot mix with tracking extras
-        assertNull(intent.getStringExtra("adb_title"))
-    }
-
-    @Test
-    fun `rerender without actionId carries no actionId`() {
-        val intent = savedIntent(provider.getPendingIntent(PushInteraction("rerender")))
-
-        assertFalse(intent.hasExtra("actionId"))
-        assertNull(intent.getBundleExtra(TemplateIntent.TEMPLATE_STATE))
-    }
+    // Re-render is disabled until a template uses it; uncomment to enable.
+    // @Test
+    // fun `rerender carries payload and state as nested bundles and tracking details flat`() {
+    //     val intent = savedIntent(
+    //         provider.getPendingIntent(
+    //             PushInteraction("rerender", actionId = "next", templateExtras = mapOf("adb_index" to "2"))
+    //         )
+    //     )
+    //
+    //     assertEquals(NotificationAction.RERENDER, intent.action)
+    //     assertEquals(NotificationInteractionReceiver::class.java.name, intent.component?.className)
+    //     val payload = intent.getBundleExtra(TemplateIntent.PUSH_PAYLOAD)
+    //     assertEquals("Title", payload?.getString("adb_title"))
+    //     assertEquals("42", payload?.getString("notificationId"))
+    //     assertEquals("2", intent.getBundleExtra(TemplateIntent.TEMPLATE_STATE)?.getString("adb_index"))
+    //     assertEquals("next", intent.getStringExtra("actionId"))
+    //     assertEquals(messageId, intent.getStringExtra("messageId"))
+    //     // the payload is not copied flat, so it cannot mix with tracking extras
+    //     assertNull(intent.getStringExtra("adb_title"))
+    // }
+    //
+    // @Test
+    // fun `rerender without actionId carries no actionId`() {
+    //     val intent = savedIntent(provider.getPendingIntent(PushInteraction("rerender")))
+    //
+    //     assertFalse(intent.hasExtra("actionId"))
+    //     assertNull(intent.getBundleExtra(TemplateIntent.TEMPLATE_STATE))
+    // }
 
     @Test
     fun `unknown type with an actionUri falls back to OPENED`() {
@@ -173,11 +182,11 @@ class MessagingPushTrackingProviderTest {
     fun `identity uri is deterministic and scoped to the notification id`() {
         val intent = savedIntent(
             provider.getPendingIntent(
-                PushInteraction("rerender", actionId = "next", templateExtras = mapOf("b" to "2", "a" to "1"))
+                PushInteraction("button_click", actionId = "next", templateExtras = mapOf("b" to "2", "a" to "1"))
             )
         )
 
-        assertEquals("adbpush://42/rerender?id=next&s.a=1&s.b=2", intent.dataString)
+        assertEquals("adbpush://42/button_click?id=next&s.a=1&s.b=2", intent.dataString)
     }
 
     @Test
@@ -191,8 +200,8 @@ class MessagingPushTrackingProviderTest {
 
     @Test
     fun `interactions differing only in template state resolve to different PendingIntents`() {
-        val left = provider.getPendingIntent(PushInteraction("rerender", templateExtras = mapOf("adb_index" to "0")))
-        val right = provider.getPendingIntent(PushInteraction("rerender", templateExtras = mapOf("adb_index" to "2")))
+        val left = provider.getPendingIntent(PushInteraction("button_click", templateExtras = mapOf("adb_index" to "0")))
+        val right = provider.getPendingIntent(PushInteraction("button_click", templateExtras = mapOf("adb_index" to "2")))
 
         assertNotEquals(left, right)
     }
