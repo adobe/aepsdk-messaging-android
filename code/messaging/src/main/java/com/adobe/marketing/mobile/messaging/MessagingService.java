@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.plugin.ILiveupdatePlugin;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -73,6 +74,32 @@ public class MessagingService extends FirebaseMessagingService {
                             + " Messaging extension is ignoring to display the push notification.");
             return false;
         }
+
+        // Live Update fork — early gate. If a handler is registered, hand off the raw
+        // RemoteMessage; the handler owns parsing, building, and posting end-to-end.
+        // If no handler is registered, drop with a warning — Messaging cannot meaningfully
+        // render a Live Update payload (its content lives inside adb_liveupdate_data which
+        // is intentionally opaque to Messaging).
+        if (remoteMessage
+                .getData()
+                .containsKey(MessagingConstants.Push.PayloadKeys.LIVE_UPDATE_DATA)) {
+            final ILiveupdatePlugin liveUpdatePlugin =
+                    MobileCore.getPlugin(ILiveupdatePlugin.class);
+            if (liveUpdatePlugin == null) {
+                Log.warning(
+                        MessagingPushConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Received a Live Update push but no ILiveupdatePlugin is registered."
+                                + " Dropping. Register a plugin via MobileCore.addPlugins(...).");
+                return true;
+            }
+            liveUpdatePlugin.handleLiveUpdatePush(context, remoteMessage);
+            return true;
+        }
+
+        // Standard push path — UNCHANGED from pre-Live-Update state. Reads only outer adb_*
+        // keys; never peeks inside adb_liveupdate_data.
+        // Build and display the notification synchronously while the FCM wakelock is active.
 
         final String messageId = remoteMessage.getMessageId();
         if (StringUtils.isNullOrEmpty(messageId)) {

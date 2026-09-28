@@ -340,6 +340,42 @@ class InternalMessagingUtils {
         return consequenceType.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is a clear persisted propositions event.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a clear persisted propositions
+     *     event.
+     */
+    static boolean isClearPersistedPropositionsEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+                && DataReader.optBoolean(
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.Messaging.CLEAR_PERSISTED_PROPOSITIONS,
+                        false);
+    }
+
+    /**
+     * Determines if the passed in {@code Event} is an edge error response event.
+     *
+     * @param event An Edge error response {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is an edge error response event.
+     */
+    static boolean isEdgeErrorResponseEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return MessagingConstants.EventType.EDGE.equalsIgnoreCase(event.getType())
+                && MessagingConstants.EventSource.EDGE_ERROR_RESPONSE.equalsIgnoreCase(
+                        event.getSource());
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
@@ -377,6 +413,43 @@ class InternalMessagingUtils {
             retrievedSurfaces.add(surface);
         }
         return retrievedSurfaces;
+    }
+
+    /**
+     * Retrieves the caller-provided custom XDM from an {@code updatePropositionsForSurfaces} {@code
+     * Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code Map<String, Object>} containing the custom XDM, or {@code null} if not present
+     */
+    static Map<String, Object> getUpdatePropositionsXdm(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
+        return DataReader.optTypedMap(
+                Object.class,
+                event.getEventData(),
+                MessagingConstants.EventDataKeys.Messaging.XDM,
+                null);
+    }
+
+    /**
+     * Retrieves the caller-provided custom free-form data from an {@code
+     * updatePropositionsForSurfaces} {@code Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code Map<String, Object>} containing the custom data, or {@code null} if not
+     *     present
+     */
+    static Map<String, Object> getUpdatePropositionsData(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
+        return DataReader.optTypedMap(
+                Object.class,
+                event.getEventData(),
+                MessagingConstants.EventDataKeys.Messaging.DATA,
+                null);
     }
 
     // ========================================================================================

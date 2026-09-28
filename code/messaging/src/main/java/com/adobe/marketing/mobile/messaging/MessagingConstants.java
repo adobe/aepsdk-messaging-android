@@ -11,6 +11,11 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public final class MessagingConstants {
 
     public static final String LOG_TAG = "Messaging";
@@ -23,6 +28,7 @@ public final class MessagingConstants {
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CONTENT_CARD_CACHE_SUBDIRECTORY = "contentCardImages";
+    static final String CONTENT_CARD_PROPOSITIONS_CACHE_SUBDIRECTORY = "contentCardPropositions";
     static final String HTTP_HEADER_IF_MODIFIED_SINCE = "If-Modified-Since";
     static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
@@ -34,6 +40,8 @@ public final class MessagingConstants {
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
     static final int IGNORE_PUSH_SYNC_TIMEOUT_MS = 1000;
+    static final Set<Integer> RECOVERABLE_EDGE_ERROR_STATUS_CODES =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(408, 429, 502, 503, 504, 507)));
 
     private MessagingConstants() {}
 
@@ -145,6 +153,7 @@ public final class MessagingConstants {
         static final String DATASET_ID = "datasetId";
         static final String COLLECT = "collect";
         static final String EXD_REQUEST_ID = "exdRequestID";
+        static final String DISPLAY = "display";
         static final String INTERACT = "interact";
         static final String DISMISS = "dismiss";
 
@@ -205,12 +214,15 @@ public final class MessagingConstants {
             static final String UPDATE_PROPOSITIONS = "updatepropositions";
             static final String GET_PROPOSITIONS = "getpropositions";
             static final String SURFACES = "surfaces";
+            static final String XDM = "xdm";
+            static final String DATA = "data";
             static final String ENDING_EVENT_ID = "endingEventId";
             static final String RESPONSE_ERROR = "responseerror";
             static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
             static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            static final String CLEAR_PERSISTED_PROPOSITIONS = "clearpersistedpropositions";
             static final String PUSH_NOTIFICATION_RECEIVED = "pushnotificationreceived";
 
             private Messaging() {}
@@ -273,7 +285,7 @@ public final class MessagingConstants {
                 private Inbound() {}
 
                 final class EventType {
-                    static final String PERSONALIZATION_REQUEST = "personalization.request";
+                    static final String PROPOSITION_FETCH = "decisioning.propositionFetch";
 
                     private EventType() {}
                 }
@@ -296,10 +308,17 @@ public final class MessagingConstants {
                     static final String SCHEMAS = "schemas";
                     static final String CHARACTERISTICS = "characteristics";
                     static final String TOKENS = "tokens";
+                    static final String SERVED_FROM_PERSISTENT_CACHE = "servedFromPersistentCache";
 
                     private Key() {}
                 }
             }
+        }
+
+        final class EdgeError {
+            static final String STATUS = "status";
+
+            private EdgeError() {}
         }
 
         final class RulesEngine {
@@ -363,6 +382,7 @@ public final class MessagingConstants {
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
         static final String TRACK_PROPOSITIONS = "Track propositions";
         static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
+        static final String CLEAR_PERSISTED_PROPOSITIONS = "Clear cached propositions";
 
         private EventName() {}
     }
@@ -372,6 +392,7 @@ public final class MessagingConstants {
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
         static final String NOTIFICATION = "com.adobe.eventSource.notification";
         static final String EVENT_HISTORY_WRITE = "com.adobe.eventSource.eventHistoryWrite";
+        static final String EDGE_ERROR_RESPONSE = "com.adobe.eventSource.errorResponseContent";
 
         private EventSource() {}
     }
@@ -410,6 +431,8 @@ public final class MessagingConstants {
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
             static final String OPTIMIZE_PUSH_SYNC = "messaging.optimizePushSync";
+            static final String CONTENT_CARD_OFFLINE_AVAILABLE =
+                    "messaging.contentCardOfflineAvailable";
 
             private Configuration() {}
         }
@@ -464,6 +487,15 @@ public final class MessagingConstants {
             public static final String ACTION_BUTTONS = "adb_act";
             public static final String INAPP_MESSAGE_ID = "adb_iam_id";
             public static final String TEMPLATE_TYPE = "adb_template_type";
+
+            /**
+             * JSON-stringified Live Update envelope. Detection key only — Messaging never reads
+             * inside it. When present and an {@link
+             * com.adobe.marketing.mobile.plugin.ILiveupdatePlugin} is registered via {@code
+             * MobileCore.addPlugins(...)}, the raw {@link
+             * com.google.firebase.messaging.RemoteMessage} is handed to the plugin.
+             */
+            public static final String LIVE_UPDATE_DATA = "adb_liveupdate_data";
 
             private PayloadKeys() {}
         }

@@ -11,22 +11,28 @@
 
 package com.adobe.marketing.mobile.messagingsample
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,11 +42,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.adobe.marketing.mobile.AdobeCallbackWithError
+import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
@@ -59,7 +66,16 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messaging.Surface
+
+private const val DEFAULT_SURFACE_1 = "card/ms"
+private const val DEFAULT_SURFACE_2 = "largeImageCards"
+private const val DEFAULT_TRACK_ACTION = "smoke_test"
+
+private const val PREFS_NAME = "messaging_test_prefs"
+private const val PREF_OFFLINE_AVAILABLE = "contentCardOfflineAvailable"
+private const val CONFIG_KEY_OFFLINE_AVAILABLE = "messaging.contentCardOfflineAvailable"
 
 class ContentCardsTestActivity : ComponentActivity() {
 
@@ -76,137 +92,261 @@ class ContentCardsTestActivity : ComponentActivity() {
 @Composable
 private fun ContentCardsTestScreen(viewModel: ContentCardsTestViewModel = viewModel()) {
     val context = LocalContext.current
-    var surfacesRaw by remember { mutableStateOf("card/ms, card/ms2") }
-    var triggerAction by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("") }
+    var surface1Path by remember { mutableStateOf(DEFAULT_SURFACE_1) }
+    var surface2Path by remember { mutableStateOf(DEFAULT_SURFACE_2) }
+    var offlineAvailable by remember { mutableStateOf(readPersistedOfflineFlag(context)) }
+    var trackActionName by remember { mutableStateOf(DEFAULT_TRACK_ACTION) }
 
     val sections by viewModel.sections.collectAsStateWithLifecycle()
+    val loadStatus by viewModel.loadStatus.collectAsStateWithLifecycle()
     val itemsStyle = rememberContentCardItemsStyle()
 
     Column(
-        modifier =
-            Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
     ) {
-        // Launcher for the manual messaging-settings screen (collect-consent toggles,
-        // optimizePushSync switch, set-push-identifier). Placed here because the
-        // SecondLevelActivity deep-link path is broken in this build.
+        // ── Settings shortcut ─────────────────────────────────────────────────────────
         Button(
-            onClick = {
-                context.startActivity(Intent(context, MessagingSettingsActivity::class.java))
-            },
+            onClick = { context.startActivity(Intent(context, MessagingSettingsActivity::class.java)) },
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
         ) {
             Text("Settings & Testing")
         }
+
+        // ── Surface path inputs ───────────────────────────────────────────────────────
         Text(
-            text = stringResource(R.string.content_cards_surfaces_label),
+            text = "Surface Paths",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
         OutlinedTextField(
-            value = surfacesRaw,
-            onValueChange = { surfacesRaw = it },
+            value = surface1Path,
+            onValueChange = { surface1Path = it },
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-            label = { Text(stringResource(R.string.content_cards_surfaces_label)) },
-            placeholder = { Text(stringResource(R.string.content_cards_surfaces_hint)) },
-            minLines = 2
-        )
-        Button(
-            onClick = {
-                val entries = parseSurfaceEntries(surfacesRaw)
-                if (entries == null) {
-                    Toast.makeText(context, "Enter at least one surface path", Toast.LENGTH_SHORT)
-                        .show()
-                    return@Button
-                }
-                Messaging.updatePropositionsForSurfaces(entries.map { it.second })
-                status =
-                    "updatePropositionsForSurfaces dispatched (${entries.size} surface(s)). Tap Get content to refresh the card UI."
-            },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-        ) {
-            Text(stringResource(R.string.content_cards_refresh))
-        }
-        Text(
-            text = stringResource(R.string.content_cards_trigger_action_label),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 12.dp)
+            label = { Text("S1 surface path") },
+            singleLine = true
         )
         OutlinedTextField(
-            value = triggerAction,
-            onValueChange = { triggerAction = it },
+            value = surface2Path,
+            onValueChange = { surface2Path = it },
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-            label = { Text(stringResource(R.string.content_cards_trigger_action_label)) },
-            placeholder = { Text(stringResource(R.string.content_cards_trigger_action_hint)) },
+            label = { Text("S2 surface path") },
+            singleLine = true
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // ── Offline flag toggle ───────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "Offline Content Cards",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = CONFIG_KEY_OFFLINE_AVAILABLE,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = offlineAvailable,
+                onCheckedChange = { enabled ->
+                    offlineAvailable = enabled
+                    persistOfflineFlag(context, enabled)
+                    MobileCore.updateConfiguration(mapOf(CONFIG_KEY_OFFLINE_AVAILABLE to enabled))
+                }
+            )
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+        // ── Update Propositions (network fetch only; UI is not refreshed) ─────────────
+        Text(
+            text = "Update Propositions",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { updateSurface(context, surface1Path, "S1", viewModel) },
+                modifier = Modifier.weight(1f)
+            ) { Text("Update S1") }
+
+            Button(
+                onClick = { updateSurface(context, surface2Path, "S2", viewModel) },
+                modifier = Modifier.weight(1f)
+            ) { Text("Update S2") }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // ── Get Propositions (reads cache and reflects cards / errors on the UI) ──────
+        Text(
+            text = "Get Propositions",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { getSurface(context, surface1Path, "S1", viewModel) },
+                modifier = Modifier.weight(1f)
+            ) { Text("Get S1") }
+
+            Button(
+                onClick = { getSurface(context, surface2Path, "S2", viewModel) },
+                modifier = Modifier.weight(1f)
+            ) { Text("Get S2") }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // ── Clear Propositions (clear API only) ───────────────────────────────────────
+        Button(
+            onClick = {
+                Messaging.clearCachedPropositions()
+                viewModel.setLoadStatus("clearCachedPropositions() called.")
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Clear Propositions")
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // ── Track Action (dispatches an event that can qualify trigger-gated cards) ────
+        Text(
+            text = "Track Action",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        OutlinedTextField(
+            value = trackActionName,
+            onValueChange = { trackActionName = it },
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            label = { Text("Action name") },
             singleLine = true
         )
         Button(
             onClick = {
-                val action = triggerAction.trim()
+                val action = trackActionName.trim()
                 if (action.isEmpty()) {
-                    Toast.makeText(
-                            context,
-                            "Enter a trigger action name",
-                            Toast.LENGTH_SHORT
-                        )
-                        .show()
+                    Toast.makeText(context, "Action name is empty", Toast.LENGTH_SHORT).show()
                     return@Button
                 }
                 MobileCore.trackAction(action, null)
-                status = "MobileCore.trackAction(\"$action\", null)"
+                viewModel.setLoadStatus("trackAction(\"$action\") sent. Tap Get to refresh cards.")
             },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
         ) {
-            Text(stringResource(R.string.content_cards_send_action))
+            Text("Send Action")
         }
-        Button(
-            onClick = {
-                val entries = parseSurfaceEntries(surfacesRaw)
-                if (entries == null) {
-                    Toast.makeText(context, "Enter at least one surface path", Toast.LENGTH_SHORT)
-                        .show()
-                    return@Button
-                }
-                viewModel.setSurfaceEntries(entries)
-                val time =
-                    DateFormat.getTimeFormat(context).format(System.currentTimeMillis())
-                status = "Card UI loaded from cache ($time)"
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.content_cards_get_content))
-        }
-        Text(
-            text = status,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-        Text(
-            text = stringResource(R.string.content_cards_results_label),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-        if (sections.isEmpty()) {
+
+        // ── Status label ──────────────────────────────────────────────────────────────
+        if (loadStatus.isNotEmpty()) {
             Text(
-                text =
-                    "Tap Get content to load ContentCardUIProvider output. Refresh only fetches propositions from Edge (no UI update).",
+                text = loadStatus,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 8.dp)
             )
-        } else {
-            sections.forEach { section ->
-                SurfaceCardsSection(
-                    section = section,
-                    itemsStyle = itemsStyle,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+        // ── Card results ──────────────────────────────────────────────────────────────
+        Text(
+            text = "Content Cards",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        sections.forEach { section ->
+            SurfaceCardsSection(
+                section = section,
+                itemsStyle = itemsStyle,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
+}
+
+/** Fires an update (network fetch) for a single surface. Does not touch the card UI. */
+private fun updateSurface(
+    context: Context,
+    rawPath: String,
+    label: String,
+    viewModel: ContentCardsTestViewModel,
+) {
+    val path = rawPath.trim()
+    if (path.isEmpty()) {
+        Toast.makeText(context, "$label path is empty", Toast.LENGTH_SHORT).show()
+        return
+    }
+    viewModel.setLoadStatus("Updating $label…")
+    Messaging.updatePropositionsForSurfaces(listOf(Surface(path))) { success ->
+        viewModel.setLoadStatus(
+            if (success == true) "$label update completed." else "$label update failed or timed out."
+        )
+    }
+}
+
+/** Reads a single surface from cache and reflects the cards (or error) on the UI. */
+private fun getSurface(
+    context: Context,
+    rawPath: String,
+    label: String,
+    viewModel: ContentCardsTestViewModel,
+) {
+    val path = rawPath.trim()
+    if (path.isEmpty()) {
+        Toast.makeText(context, "$label path is empty", Toast.LENGTH_SHORT).show()
+        return
+    }
+    val surface = Surface(path)
+    viewModel.setLoadStatus("Loading $label…")
+    Messaging.getPropositionsForSurfaces(
+        listOf(surface),
+        object : AdobeCallbackWithError<Map<Surface, List<Proposition>>> {
+            override fun call(propositionsMap: Map<Surface, List<Proposition>>?) {
+                val count = propositionsMap?.values?.sumOf { it.size } ?: 0
+                viewModel.setLoadStatus("$label: $count card(s) loaded.")
+                if (count > 0) {
+                    viewModel.upsertSurfaceEntry(path, surface)
+                } else {
+                    viewModel.removeSurfaceEntry(path)
+                }
+            }
+
+            override fun fail(error: AdobeError?) {
+                viewModel.setLoadStatus("$label get failed: ${error?.errorName ?: "unknown"}")
+                viewModel.removeSurfaceEntry(path)
+            }
+        }
+    )
+}
+
+private fun readPersistedOfflineFlag(context: Context): Boolean =
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .getBoolean(PREF_OFFLINE_AVAILABLE, false)
+
+private fun persistOfflineFlag(context: Context, enabled: Boolean) {
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .edit()
+        .putBoolean(PREF_OFFLINE_AVAILABLE, enabled)
+        .apply()
 }
 
 @Composable
@@ -219,8 +359,7 @@ private fun rememberContentCardItemsStyle(): AepUIStyle {
                 .rootRowStyle(
                     AepRowStyle(
                         modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     )
                 )
@@ -302,30 +441,10 @@ private fun ContentCardRow(
     }
     when (aepUI) {
         is SmallImageUI ->
-            SmallImageCard(
-                ui = aepUI,
-                style = itemsStyle.smallImageUIStyle,
-                observer = observer
-            )
+            SmallImageCard(ui = aepUI, style = itemsStyle.smallImageUIStyle, observer = observer)
         is LargeImageUI ->
-            LargeImageCard(
-                ui = aepUI,
-                style = itemsStyle.largeImageUIStyle,
-                observer = observer
-            )
+            LargeImageCard(ui = aepUI, style = itemsStyle.largeImageUIStyle, observer = observer)
         is ImageOnlyUI ->
-            ImageOnlyCard(
-                ui = aepUI,
-                style = itemsStyle.imageOnlyUIStyle,
-                observer = observer
-            )
+            ImageOnlyCard(ui = aepUI, style = itemsStyle.imageOnlyUIStyle, observer = observer)
     }
-}
-
-private fun parseSurfaceEntries(raw: String): List<Pair<String, Surface>>? {
-    val entries =
-        raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }.map { token ->
-            token to Surface(token)
-        }
-    return if (entries.isEmpty()) null else entries
 }

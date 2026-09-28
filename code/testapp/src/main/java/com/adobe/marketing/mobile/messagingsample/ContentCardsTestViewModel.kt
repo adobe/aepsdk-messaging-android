@@ -33,6 +33,11 @@ class ContentCardsTestViewModel : ViewModel() {
     private val _sections = MutableStateFlow<List<SurfaceCardSection>>(emptyList())
     val sections: StateFlow<List<SurfaceCardSection>> = _sections.asStateFlow()
 
+    /** Human-readable status shown below the action buttons (e.g. "Loaded 3 card(s) from Disk"). */
+    private val _loadStatus = MutableStateFlow("")
+    val loadStatus: StateFlow<String> = _loadStatus.asStateFlow()
+
+    /** Replace all sections with the given list of surface entries. */
     fun setSurfaceEntries(entries: List<Pair<String, Surface>>) {
         _sections.value =
             entries.map { (path, surface) ->
@@ -41,6 +46,35 @@ class ContentCardsTestViewModel : ViewModel() {
                     ContentCardEventObserver(SampleContentCardEventCallback, provider)
                 SurfaceCardSection(path, surface, provider, observer)
             }
+    }
+
+    /**
+     * Add or replace the section for a single surface, leaving other surfaces unchanged.
+     * If a section with the same path already exists it is refreshed in place; otherwise
+     * it is appended.
+     */
+    fun upsertSurfaceEntry(path: String, surface: Surface) {
+        val provider = ContentCardUIProvider(surface)
+        val observer = ContentCardEventObserver(SampleContentCardEventCallback, provider)
+        val newSection = SurfaceCardSection(path, surface, provider, observer)
+        val current = _sections.value.toMutableList()
+        val idx = current.indexOfFirst { it.pathToken == path }
+        if (idx >= 0) current[idx] = newSection else current.add(newSection)
+        _sections.value = current
+    }
+
+    /** Remove the section for a single surface path, if present. */
+    fun removeSurfaceEntry(path: String) {
+        _sections.value = _sections.value.filterNot { it.pathToken == path }
+    }
+
+    fun setLoadStatus(status: String) {
+        _loadStatus.value = status
+    }
+
+    fun clearSections() {
+        _sections.value = emptyList()
+        _loadStatus.value = ""
     }
 
     private object SampleContentCardEventCallback : ContentCardUIEventListener {

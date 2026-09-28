@@ -1304,6 +1304,73 @@ public class InternalMessagingUtilsTests {
     }
 
     // ========================================================================================
+    // getUpdatePropositionsXdm / getUpdatePropositionsData
+    // ========================================================================================
+    @Test
+    public void getUpdatePropositionsXdm_returnsXdm_whenPresent() {
+        // setup
+        Map<String, Object> xdm = new HashMap<>();
+        xdm.put("key", "value");
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("xdm", xdm);
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+
+        // test & verify
+        Map<String, Object> result = InternalMessagingUtils.getUpdatePropositionsXdm(event);
+        assertNotNull(result);
+        assertEquals("value", result.get("key"));
+    }
+
+    @Test
+    public void getUpdatePropositionsXdm_returnsNull_whenAbsent() {
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertNull(InternalMessagingUtils.getUpdatePropositionsXdm(event));
+    }
+
+    @Test
+    public void getUpdatePropositionsXdm_returnsNull_whenEventIsNull() {
+        assertNull(InternalMessagingUtils.getUpdatePropositionsXdm(null));
+    }
+
+    @Test
+    public void getUpdatePropositionsData_returnsData_whenPresent() {
+        // setup
+        Map<String, Object> data = new HashMap<>();
+        data.put("customKey", "customValue");
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("data", data);
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+
+        // test & verify
+        Map<String, Object> result = InternalMessagingUtils.getUpdatePropositionsData(event);
+        assertNotNull(result);
+        assertEquals("customValue", result.get("customKey"));
+    }
+
+    @Test
+    public void getUpdatePropositionsData_returnsNull_whenAbsent() {
+        Event event =
+                new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertNull(InternalMessagingUtils.getUpdatePropositionsData(event));
+    }
+
+    @Test
+    public void getUpdatePropositionsData_returnsNull_whenEventIsNull() {
+        assertNull(InternalMessagingUtils.getUpdatePropositionsData(null));
+    }
+
+    // ========================================================================================
     // Event id retrieval
     // ========================================================================================
     @Test
@@ -2054,5 +2121,150 @@ public class InternalMessagingUtilsTests {
                         .setEventData(data)
                         .build();
         assertFalse(InternalMessagingUtils.isPushNotificationReceivedEvent(event));
+    }
+
+    // =====================================================================
+    // isClearPersistedPropositionsEvent
+    // =====================================================================
+
+    @Test
+    public void testIsClearPersistedPropositionsEvent_returnTrue_validEvent() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.Messaging.CLEAR_PERSISTED_PROPOSITIONS, true);
+        final Event event =
+                new Event.Builder(
+                                "Clear persisted propositions",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertTrue(InternalMessagingUtils.isClearPersistedPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsClearPersistedPropositionsEvent_returnFalse_nullEvent() {
+        assertFalse(InternalMessagingUtils.isClearPersistedPropositionsEvent(null));
+    }
+
+    @Test
+    public void testIsClearPersistedPropositionsEvent_returnFalse_nullEventData() {
+        final Event event =
+                new Event.Builder(
+                                "Clear persisted propositions",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .build();
+        assertFalse(InternalMessagingUtils.isClearPersistedPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsClearPersistedPropositionsEvent_returnFalse_wrongEventType() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.Messaging.CLEAR_PERSISTED_PROPOSITIONS, true);
+        final Event event =
+                new Event.Builder(
+                                "Clear persisted propositions",
+                                EventType.EDGE,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertFalse(InternalMessagingUtils.isClearPersistedPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsClearPersistedPropositionsEvent_returnFalse_wrongEventSource() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.Messaging.CLEAR_PERSISTED_PROPOSITIONS, true);
+        final Event event =
+                new Event.Builder(
+                                "Clear persisted propositions",
+                                EventType.MESSAGING,
+                                EventSource.RESPONSE_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertFalse(InternalMessagingUtils.isClearPersistedPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsClearPersistedPropositionsEvent_returnFalse_flagIsFalse() {
+        final Map<String, Object> data = new HashMap<>();
+        data.put(
+                MessagingTestConstants.EventDataKeys.Messaging.CLEAR_PERSISTED_PROPOSITIONS, false);
+        final Event event =
+                new Event.Builder(
+                                "Clear persisted propositions",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(data)
+                        .build();
+        assertFalse(InternalMessagingUtils.isClearPersistedPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsClearPersistedPropositionsEvent_returnFalse_keyMissing() {
+        final Event event =
+                new Event.Builder(
+                                "Clear persisted propositions",
+                                EventType.MESSAGING,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertFalse(InternalMessagingUtils.isClearPersistedPropositionsEvent(event));
+    }
+
+    // =====================================================================
+    // isEdgeErrorResponseEvent
+    // =====================================================================
+
+    @Test
+    public void testIsEdgeErrorResponseEvent_returnTrue_validEvent() {
+        final Event event =
+                new Event.Builder(
+                                "Edge error response",
+                                MessagingTestConstants.EventType.EDGE,
+                                MessagingTestConstants.EventSource.EDGE_ERROR_RESPONSE)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertTrue(InternalMessagingUtils.isEdgeErrorResponseEvent(event));
+    }
+
+    @Test
+    public void testIsEdgeErrorResponseEvent_returnFalse_nullEvent() {
+        assertFalse(InternalMessagingUtils.isEdgeErrorResponseEvent(null));
+    }
+
+    @Test
+    public void testIsEdgeErrorResponseEvent_returnFalse_nullEventData() {
+        final Event event =
+                new Event.Builder(
+                                "Edge error response",
+                                MessagingTestConstants.EventType.EDGE,
+                                MessagingTestConstants.EventSource.EDGE_ERROR_RESPONSE)
+                        .build();
+        assertFalse(InternalMessagingUtils.isEdgeErrorResponseEvent(event));
+    }
+
+    @Test
+    public void testIsEdgeErrorResponseEvent_returnFalse_wrongEventType() {
+        final Event event =
+                new Event.Builder(
+                                "Edge error response",
+                                EventType.MESSAGING,
+                                MessagingTestConstants.EventSource.EDGE_ERROR_RESPONSE)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertFalse(InternalMessagingUtils.isEdgeErrorResponseEvent(event));
+    }
+
+    @Test
+    public void testIsEdgeErrorResponseEvent_returnFalse_wrongEventSource() {
+        final Event event =
+                new Event.Builder(
+                                "Edge error response",
+                                MessagingTestConstants.EventType.EDGE,
+                                EventSource.REQUEST_CONTENT)
+                        .setEventData(new HashMap<>())
+                        .build();
+        assertFalse(InternalMessagingUtils.isEdgeErrorResponseEvent(event));
     }
 }
