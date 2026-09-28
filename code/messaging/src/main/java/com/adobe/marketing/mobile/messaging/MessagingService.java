@@ -74,17 +74,24 @@ public class MessagingService extends FirebaseMessagingService {
             return false;
         }
 
-        // Build and display the notification synchronously while the FCM wakelock is active.
-        final Notification notification = MessagingPushBuilder.build(remoteMessage, context);
-        if (notification == null) {
-            // notification could not be constructed; the push message is ignored
+        final String messageId = remoteMessage.getMessageId();
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "The received push message does not have a message id. Messaging extension is"
+                            + " ignoring to display the push notification.");
             return false;
         }
+
+        // Build and display the notification synchronously while the FCM wakelock is active.
+        final Notification notification =
+                MessagingPushBuilder.build(remoteMessage, messageId, context);
 
         // display notification
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
-        notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
+        notificationManager.notify(MessagingPushUtils.getNotificationId(messageId), notification);
 
         // Bootstrap the SDK if this is a cold-start push, then record delivery.
         selfInit(context, () -> Messaging.trackPushReceived(remoteMessage));

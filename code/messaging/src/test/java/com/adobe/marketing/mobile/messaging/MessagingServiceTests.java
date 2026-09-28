@@ -110,7 +110,7 @@ public class MessagingServiceTests {
                 .when(
                         () ->
                                 MessagingPushBuilder.build(
-                                        any(RemoteMessage.class), any(Context.class)))
+                                        any(RemoteMessage.class), anyString(), any(Context.class)))
                 .thenReturn(notification);
 
         // Mock ServiceProvider so that the NamedCollection returned by the data store service
@@ -475,29 +475,45 @@ public class MessagingServiceTests {
     }
 
     @Test
-    public void test_handleRemoteMessage_whenNotificationBuildFails_ReturnsFalse() {
-        // setup
-        when(remoteMessage.getData())
-                .thenReturn(
-                        new HashMap<String, String>() {
-                            {
-                                put("_xdm", "somevalues");
-                                put("adb_title", "Sample Title");
-                            }
-                        });
-        pushBuilder
-                .when(
-                        () ->
-                                MessagingPushBuilder.build(
-                                        any(RemoteMessage.class), any(Context.class)))
-                .thenReturn(null);
-
+    public void test_handleRemoteMessage_postsUnderNotificationIdOfMessageId() {
         // test
         boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
-        // verify the push message is ignored and no notification is displayed
+        // verify the validated message id is passed to the builder and used for the notification id
+        assertTrue(isHandled);
+        pushBuilder.verify(
+                () ->
+                        MessagingPushBuilder.build(
+                                eq(remoteMessage), eq("test-message-id"), any(Context.class)));
+        verify(notificationManager)
+                .notify(
+                        eq(MessagingPushUtils.getNotificationId("test-message-id")),
+                        eq(notification));
+    }
+
+    @Test
+    public void test_handleRemoteMessage_whenMessageIdIsNull_ReturnsFalse() {
+        when(remoteMessage.getMessageId()).thenReturn(null);
+
+        assertMessageIgnored();
+    }
+
+    @Test
+    public void test_handleRemoteMessage_whenMessageIdIsEmpty_ReturnsFalse() {
+        when(remoteMessage.getMessageId()).thenReturn("");
+
+        assertMessageIgnored();
+    }
+
+    private void assertMessageIgnored() {
+        // test
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify nothing is built, displayed or tracked
         assertFalse(isHandled);
-        verify(notificationManager, times(0)).notify(anyInt(), any());
-        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), times(0));
+        pushBuilder.verify(
+                () -> MessagingPushBuilder.build(any(RemoteMessage.class), any(), any()), never());
+        verify(notificationManager, never()).notify(anyInt(), any());
+        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), never());
     }
 }

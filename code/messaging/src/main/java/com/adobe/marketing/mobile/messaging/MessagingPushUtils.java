@@ -46,6 +46,17 @@ import java.util.concurrent.atomic.AtomicReference;
 class MessagingPushUtils {
     private static final String SELF_TAG = "MessagingPushUtils";
 
+    /**
+     * Returns the id a push notification is posted with. Every place that posts, updates or cancels
+     * a Messaging push notification must use this so they all agree.
+     *
+     * @param messageId the push message id
+     * @return the notification id
+     */
+    static int getNotificationId(@NonNull final String messageId) {
+        return messageId.hashCode();
+    }
+
     static Bitmap download(final String url) {
         Bitmap bitmap = null;
         HttpURLConnection connection = null;

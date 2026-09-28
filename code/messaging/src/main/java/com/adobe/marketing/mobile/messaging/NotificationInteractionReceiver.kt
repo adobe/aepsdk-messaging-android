@@ -14,16 +14,87 @@ package com.adobe.marketing.mobile.messaging
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.messaging.MessagingPushConstants.Tracking.Keys.ACTION_DISMISS
+import androidx.annotation.VisibleForTesting
+import com.adobe.marketing.mobile.messaging.MessagingPushConstants.NotificationAction
+import com.adobe.marketing.mobile.services.Log
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
-class NotificationInteractionReceiver : BroadcastReceiver() {
+/**
+ * Entry point for the silent (broadcast) push-notification interactions Messaging owns.
+ *
+ * The receiver only dispatches: it runs the [NotificationInteractionHandler] registered for the intent
+ * action, off the main thread (keeping the broadcast alive with [goAsync]) when the handler asks for
+ * it. Supporting a new interaction means registering a new handler, not changing this class.
+ *
+ * - [NotificationAction.DISMISSED] -> [DismissInteractionHandler]
+ * - [NotificationAction.INTERACTION] -> [SilentInteractionHandler]
+ * - [NotificationAction.RERENDER] -> [PushTemplateRerenderHandler] (background)
+ *
+ * This receiver must stay `exported="false"`: the re-render path posts a notification built from the
+ * intent's extras.
+ */
+class NotificationInteractionReceiver @VisibleForTesting internal constructor(
+    private val handlers: Map<String, NotificationInteractionHandler>,
+    private val backgroundExecutor: Executor
+) : BroadcastReceiver() {
+
+    constructor() : this(DEFAULT_HANDLERS, BACKGROUND_EXECUTOR)
+
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent != null) {
-            Messaging.handleNotificationResponse(
-                intent,
-                false,
-                ACTION_DISMISS
+        if (context == null || intent == null) {
+            return
+        }
+
+        val handler = handlers[intent.action]
+        if (handler == null) {
+            Log.debug(
+                MessagingPushConstants.LOG_TAG,
+                SELF_TAG,
+                "Ignoring intent with unrecognized action '${intent.action}'."
+            )
+            return
+        }
+
+        if (handler.runsInBackground) {
+            runInBackground(handler, context.applicationContext ?: context, intent)
+        } else {
+            handler.handle(context, intent)
+        }
+    }
+
+    private fun runInBackground(
+        handler: NotificationInteractionHandler,
+        context: Context,
+        intent: Intent
+    ) {
+        val pendingResult: PendingResult? = goAsync()
+        backgroundExecutor.execute {
+            try {
+                handler.handle(context, intent)
+            } catch (t: Throwable) {
+                Log.warning(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to handle interaction '${intent.action}': ${t.message}"
+                )
+            } finally {
+                pendingResult?.finish()
+            }
+        }
+    }
+
+    private companion object {
+        const val SELF_TAG = "NotificationInteractionReceiver"
+
+        // Single thread so rapid interactions on one notification are applied in order.
+        val BACKGROUND_EXECUTOR: Executor by lazy { Executors.newSingleThreadExecutor() }
+
+        val DEFAULT_HANDLERS: Map<String, NotificationInteractionHandler> by lazy {
+            mapOf(
+                NotificationAction.DISMISSED to DismissInteractionHandler(),
+                NotificationAction.INTERACTION to SilentInteractionHandler(),
+                NotificationAction.RERENDER to PushTemplateRerenderHandler()
             )
         }
     }
