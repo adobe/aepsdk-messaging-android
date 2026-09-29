@@ -61,4 +61,27 @@ class MessagingPushConstants {
 
         private Tracking() {}
     }
+
+    /**
+     * Event Hub-only error events dispatched when a push needs a Core plugin that is not
+     * registered. They carry the push's {@code _xdm} unchanged and are never forwarded to Edge.
+     */
+    static final class PluginError {
+        // Same event name as the Live Update add-on's render errors, so consumers see one stream.
+        static final String EVENT_NAME_LIVE_UPDATE_ERROR = "Live Update Render Error";
+        static final String EVENT_NAME_PUSH_TEMPLATE_ERROR = "Push Template Render Error";
+
+        static final String PAYLOAD_KEY_XDM = "_xdm";
+
+        static final String KEY_XDM = "xdm";
+        static final String KEY_CATEGORY = "category";
+        static final String KEY_SUBCATEGORY = "subcategory";
+
+        static final String CATEGORY_LIVE_UPDATE_ERROR = "liveUpdateTracking.renderError";
+        static final String CATEGORY_PUSH_TEMPLATE_ERROR = "pushTracking.renderError";
+
+        static final String SUBCATEGORY_NO_PLUGIN = "no_plugin";
+
+        private PluginError() {}
+    }
 }

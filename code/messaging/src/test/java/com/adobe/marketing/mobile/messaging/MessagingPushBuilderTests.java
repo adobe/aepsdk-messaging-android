@@ -363,6 +363,10 @@ public class MessagingPushBuilderTests {
             verify(uiTemplatePlugin).buildPushTemplateNotification(any(), any());
             assertEquals(1, payloadConstruction.constructed().size());
             assertNotNull(result);
+            // a registered plugin that fails to build is not a missing plugin
+            utils.verify(
+                    () -> MessagingPushUtils.dispatchPluginErrorEvent(any(), any(), any(), any()),
+                    never());
         }
     }
 
@@ -392,6 +396,15 @@ public class MessagingPushBuilderTests {
 
             // verify the legacy payload-based flow was used when no plugin is registered
             assertNotNull(result);
+            // verify the missing plugin is reported with the push data
+            final Map<String, String> data = remoteMessage.getData();
+            utils.verify(
+                    () ->
+                            MessagingPushUtils.dispatchPluginErrorEvent(
+                                    eq("Push Template Render Error"),
+                                    eq("pushTracking.renderError"),
+                                    eq("no_plugin"),
+                                    eq(data)));
         }
     }
 

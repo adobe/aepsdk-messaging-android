@@ -84,7 +84,9 @@ class MessagingPushBuilder {
     }
 
     /**
-     * Tries to build the notification through the registered UI template plugin.
+     * Tries to build the notification through the registered UI template plugin. When no plugin is
+     * registered, a {@code no_plugin} render error event carrying the message's {@code _xdm} is
+     * dispatched.
      *
      * @return the templated notification, or {@code null} if the message is not a template, no
      *     plugin is registered, or the plugin could not build it
@@ -114,6 +116,11 @@ class MessagingPushBuilder {
                             + " Add the aepsdk-ui-android plugin and register it via"
                             + " MobileCore.addPlugins(...). Falling back to a basic notification.",
                     templateType);
+            MessagingPushUtils.dispatchPluginErrorEvent(
+                    MessagingPushConstants.PluginError.EVENT_NAME_PUSH_TEMPLATE_ERROR,
+                    MessagingPushConstants.PluginError.CATEGORY_PUSH_TEMPLATE_ERROR,
+                    MessagingPushConstants.PluginError.SUBCATEGORY_NO_PLUGIN,
+                    remoteMessage.getData());
             return null;
         }
         return buildTemplateNotification(uiTemplatePlugin, remoteMessage, messageId, templateType);

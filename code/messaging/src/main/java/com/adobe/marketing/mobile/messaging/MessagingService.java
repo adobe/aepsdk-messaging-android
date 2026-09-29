@@ -152,7 +152,8 @@ public class MessagingService extends FirebaseMessagingService {
     /**
      * Hands a Live Update message to the registered {@link ILiveupdatePlugin}, which owns parsing,
      * building and posting it. Without a registered plugin the message is dropped with a warning,
-     * because Messaging cannot render the opaque {@code adb_liveupdate_data} content.
+     * because Messaging cannot render the opaque {@code adb_liveupdate_data} content, and a {@code
+     * no_plugin} render error event carrying the message's {@code _xdm} is dispatched.
      *
      * @param context the {@link Context} passed to the plugin
      * @param remoteMessage the Live Update {@link RemoteMessage}
@@ -166,7 +167,11 @@ public class MessagingService extends FirebaseMessagingService {
                     SELF_TAG,
                     "Received a Live Update push but no ILiveupdatePlugin is registered."
                             + " Dropping. Register a plugin via MobileCore.addPlugins(...).");
-
+            MessagingPushUtils.dispatchPluginErrorEvent(
+                    MessagingPushConstants.PluginError.EVENT_NAME_LIVE_UPDATE_ERROR,
+                    MessagingPushConstants.PluginError.CATEGORY_LIVE_UPDATE_ERROR,
+                    MessagingPushConstants.PluginError.SUBCATEGORY_NO_PLUGIN,
+                    remoteMessage.getData());
             return;
         }
         liveUpdatePlugin.handleLiveUpdatePush(context, remoteMessage);

@@ -19,23 +19,32 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
+import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Utility class for Building AJO push notification.
@@ -55,6 +64,54 @@ class MessagingPushUtils {
      */
     static int getNotificationId(@NonNull final String messageId) {
         return messageId.hashCode();
+    }
+
+    /**
+     * Dispatches an Event Hub-only error event ({@link EventType#MESSAGING} + {@link
+     * EventSource#ERROR_RESPONSE_CONTENT}) reporting that a push could not be handled because a
+     * required plugin is not registered. The push's {@code _xdm} is attached unchanged under {@code
+     * xdm}; when it is missing or not valid JSON the event is still dispatched without it.
+     *
+     * @param eventName the event name
+     * @param category the error category
+     * @param subcategory the error subcategory
+     * @param messageData the push data map
+     */
+    static void dispatchPluginErrorEvent(
+            @NonNull final String eventName,
+            @NonNull final String category,
+            @NonNull final String subcategory,
+            @Nullable final Map<String, String> messageData) {
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingPushConstants.PluginError.KEY_CATEGORY, category);
+        eventData.put(MessagingPushConstants.PluginError.KEY_SUBCATEGORY, subcategory);
+
+        final String rawXdm =
+                messageData == null
+                        ? null
+                        : messageData.get(MessagingPushConstants.PluginError.PAYLOAD_KEY_XDM);
+        if (!StringUtils.isNullOrEmpty(rawXdm)) {
+            try {
+                final Map<String, Object> xdm = JSONUtils.toMap(new JSONObject(rawXdm));
+                if (xdm != null) {
+                    eventData.put(MessagingPushConstants.PluginError.KEY_XDM, xdm);
+                }
+            } catch (final JSONException e) {
+                Log.debug(
+                        MessagingPushConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Unable to parse _xdm for '%s'; dispatching without xdm: %s",
+                        eventName,
+                        e.getMessage());
+            }
+        }
+
+        final Event event =
+                new Event.Builder(
+                                eventName, EventType.MESSAGING, EventSource.ERROR_RESPONSE_CONTENT)
+                        .setEventData(eventData)
+                        .build();
+        MobileCore.dispatchEvent(event);
     }
 
     static Bitmap download(final String url) {
