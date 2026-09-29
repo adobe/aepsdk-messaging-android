@@ -65,7 +65,7 @@ dependencies {
     implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
     implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
     implementation("com.adobe.marketing.mobile:edgeconsent:$mavenEdgeConsentVersion")
-    implementation("com.github.adobe:aepsdk-ui-android:$mavenNotificationBuilderVersion")
+    implementation("com.adobe.marketing.mobile:notificationbuilder:$mavenNotificationBuilderVersion")
 
     implementation("com.google.firebase:firebase-messaging:23.4.1")
     implementation("androidx.appcompat:appcompat:1.6.1")

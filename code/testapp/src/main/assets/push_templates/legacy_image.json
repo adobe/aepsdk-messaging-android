@@ -1,0 +1,8 @@
+{
+  "adb_a_type": "OPENAPP",
+  "adb_image": "\nhttps://techcrunch.com/wp-content/uploads/2021/10/GettyImages-1231677180.jpg",
+  "adb_n_priority": "PRIORITY_DEFAULT",
+  "adb_title": "\nHello  - JB Push Image",
+  "adb_body": "\nItem Description : Test Description",
+  "_xdm": "{\"mixins\":{\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"local-test-execution\",\"messageID\":\"local-test-message\",\"messageType\":\"transactional\",\"campaignID\":\"local-test-campaign\",\"campaignVersionID\":\"local-test-version\",\"campaignActionID\":\"local-test-action\"}}}}}"
+}

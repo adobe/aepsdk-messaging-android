@@ -37,11 +37,13 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.PushNotificationListener;
+import com.adobe.marketing.mobile.plugin.ILiveupdatePlugin;
 import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.google.firebase.messaging.RemoteMessage;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +112,7 @@ public class MessagingServiceTests {
                 .when(
                         () ->
                                 MessagingPushBuilder.build(
-                                        any(RemoteMessage.class), any(Context.class)))
+                                        any(RemoteMessage.class), anyString(), any(Context.class)))
                 .thenReturn(notification);
 
         // Mock ServiceProvider so that the NamedCollection returned by the data store service
@@ -475,29 +477,98 @@ public class MessagingServiceTests {
     }
 
     @Test
-    public void test_handleRemoteMessage_whenNotificationBuildFails_ReturnsFalse() {
-        // setup
+    public void test_handleRemoteMessage_postsUnderNotificationIdOfMessageId() {
+        // test
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        // verify the validated message id is passed to the builder and used for the notification id
+        assertTrue(isHandled);
+        pushBuilder.verify(
+                () ->
+                        MessagingPushBuilder.build(
+                                eq(remoteMessage), eq("test-message-id"), any(Context.class)));
+        verify(notificationManager)
+                .notify(
+                        eq(MessagingPushUtils.getNotificationId("test-message-id")),
+                        eq(notification));
+    }
+
+    @Test
+    public void test_handleRemoteMessage_liveUpdate_noPlugin_dropsAndDispatchesRenderError() {
         when(remoteMessage.getData())
                 .thenReturn(
                         new HashMap<String, String>() {
                             {
-                                put("_xdm", "somevalues");
-                                put("adb_title", "Sample Title");
+                                put("_xdm", "{\"cjm\":{\"_experience\":{\"id\":\"abc\"}}}");
+                                put("adb_liveupdate_data", "{\"notification_id\":\"n1\"}");
                             }
                         });
-        pushBuilder
-                .when(
-                        () ->
-                                MessagingPushBuilder.build(
-                                        any(RemoteMessage.class), any(Context.class)))
-                .thenReturn(null);
+        mobileCore.when(() -> MobileCore.getPlugin(ILiveupdatePlugin.class)).thenReturn(null);
 
+        final boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        assertTrue(isHandled);
+        verify(notificationManager, never()).notify(anyInt(), any());
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        mobileCore.verify(() -> MobileCore.dispatchEvent(eventCaptor.capture()), times(1));
+        final Event event = eventCaptor.getValue();
+        assertEquals("Live Update Render Error", event.getName());
+        assertEquals(EventType.MESSAGING, event.getType());
+        assertEquals(EventSource.ERROR_RESPONSE_CONTENT, event.getSource());
+        assertEquals("liveUpdateTracking.renderError", event.getEventData().get("category"));
+        assertEquals("no_plugin", event.getEventData().get("subcategory"));
+        final Map<String, Object> experience = new HashMap<>();
+        experience.put("id", "abc");
+        final Map<String, Object> cjm = new HashMap<>();
+        cjm.put("_experience", experience);
+        final Map<String, Object> expectedXdm = new HashMap<>();
+        expectedXdm.put("cjm", cjm);
+        assertEquals(expectedXdm, event.getEventData().get("xdm"));
+    }
+
+    @Test
+    public void test_handleRemoteMessage_liveUpdate_pluginRegistered_delegatesWithoutError() {
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "{}");
+                                put("adb_liveupdate_data", "{}");
+                            }
+                        });
+        final ILiveupdatePlugin plugin = Mockito.mock(ILiveupdatePlugin.class);
+        mobileCore.when(() -> MobileCore.getPlugin(ILiveupdatePlugin.class)).thenReturn(plugin);
+
+        final boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
+
+        assertTrue(isHandled);
+        verify(plugin).handleLiveUpdatePush(context, remoteMessage);
+        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), never());
+    }
+
+    @Test
+    public void test_handleRemoteMessage_whenMessageIdIsNull_ReturnsFalse() {
+        when(remoteMessage.getMessageId()).thenReturn(null);
+
+        assertMessageIgnored();
+    }
+
+    @Test
+    public void test_handleRemoteMessage_whenMessageIdIsEmpty_ReturnsFalse() {
+        when(remoteMessage.getMessageId()).thenReturn("");
+
+        assertMessageIgnored();
+    }
+
+    private void assertMessageIgnored() {
         // test
         boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
-        // verify the push message is ignored and no notification is displayed
+        // verify nothing is built, displayed or tracked
         assertFalse(isHandled);
-        verify(notificationManager, times(0)).notify(anyInt(), any());
-        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), times(0));
+        pushBuilder.verify(
+                () -> MessagingPushBuilder.build(any(RemoteMessage.class), any(), any()), never());
+        verify(notificationManager, never()).notify(anyInt(), any());
+        mobileCore.verify(() -> MobileCore.dispatchEvent(any(Event.class)), never());
     }
 }

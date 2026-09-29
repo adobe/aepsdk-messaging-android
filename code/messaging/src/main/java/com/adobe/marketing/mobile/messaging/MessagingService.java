@@ -64,6 +64,16 @@ public class MessagingService extends FirebaseMessagingService {
         handleRemoteMessage(this, remoteMessage);
     }
 
+    /**
+     * Entry point for an FCM message: displays and tracks it when it was sent by Adobe Journey
+     * Optimizer. Live Update messages go to the registered {@link ILiveupdatePlugin}; all other AJO
+     * messages go through the standard push path.
+     *
+     * @param context the {@link Context} used to build and post the notification
+     * @param remoteMessage the {@link RemoteMessage} received from FCM
+     * @return {@code true} if Messaging handled the message, {@code false} if it was not an AJO
+     *     message or has no message id, in which case the app should handle it
+     */
     public static boolean handleRemoteMessage(
             final @NonNull Context context, final @NonNull RemoteMessage remoteMessage) {
         if (!isAJONotification(remoteMessage)) {
@@ -80,41 +90,91 @@ public class MessagingService extends FirebaseMessagingService {
         // If no handler is registered, drop with a warning — Messaging cannot meaningfully
         // render a Live Update payload (its content lives inside adb_liveupdate_data which
         // is intentionally opaque to Messaging).
-        if (remoteMessage
-                .getData()
-                .containsKey(MessagingConstants.Push.PayloadKeys.LIVE_UPDATE_DATA)) {
-            final ILiveupdatePlugin liveUpdatePlugin =
-                    MobileCore.getPlugin(ILiveupdatePlugin.class);
-            if (liveUpdatePlugin == null) {
-                Log.warning(
-                        MessagingPushConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Received a Live Update push but no ILiveupdatePlugin is registered."
-                                + " Dropping. Register a plugin via MobileCore.addPlugins(...).");
-                return true;
-            }
-            liveUpdatePlugin.handleLiveUpdatePush(context, remoteMessage);
+        if (isLiveUpdateMessage(remoteMessage)) {
+            handleLiveUpdateMessage(context, remoteMessage);
             return true;
         }
 
         // Standard push path — UNCHANGED from pre-Live-Update state. Reads only outer adb_*
         // keys; never peeks inside adb_liveupdate_data.
         // Build and display the notification synchronously while the FCM wakelock is active.
-        final Notification notification = MessagingPushBuilder.build(remoteMessage, context);
-        if (notification == null) {
-            // notification could not be constructed; the push message is ignored
+        return handlePushMessage(context, remoteMessage);
+    }
+
+    /**
+     * Standard push path: builds the notification (through the push template plugin when one is
+     * registered, otherwise the basic layout), posts it under the id derived from the message id,
+     * then records delivery, bootstrapping the SDK first on a cold start.
+     *
+     * @param context the {@link Context} used to build and post the notification
+     * @param remoteMessage the AJO {@link RemoteMessage} to display
+     * @return {@code true} if the notification was posted, {@code false} if the message has no
+     *     message id
+     */
+    private static boolean handlePushMessage(
+            final @NonNull Context context, final @NonNull RemoteMessage remoteMessage) {
+        final String messageId = remoteMessage.getMessageId();
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "The received push message does not have a message id. Messaging extension is"
+                            + " ignoring to display the push notification.");
             return false;
         }
+
+        // Build and display the notification synchronously while the FCM wakelock is active.
+        final Notification notification =
+                MessagingPushBuilder.build(remoteMessage, messageId, context);
 
         // display notification
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
-        notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
+        notificationManager.notify(MessagingPushUtils.getNotificationId(messageId), notification);
 
         // Bootstrap the SDK if this is a cold-start push, then record delivery.
         selfInit(context, () -> Messaging.trackPushReceived(remoteMessage));
 
         return true;
+    }
+
+    /**
+     * @param remoteMessage the {@link RemoteMessage} to check
+     * @return {@code true} if the message data has the {@code adb_liveupdate_data} key, marking it
+     *     as a Live Update push
+     */
+    private static boolean isLiveUpdateMessage(final @NonNull RemoteMessage remoteMessage) {
+        return remoteMessage
+                .getData()
+                .containsKey(MessagingConstants.Push.PayloadKeys.LIVE_UPDATE_DATA);
+    }
+
+    /**
+     * Hands a Live Update message to the registered {@link ILiveupdatePlugin}, which owns parsing,
+     * building and posting it. Without a registered plugin the message is dropped with a warning,
+     * because Messaging cannot render the opaque {@code adb_liveupdate_data} content, and a {@code
+     * no_plugin} render error event carrying the message's {@code _xdm} is dispatched.
+     *
+     * @param context the {@link Context} passed to the plugin
+     * @param remoteMessage the Live Update {@link RemoteMessage}
+     */
+    private static void handleLiveUpdateMessage(
+            final @NonNull Context context, final @NonNull RemoteMessage remoteMessage) {
+        final ILiveupdatePlugin liveUpdatePlugin = MobileCore.getPlugin(ILiveupdatePlugin.class);
+        if (liveUpdatePlugin == null) {
+            Log.warning(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Received a Live Update push but no ILiveupdatePlugin is registered."
+                            + " Dropping. Register a plugin via MobileCore.addPlugins(...).");
+            MessagingPushUtils.dispatchPluginErrorEvent(
+                    MessagingPushConstants.PluginError.EVENT_NAME_LIVE_UPDATE_ERROR,
+                    MessagingPushConstants.PluginError.CATEGORY_LIVE_UPDATE_ERROR,
+                    MessagingPushConstants.PluginError.SUBCATEGORY_NO_PLUGIN,
+                    remoteMessage.getData());
+            return;
+        }
+        liveUpdatePlugin.handleLiveUpdatePush(context, remoteMessage);
     }
 
     /**

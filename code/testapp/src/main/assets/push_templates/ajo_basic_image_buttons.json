@@ -1,0 +1,13 @@
+{
+  "adb_channel_id": "messagingSampleChannel",
+  "adb_n_count": "1",
+  "adb_a_type": "DEEPLINK",
+  "adb_image": "https://picsum.photos/id/237/200/300",
+  "adb_n_priority": "PRIORITY_HIGH",
+  "adb_title": "PT-Val-Basic-Actions",
+  "adb_body": "Standard, with image, \"show entire image\" off",
+  "adb_act": "[{\"label\":\"Web URL\",\"type\":\"WEBURL\",\"uri\":\"https://www.adobe.com\"},{\"label\":\"Deeplink\",\"type\":\"DEEPLINK\",\"uri\":\"demoapp://thirdpage\"},{\"label\":\"Open App\",\"type\":\"OPENAPP\"}]",
+  "adb_uri": "demoapp://secondpage",
+  "adb_template_type": "ajo_basic",
+  "_xdm": "{\"mixins\":{\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"local-test-execution\",\"messageID\":\"local-test-message\",\"messageType\":\"transactional\",\"campaignID\":\"local-test-campaign\",\"campaignVersionID\":\"local-test-version\",\"campaignActionID\":\"local-test-action\"}}}}}"
+}
