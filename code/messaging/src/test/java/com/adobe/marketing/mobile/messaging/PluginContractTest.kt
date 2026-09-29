@@ -27,9 +27,7 @@ class PluginContractTest {
     private val expectedInteractionTypes = mapOf(
         "CONTENT_CLICK" to "content_click",
         "BUTTON_CLICK" to "button_click",
-        "DISMISS" to "dismiss",
-        "INPUT_SUBMIT" to "input_submit",
-        "RERENDER" to "rerender"
+        "DISMISS" to "dismiss"
     )
 
     // Keep identical to the fixture in aepsdk-ui-android PluginContractTest.
@@ -45,9 +43,7 @@ class PluginContractTest {
             mapOf(
                 "CONTENT_CLICK" to PushInteractionType.CONTENT_CLICK,
                 "BUTTON_CLICK" to PushInteractionType.BUTTON_CLICK,
-                "DISMISS" to PushInteractionType.DISMISS,
-                "INPUT_SUBMIT" to PushInteractionType.INPUT_SUBMIT,
-                "RERENDER" to PushInteractionType.RERENDER
+                "DISMISS" to PushInteractionType.DISMISS
             )
         )
     }

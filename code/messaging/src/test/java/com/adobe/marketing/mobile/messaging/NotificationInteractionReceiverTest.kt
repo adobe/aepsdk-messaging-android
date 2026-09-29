@@ -72,24 +72,24 @@ class NotificationInteractionReceiverTest {
 
     @Test
     fun `runs background handlers on the executor`() {
-        val rerender = RecordingHandler(runsInBackground = true)
+        val slow = RecordingHandler(runsInBackground = true)
         val executor = CountingExecutor()
-        val receiver = NotificationInteractionReceiver(mapOf("rerender" to rerender), executor)
+        val receiver = NotificationInteractionReceiver(mapOf("slow" to slow), executor)
 
-        receiver.onReceive(context, Intent("rerender"))
+        receiver.onReceive(context, Intent("slow"))
 
         assertEquals(1, executor.executed)
-        assertEquals(listOf("rerender"), rerender.handled)
+        assertEquals(listOf("slow"), slow.handled)
     }
 
     @Test
     fun `a failing background handler does not crash the receiver`() {
-        val rerender = RecordingHandler(runsInBackground = true, failure = IllegalStateException("boom"))
-        val receiver = NotificationInteractionReceiver(mapOf("rerender" to rerender), CountingExecutor())
+        val slow = RecordingHandler(runsInBackground = true, failure = IllegalStateException("boom"))
+        val receiver = NotificationInteractionReceiver(mapOf("slow" to slow), CountingExecutor())
 
-        receiver.onReceive(context, Intent("rerender"))
+        receiver.onReceive(context, Intent("slow"))
 
-        assertEquals(listOf("rerender"), rerender.handled)
+        assertEquals(listOf("slow"), slow.handled)
     }
 
     @Test

@@ -60,7 +60,7 @@ internal class DismissInteractionHandler(
     }
 }
 
-/** Tracks a silent interaction (for example a text reply) by its action id, without opening the app. */
+/** Tracks a silent interaction by its action id, without opening the app. */
 internal class SilentInteractionHandler(
     private val tracker: PushResponseTracker = PushResponseTracker.MESSAGING
 ) : NotificationInteractionHandler {

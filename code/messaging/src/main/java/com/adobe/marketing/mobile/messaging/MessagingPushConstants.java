@@ -18,15 +18,10 @@ class MessagingPushConstants {
         static final String DISMISSED = "Notification Dismissed";
         static final String OPENED = "Notification Opened";
         static final String BUTTON_CLICKED = "Notification Button Clicked";
-        // Silent, host-tracked interaction (input replies, unknown interaction types). Delivered to
-        // the NotificationInteractionReceiver and tracked by actionId without launching the tracker
-        // Activity. Not used by AJO Basic / Big Text today.
+        // Silent, host-tracked interaction for unknown interaction types without an actionUri.
+        // Delivered to the NotificationInteractionReceiver and tracked by actionId without
+        // launching the tracker Activity. Not used by AJO Basic / Big Text today.
         static final String INTERACTION = "Notification Interaction";
-        // Re-render is disabled until a template uses it; uncomment to enable.
-        // // Gesture that rebuilds a push-template notification (for example a carousel arrow).
-        // // Delivered to the NotificationInteractionReceiver, which rebuilds via the UI template
-        // // plugin and re-posts. Not used by AJO Basic / Big Text today.
-        // static final String RERENDER = "Notification Rerender";
 
         private NotificationAction() {}
     }
@@ -37,20 +32,12 @@ class MessagingPushConstants {
         static final String CONTENT_CLICK = "content_click";
         static final String BUTTON_CLICK = "button_click";
         static final String DISMISS = "dismiss";
-        static final String INPUT_SUBMIT = "input_submit";
-        static final String RERENDER = "rerender";
 
         private PushInteractionType() {}
     }
 
     // Messaging-internal intent extras and identity for push-template PendingIntents.
     static final class TemplateIntent {
-        // Re-render is disabled until a template uses it; uncomment to enable.
-        // // nested Bundle holding the original message data (incl. reserved keys) on re-render
-        // // intents
-        // static final String PUSH_PAYLOAD = "adb_rerender_payload";
-        // // nested Bundle holding the UI template state on re-render intents
-        // static final String TEMPLATE_STATE = "adb_rerender_state";
         // data-URI scheme giving each template PendingIntent a deterministic identity
         static final String IDENTITY_SCHEME = "adbpush";
         // fixed request code; identity comes from the data URI
