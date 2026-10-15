@@ -15,6 +15,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.AepUIMetadata
 import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
@@ -54,16 +55,23 @@ internal object ContentCardSchemaDataUtils {
      * Provides an [AepUI] instance from the given [AepUITemplate].
      *
      * @param uiTemplate The template to convert into a UI component.
+     * @param isRead The read status of the card, or null if read status is not tracked.
+     * @param metadata The delivery metadata (priority, rank) of the proposition the template was built from.
      * @return An instance of [AepUI] representing the given template or null in case of unsupported template type.
      */
-    internal fun getAepUI(uiTemplate: AepUITemplate, isRead: Boolean? = null): AepUI<*, *>? {
+    internal fun getAepUI(
+        uiTemplate: AepUITemplate,
+        isRead: Boolean? = null,
+        metadata: AepUIMetadata = AepUIMetadata()
+    ): AepUI<*, *>? {
         return when (uiTemplate) {
             is SmallImageTemplate -> {
                 SmallImageUI(
                     uiTemplate,
                     SmallImageCardUIState(
                         read = isRead
-                    )
+                    ),
+                    metadata
                 )
             }
             is LargeImageTemplate -> {
@@ -71,7 +79,8 @@ internal object ContentCardSchemaDataUtils {
                     uiTemplate,
                     LargeImageCardUIState(
                         read = isRead
-                    )
+                    ),
+                    metadata
                 )
             }
             is ImageOnlyTemplate -> {
@@ -79,7 +88,8 @@ internal object ContentCardSchemaDataUtils {
                     uiTemplate,
                     ImageOnlyCardUIState(
                         read = isRead
-                    )
+                    ),
+                    metadata
                 )
             }
             else -> {
@@ -94,14 +104,23 @@ internal object ContentCardSchemaDataUtils {
     }
 
     /**
-     * Returns a new [AepUI] instance with the same template and state as [ui].
+     * Returns a new [AepUI] instance with the same template, state and metadata as [ui].
      * Used so that [kotlinx.coroutines.flow.StateFlow] sees a distinct value and emits when state was updated in place.
      */
     internal fun copyAepUI(ui: AepUI<*, *>): AepUI<*, *> = when (ui) {
-        is SmallImageUI -> SmallImageUI(ui.getTemplate(), ui.getState())
-        is LargeImageUI -> LargeImageUI(ui.getTemplate(), ui.getState())
-        is ImageOnlyUI -> ImageOnlyUI(ui.getTemplate(), ui.getState())
+        is SmallImageUI -> SmallImageUI(ui.getTemplate(), ui.getState(), ui.getMetadata())
+        is LargeImageUI -> LargeImageUI(ui.getTemplate(), ui.getState(), ui.getMetadata())
+        is ImageOnlyUI -> ImageOnlyUI(ui.getTemplate(), ui.getState(), ui.getMetadata())
     }
+
+    /**
+     * Builds the [AepUIMetadata] (priority and rank) from a given [Proposition].
+     *
+     * @param proposition The proposition the content card was built from.
+     * @return The [AepUIMetadata] for the proposition.
+     */
+    internal fun buildMetadata(proposition: Proposition): AepUIMetadata =
+        AepUIMetadata(priority = proposition.priority, rank = proposition.rank)
 
     /**
      * Builds an [AepUITemplate] from a given [Proposition].

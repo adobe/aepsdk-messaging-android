@@ -15,6 +15,7 @@ import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.AepUIMetadata
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
@@ -43,6 +44,12 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     companion object {
         private const val SELF_TAG: String = "ContentCardUIProvider"
     }
+
+    /** A built template together with the delivery metadata of the proposition it came from. */
+    private data class CardItem(val template: AepUITemplate, val metadata: AepUIMetadata)
+
+    private fun Result<List<CardItem>>.templates(): Result<List<AepUITemplate>> =
+        map { items -> items.map { it.template } }
 
     private val _contentFlow = MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
     private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow.asStateFlow()
@@ -117,18 +124,20 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * so this method is only needed for manual refresh operations.
      */
     override suspend fun refreshContent() {
-        val templateResult = fetchContent()
-        _contentFlow.update { templateResult }
+        val itemsResult = fetchContent()
+        _contentFlow.update { itemsResult.templates() }
 
         // Also update _aepUIFlow so getContentCardUIFlow collectors receive refresh updates
         _aepUIFlow.update {
-            if (templateResult.isSuccess) {
-                val aepUIList = templateResult.getOrDefault(emptyList())
-                    .mapNotNull { item -> ContentCardSchemaDataUtils.getAepUI(item) }
+            if (itemsResult.isSuccess) {
+                val aepUIList = itemsResult.getOrDefault(emptyList())
+                    .mapNotNull { item ->
+                        ContentCardSchemaDataUtils.getAepUI(item.template, metadata = item.metadata)
+                    }
                 Result.success(aepUIList)
             } else {
                 Result.failure(
-                    templateResult.exceptionOrNull()
+                    itemsResult.exceptionOrNull()
                         ?: Throwable("Failed to process propositions for surface ${surface.uri}: Unknown Error")
                 )
             }
@@ -138,7 +147,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     /**
      * Initiates fetching of [AepUITemplate] instances for the given surface and returns a flow that emits updates.
      *
-     * This function fetches new content by invoking [getAepUITemplateList], which retrieves
+     * This function fetches new content by invoking [getCardItemList], which retrieves
      * propositions and builds a list of [AepUITemplate]. The result is posted to the [_contentFlow],
      * which is returned as a [Flow].
      *
@@ -146,7 +155,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      */
     @Deprecated("Use getUIContent instead", ReplaceWith("getUIContent"))
     override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> {
-        _contentFlow.update { fetchContent() }
+        _contentFlow.update { fetchContent().templates() }
         return contentFlow
     }
 
@@ -167,21 +176,21 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     }
 
     /**
-     * Fetches propositions for the specified surface and converts them into a list of [AepUITemplate].
+     * Fetches propositions for the specified surface and converts them into a list of [CardItem].
      * This is a pure function without any side effects and the caller is responsible for updating
      * any state or flows with the result.
      */
-    private suspend fun fetchContent(): Result<List<AepUITemplate>> {
+    private suspend fun fetchContent(): Result<List<CardItem>> {
         val propositionsResult = getPropositionsForSurface()
-        return getAepUITemplateList(propositionsResult)
+        return getCardItemList(propositionsResult)
     }
 
     /**
-     * Converts the provided Result<Map<Surface, List<Proposition>> into a result of list of [AepUITemplate]
-     * for the specified surface.
+     * Converts the provided Result<Map<Surface, List<Proposition>> into a result of list of [CardItem]
+     * (a template plus the metadata of its proposition) for the specified surface.
      *
      * If the input result is successful and the proposition can be built into a template,
-     * a [Result.success] containing the list of templates is returned.
+     * a [Result.success] containing the list of items is returned.
      *
      * If any proposition fails to be built into a template, an error is logged and the proposition
      * is skipped in the resulting list.
@@ -190,13 +199,15 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * a [Result.Failure] is returned.
      *
      * @param propositionsResult The result containing a map of the requested surface and its propositions.
-     * @return A [Result] containing a list of [AepUITemplate] or an error if fetching or building fails.
+     * @return A [Result] containing a list of [CardItem] or an error if fetching or building fails.
      */
-    private fun getAepUITemplateList(propositionsResult: Result<Map<Surface, List<Proposition>>>): Result<List<AepUITemplate>> {
+    private fun getCardItemList(propositionsResult: Result<Map<Surface, List<Proposition>>>): Result<List<CardItem>> {
         return if (propositionsResult.isSuccess) {
-            val templateModelList = propositionsResult.getOrNull()?.get(surface)?.mapNotNull { proposition ->
+            val cardItems = propositionsResult.getOrNull()?.get(surface)?.mapNotNull { proposition ->
                 try {
-                    buildTemplate(proposition)
+                    buildTemplate(proposition)?.let { template ->
+                        CardItem(template, ContentCardSchemaDataUtils.buildMetadata(proposition))
+                    }
                 } catch (e: IllegalArgumentException) {
                     Log.error(
                         LOG_TAG,
@@ -206,7 +217,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                     null
                 }
             } ?: emptyList()
-            Result.success(templateModelList)
+            Result.success(cardItems)
         } else {
             Result.failure(
                 propositionsResult.exceptionOrNull()

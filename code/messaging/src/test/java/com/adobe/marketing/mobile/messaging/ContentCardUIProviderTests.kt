@@ -21,6 +21,7 @@ import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCard
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
 import com.adobe.marketing.mobile.services.DeviceInforming
 import com.adobe.marketing.mobile.services.ServiceProvider
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -117,6 +118,24 @@ class ContentCardUIProviderTests {
         assertTrue(result.isSuccess)
         assertNotNull(result.getOrNull())
         assertTrue(result.getOrNull()?.isNotEmpty() == true)
+    }
+
+    @Test
+    fun `getContentCardUIFlow exposes priority and rank of the proposition as metadata`() = runTest {
+        whenever(proposition.priority).thenReturn(80)
+        whenever(proposition.rank).thenReturn(2)
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        val metadata = result.getOrNull()?.first()?.getMetadata()
+        assertEquals(80, metadata?.priority)
+        assertEquals(2, metadata?.rank)
     }
 
     @Test

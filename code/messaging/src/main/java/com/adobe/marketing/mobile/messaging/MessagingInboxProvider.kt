@@ -63,7 +63,8 @@ class MessagingInboxProvider(
                         template,
                         if (inboxTemplate.isUnreadEnabled) ContentCardSchemaDataUtils.getReadStatus(
                             template.id
-                        ) else null
+                        ) else null,
+                        ContentCardSchemaDataUtils.buildMetadata(cardProposition)
                     )
                 }
             }

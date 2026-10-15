@@ -20,10 +20,14 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
  *
  * @param T The type of the template associated with the AepUI.
  * @param S The type of the state associated with the AepUI.
+ * @param template The template associated with the AepUI.
+ * @param state The initial state of the AepUI.
+ * @param metadata The delivery metadata (priority, rank) of the proposition the AepUI was built from.
  */
 sealed class BaseAepUI<T : AepUITemplate, S : AepCardUIState>(
     private val template: T,
-    state: S
+    state: S,
+    private val metadata: AepUIMetadata = AepUIMetadata()
 ) : AepUI<T, S> {
     private val _state = mutableStateOf(state)
 
@@ -52,5 +56,14 @@ sealed class BaseAepUI<T : AepUITemplate, S : AepCardUIState>(
      */
     override fun getState(): S {
         return _state.value
+    }
+
+    /**
+     * Retrieves the delivery metadata of the AepUI.
+     *
+     * @return The [AepUIMetadata] of the AepUI.
+     */
+    override fun getMetadata(): AepUIMetadata {
+        return metadata
     }
 }
