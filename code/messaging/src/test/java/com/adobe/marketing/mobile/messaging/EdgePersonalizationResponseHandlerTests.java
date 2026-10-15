@@ -1311,6 +1311,141 @@ public class EdgePersonalizationResponseHandlerTests {
                 });
     }
 
+    // ========================================================================================
+    // Streaming success: Edge streams a personalization response back as multiple
+    // personalization:decisions handles for the same request event id, then closes the stream
+    // with a content-complete. All handles must accumulate and be applied together on complete.
+    // ========================================================================================
+    @Test
+    public void
+            test_handleProcessCompletedEvent_StreamingResponse_MultipleHandlesAccumulatedThenApplied() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
+                                .thenCallRealMethod();
+
+                        // one edge request for two surfaces: the app surface (in-app) and a content
+                        // card surface. Edge streams the response back in multiple handles for this
+                        // same request event id.
+                        final Surface inappSurface = new Surface();
+                        final Surface contentCardSurface = new Surface("apifeed");
+                        edgePersonalizationResponseHandler.setMessagesRequestEventId(
+                                "STREAMING_ID",
+                                new ArrayList<Surface>() {
+                                    {
+                                        add(inappSurface);
+                                        add(contentCardSurface);
+                                    }
+                                });
+
+                        // --- stream chunk 1: two in-app propositions for the app surface ---
+                        final MessageTestConfig iamConfig = new MessageTestConfig();
+                        iamConfig.count = 2;
+                        final Map<String, Object> chunk1 = new HashMap<>();
+                        chunk1.put("payload", MessagingTestUtils.generateInAppPayload(iamConfig));
+                        chunk1.put("requestEventId", "STREAMING_ID");
+                        final Event streamEvent1 = mock(Event.class);
+                        when(streamEvent1.getEventData()).thenReturn(chunk1);
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                streamEvent1);
+
+                        // after chunk 1, only the app surface has accumulated
+                        assertEquals(
+                                1,
+                                edgePersonalizationResponseHandler
+                                        .getInProgressPropositions()
+                                        .size());
+
+                        // --- stream chunk 2: four content card propositions for the feed surface
+                        // ---
+                        final MessageTestConfig ccConfig = new MessageTestConfig();
+                        ccConfig.count = 4;
+                        final Map<String, Object> chunk2 = new HashMap<>();
+                        chunk2.put(
+                                "payload", MessagingTestUtils.generateContentCardPayload(ccConfig));
+                        chunk2.put("requestEventId", "STREAMING_ID");
+                        final Event streamEvent2 = mock(Event.class);
+                        when(streamEvent2.getEventData()).thenReturn(chunk2);
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                streamEvent2);
+
+                        // --- stream chunk 3: one more in-app proposition for the app surface ---
+                        iamConfig.count = 1;
+                        final Map<String, Object> chunk3 = new HashMap<>();
+                        chunk3.put("payload", MessagingTestUtils.generateInAppPayload(iamConfig));
+                        chunk3.put("requestEventId", "STREAMING_ID");
+                        final Event streamEvent3 = mock(Event.class);
+                        when(streamEvent3.getEventData()).thenReturn(chunk3);
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                streamEvent3);
+
+                        // both surfaces accumulated across the stream: app surface 3 (2+1), feed 4
+                        final Map<Surface, List<Proposition>> inProgress =
+                                edgePersonalizationResponseHandler.getInProgressPropositions();
+                        assertEquals(2, inProgress.size());
+                        assertEquals(3, inProgress.get(inappSurface).size());
+                        assertEquals(4, inProgress.get(contentCardSurface).size());
+
+                        // nothing is applied to the rules engines until the stream completes
+                        verify(mockMessagingRulesEngine, times(0)).replaceRules(any());
+                        verify(mockContentCardRulesEngine, times(0)).replaceRules(any());
+
+                        // --- content-complete: Edge closed the stream for this request ---
+                        final Map<String, Object> completedData = new HashMap<>();
+                        completedData.put(ENDING_EVENT_ID, "STREAMING_ID");
+                        final Event completedEvent = mock(Event.class);
+                        when(completedEvent.getEventData()).thenReturn(completedData);
+                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(
+                                completedEvent);
+
+                        // in-app rules replaced once, built from the fully-accumulated stream
+                        verify(mockMessagingRulesEngine, times(1))
+                                .replaceRules(rulesListCaptor.capture());
+                        int inAppRuleCount = 0;
+                        for (final LaunchRule rule : rulesListCaptor.getValue()) {
+                            for (final RuleConsequence consequence : rule.getConsequenceList()) {
+                                final String schema =
+                                        (String)
+                                                consequence
+                                                        .getDetail()
+                                                        .get(
+                                                                MessagingTestConstants.EventDataKeys
+                                                                        .RulesEngine
+                                                                        .MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA);
+                                if (SchemaType.INAPP.toString().equals(schema)) {
+                                    inAppRuleCount++;
+                                }
+                            }
+                        }
+                        assertEquals(3, inAppRuleCount);
+
+                        // content card rules replaced once with all four accumulated cards
+                        verify(mockContentCardRulesEngine, times(1))
+                                .replaceRules(contentCardRulesListCaptor.capture());
+                        assertEquals(4, contentCardRulesListCaptor.getValue().size());
+
+                        // the accumulated in-app propositions were cached and nothing was evicted
+                        // (both requested surfaces returned data)
+                        final ArgumentCaptor<Map<Surface, List<Proposition>>> cacheCaptor =
+                                ArgumentCaptor.forClass(Map.class);
+                        final ArgumentCaptor<List<Surface>> removeCaptor =
+                                ArgumentCaptor.forClass(List.class);
+                        verify(mockMessagingCacheUtilities, times(1))
+                                .cachePropositions(cacheCaptor.capture(), removeCaptor.capture());
+                        assertEquals(3, cacheCaptor.getValue().get(inappSurface).size());
+                        assertTrue(removeCaptor.getValue().isEmpty());
+
+                        // the in-progress buffer is cleared once the request has ended
+                        assertTrue(
+                                edgePersonalizationResponseHandler
+                                        .getInProgressPropositions()
+                                        .isEmpty());
+                    }
+                });
+    }
+
     @Test
     public void test_handleProcessCompletedEvent_IAMPropositionsNotReturnedInSubsequentResponse() {
         runUsingMockedServiceProvider(
@@ -2447,6 +2582,109 @@ public class EdgePersonalizationResponseHandlerTests {
                         // verify in-app rules are in priority order after being loaded from the
                         // cache
                         MessagingTestUtils.verifyInAppRulesOrdering(rulesListCaptor.getValue());
+                    }
+                });
+    }
+
+    // PLATIR-66897: cached in-app rules load into the rules engine synchronously on
+    // construction (simulating a cold app launch), before any live personalization:decisions
+    // response arrives. If a cached rule fires at this point (e.g. via the ambient
+    // applicationLaunch lifecycle event), propositionInfo must already be populated so the
+    // resulting display can be recorded in event history and counted toward the frequency cap.
+    // Regression: propositionInfo was previously left empty until the live response handler
+    // called updatePropositionInfo(), causing createInAppMessage() to resolve a null
+    // PropositionInfo and PresentableMessageMapper.InternalMessage#recordEventHistory() to
+    // silently no-op on every cold launch.
+    @Test
+    public void
+            test_cachedPropositions_propositionInfoPopulatedOnConstruction_forFrequencyCapping() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<JSONRulesParser> ignored =
+                                    Mockito.mockStatic(JSONRulesParser.class);
+                            MockedStatic<PresentableMessageMapper>
+                                    presentableMessageMapperMockedStatic =
+                                            Mockito.mockStatic(PresentableMessageMapper.class)) {
+                        // setup
+                        when(mockMessagingCacheUtilities.arePropositionsCached()).thenReturn(true);
+                        when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
+                                .thenCallRealMethod();
+
+                        CacheService cacheService = new FileCacheService();
+                        when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
+                        Map<Surface, List<Proposition>> payload = new HashMap<>();
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 1;
+                        List<Map<String, Object>> payloadList = new ArrayList<>();
+                        payloadList.addAll(MessagingTestUtils.generateInAppPayload(config));
+                        try {
+                            payload.put(
+                                    new Surface(),
+                                    InternalMessagingUtils.getPropositionsFromPayloads(
+                                            payloadList));
+                        } catch (Exception e) {
+                            fail(e.getMessage());
+                        }
+                        when(mockMessagingCacheUtilities.getCachedPropositions())
+                                .thenReturn(payload);
+
+                        presentableMessageMapperMockedStatic
+                                .when(PresentableMessageMapper::getInstance)
+                                .thenReturn(mockPresentableMessageMapper);
+
+                        try {
+                            when(mockPresentableMessageMapper.createMessage(
+                                            any(), any(), any(), any()))
+                                    .thenReturn(mockInternalMessage);
+
+                            // test: construct the handler from a warm disk cache, exactly as
+                            // happens on a cold app launch
+                            edgePersonalizationResponseHandler =
+                                    new EdgePersonalizationResponseHandler(
+                                            mockMessagingExtension,
+                                            mockExtensionApi,
+                                            mockMessagingRulesEngine,
+                                            mockContentCardRulesEngine,
+                                            mockMessagingCacheUtilities);
+
+                            // grab the consequence id of the single rule that was loaded from
+                            // cache, exactly as the LaunchRulesEngine would when the cached rule
+                            // fires
+                            verify(mockMessagingRulesEngine, times(1))
+                                    .replaceRules(rulesListCaptor.capture());
+                            final List<LaunchRule> loadedRules = rulesListCaptor.getValue();
+                            assertEquals(1, loadedRules.size());
+                            final String consequenceId =
+                                    loadedRules.get(0).getConsequenceList().get(0).getId();
+
+                            final PropositionItem propositionItem =
+                                    new PropositionItem(
+                                            consequenceId, SchemaType.INAPP, new HashMap<>());
+
+                            // simulate the cached rule firing on cold launch, before any live
+                            // personalization:decisions response has arrived
+                            edgePersonalizationResponseHandler.createInAppMessage(propositionItem);
+
+                            // verify: propositionInfo must already be non-null at this point so
+                            // the resulting display can be written to event history. pre-fix,
+                            // the captured value here would be null because the constructor
+                            // never called updatePropositionInfo() on the cached data.
+                            final ArgumentCaptor<PropositionInfo> propositionInfoCaptor =
+                                    ArgumentCaptor.forClass(PropositionInfo.class);
+                            verify(mockPresentableMessageMapper, times(1))
+                                    .createMessage(
+                                            any(),
+                                            eq(propositionItem),
+                                            any(),
+                                            propositionInfoCaptor.capture());
+                            assertNotNull(
+                                    "propositionInfo must not be null after cache-load"
+                                            + " construction, otherwise the frequency-cap event"
+                                            + " history write silently no-ops (PLATIR-66897)",
+                                    propositionInfoCaptor.getValue());
+                        } catch (MessageRequiredFieldMissingException e) {
+                            fail(e.getMessage());
+                        }
                     }
                 });
     }
@@ -3899,11 +4137,14 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     // ========================================================================================
-    // Fix #4: Completion handler returns false on non-recoverable edge error
+    // Completion handler is always called with true, even on a non-recoverable edge error.
+    // A non-recoverable error code does not reliably indicate the request failed (an error may be
+    // returned by one service while another returns valid data), so callers are not told it failed.
+    // The non-recoverable error flag is still cleared to avoid unbounded growth.
     // ========================================================================================
     @Test
     public void
-            test_handleProcessCompletedEvent_NonRecoverableError_CompletionHandlerCalledWithFalse() {
+            test_handleProcessCompletedEvent_NonRecoverableError_CompletionHandlerCalledWithTrue() {
         runUsingMockedServiceProvider(
                 () -> {
                     try (MockedStatic<JSONRulesParser> ignored =
@@ -3954,8 +4195,9 @@ public class EdgePersonalizationResponseHandlerTests {
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(
                                 completedEvent);
 
-                        // verify completion handler called with false
-                        verify(mockAdobeCallback, times(1)).call(false);
+                        // verify completion handler called with true (non-recoverable error is not
+                        // treated as a request failure)
+                        verify(mockAdobeCallback, times(1)).call(true);
 
                         // verify non-recoverable event id is cleaned up
                         assertFalse(
@@ -4024,6 +4266,100 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         // verify completion handler called with true
                         verify(mockAdobeCallback, times(1)).call(true);
+                    }
+                });
+    }
+
+    // ========================================================================================
+    // Non-recoverable error + partial response: apply returned surfaces, preserve the rest
+    // (parity with the iOS SDK). A non-recoverable error must NOT evict surfaces that were
+    // simply absent from the (failed) response, but surfaces that DID return data are applied.
+    // ========================================================================================
+    @Test
+    public void
+            test_handleProcessCompletedEvent_NonRecoverableError_PartialResponse_AppliesReturnedSurfaces_PreservesMissing() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
+                                .thenCallRealMethod();
+
+                        Surface inappSurface = new Surface();
+                        Surface contentCardSurface = new Surface("apifeed");
+                        Surface missingSurface = new Surface("mockSurface");
+
+                        // requested three surfaces for this event
+                        edgePersonalizationResponseHandler.setMessagesRequestEventId(
+                                "TESTING_ID",
+                                new ArrayList<Surface>() {
+                                    {
+                                        add(inappSurface);
+                                        add(contentCardSurface);
+                                        add(missingSurface);
+                                    }
+                                });
+
+                        // partial response: inapp + content card surfaces return data,
+                        // missingSurface does not
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 3;
+                        List<Map<String, Object>> payload =
+                                MessagingTestUtils.generateInAppPayload(config);
+                        config.count = 4;
+                        payload.addAll(MessagingTestUtils.generateContentCardPayload(config));
+
+                        Map<String, Object> notificationData = new HashMap<>();
+                        notificationData.put("payload", payload);
+                        notificationData.put("requestEventId", "TESTING_ID");
+                        Event notificationEvent = mock(Event.class);
+                        when(notificationEvent.getEventData()).thenReturn(notificationData);
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                notificationEvent);
+
+                        // a non-recoverable edge error (status 500) arrives for the same request
+                        Map<String, Object> errorEventData = new HashMap<>();
+                        errorEventData.put("requestEventId", "TESTING_ID");
+                        errorEventData.put("status", 500);
+                        Event errorEvent = mock(Event.class);
+                        when(errorEvent.getEventData()).thenReturn(errorEventData);
+                        edgePersonalizationResponseHandler.handleEdgeErrorResponse(errorEvent);
+                        assertTrue(
+                                edgePersonalizationResponseHandler
+                                        .getNonRecoverableErrorEventIds()
+                                        .contains("TESTING_ID"));
+
+                        // process completed
+                        Map<String, Object> completedEventData = new HashMap<>();
+                        completedEventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                        Event completedEvent = mock(Event.class);
+                        when(completedEvent.getEventData()).thenReturn(completedEventData);
+                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(
+                                completedEvent);
+
+                        // rules ARE still replaced for the surfaces that returned data (the old
+                        // behavior skipped applyPropositionChangeForEventId entirely on failure)
+                        verify(mockMessagingRulesEngine, times(1))
+                                .replaceRules(rulesListCaptor.capture());
+                        verify(mockContentCardRulesEngine, times(1))
+                                .replaceRules(contentCardRulesListCaptor.capture());
+                        assertEquals(4, contentCardRulesListCaptor.getValue().size());
+
+                        // the returned in-app surface is cached, and NO surface is evicted —
+                        // missingSurface's last-known-good state is preserved despite being absent
+                        ArgumentCaptor<Map<Surface, List<Proposition>>> cachedPropositionsCaptor =
+                                ArgumentCaptor.forClass(Map.class);
+                        ArgumentCaptor<List<Surface>> surfacesToRemoveCaptor =
+                                ArgumentCaptor.forClass(List.class);
+                        verify(mockMessagingCacheUtilities, times(1))
+                                .cachePropositions(
+                                        cachedPropositionsCaptor.capture(),
+                                        surfacesToRemoveCaptor.capture());
+                        assertEquals(
+                                3, cachedPropositionsCaptor.getValue().get(inappSurface).size());
+                        assertTrue(
+                                "no surfaces should be evicted on a non-recoverable error",
+                                surfacesToRemoveCaptor.getValue().isEmpty());
                     }
                 });
     }
@@ -4908,8 +5244,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         when(errorEvent.getEventData()).thenReturn(errorEventData);
                         edgePersonalizationResponseHandler.handleEdgeErrorResponse(errorEvent);
 
-                        // process completed — request failed path skips
-                        // applyPropositionChangeForEventId
+                        // process completed — request failed path preserves the disk cache
+                        // (no surfaces returned, so nothing is evicted)
                         Map<String, Object> completedEventData = new HashMap<>();
                         completedEventData.put(ENDING_EVENT_ID, "FLAG_OFF_FAIL_EVENT_ID");
                         Event completedEvent = mock(Event.class);

@@ -32,6 +32,12 @@
         android:layout_height="wrap_content"
         android:text="Get Local Notification" />
 
+    <Button
+        android:id="@+id/btnTestPushTemplates"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Push Templates" />
+
     <EditText
         android:id="@+id/editText"
         android:layout_width="wrap_content"

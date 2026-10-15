@@ -23,6 +23,7 @@ import com.adobe.marketing.mobile.Lifecycle
 import com.adobe.marketing.mobile.edge.consent.Consent
 import com.adobe.marketing.mobile.PushNotificationListener
 import com.adobe.marketing.mobile.edge.identity.Identity
+import com.adobe.marketing.mobile.notificationbuilder.NotificationBuilderPlugin
 
 class MessagingApplication : Application() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
@@ -35,6 +36,27 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
+
+        // Render AJO push templates with the aepsdk-ui-android NotificationBuilder plugin.
+        // Register plugins before registering extensions.
+        MobileCore.addPlugins(NotificationBuilderPlugin())
+
+        // Set the listener in Application.onCreate so callbacks for pushes that cold-start
+        // the app are not missed.
+        Messaging.setPushNotificationListener(object : PushNotificationListener {
+            override fun onNotificationReceived(payload: MessagingPushPayload) {
+                Log.d(TAG, "Push received — title: ${payload.title}, messageId: ${payload.messageId}, custom data: ${payload.data}")
+            }
+
+            override fun onNotificationOpened(payload: MessagingPushPayload, actionButtonId: String?) {
+                Log.d(TAG, "Push opened — messageId: ${payload.messageId}, actionButtonId: $actionButtonId")
+            }
+
+            override fun onNotificationDismissed(payload: MessagingPushPayload) {
+                Log.d(TAG, "Push dismissed — messageId: ${payload.messageId}")
+            }
+        })
+
         val extensions = listOf(
             Messaging.EXTENSION,
             Identity.EXTENSION,
@@ -59,20 +81,6 @@ class MessagingApplication : Application() {
                 "messaging.optimizePushSync" to true
             )
             MobileCore.updateConfiguration(configMap)
-
-            Messaging.setPushNotificationListener(object : PushNotificationListener {
-                override fun onNotificationReceived(payload: MessagingPushPayload) {
-                    Log.d(TAG, "Push received — title: ${payload.title}, messageId: ${payload.messageId}, custom data: ${payload.data}")
-                }
-
-                override fun onNotificationOpened(payload: MessagingPushPayload, actionButtonId: String?) {
-                    Log.d(TAG, "Push opened — messageId: ${payload.messageId}, actionButtonId: $actionButtonId")
-                }
-
-                override fun onNotificationDismissed(payload: MessagingPushPayload) {
-                    Log.d(TAG, "Push dismissed — messageId: ${payload.messageId}")
-                }
-            })
         }
         // Assurance.startSession(ASSURANCE_SESSION_ID)
     }
