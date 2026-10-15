@@ -549,6 +549,34 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
+    fun `test copyAepUI preserves metadata for LargeImageUI`() {
+        val metadata = AepUIMetadata(priority = 70, rank = 1)
+        val template = LargeImageTemplate("testId", AepText("title"), null, null, null, emptyList(), null)
+        val original = ContentCardSchemaDataUtils.getAepUI(template, false, metadata)!!
+
+        val copy = ContentCardSchemaDataUtils.copyAepUI(original)
+
+        assertTrue(copy is LargeImageUI)
+        assertEquals(metadata, copy.getMetadata())
+        assertEquals(template, copy.getTemplate())
+        assertEquals(false, copy.getState().read)
+    }
+
+    @Test
+    fun `test copyAepUI preserves metadata for ImageOnlyUI`() {
+        val metadata = AepUIMetadata(priority = 20, rank = 4)
+        val template = ImageOnlyTemplate("testId", AepImage("http://..."))
+        val original = ContentCardSchemaDataUtils.getAepUI(template, true, metadata)!!
+
+        val copy = ContentCardSchemaDataUtils.copyAepUI(original)
+
+        assertTrue(copy is ImageOnlyUI)
+        assertEquals(metadata, copy.getMetadata())
+        assertEquals(template, copy.getTemplate())
+        assertEquals(true, copy.getState().read)
+    }
+
+    @Test
     fun `test buildMetadata reads priority and rank from the proposition`() {
         val proposition = mock(Proposition::class.java)
         Mockito.`when`(proposition.priority).thenReturn(80)

@@ -215,6 +215,38 @@ class ContentCardUIProviderTests {
         assertTrue(result.isFailure)
     }
 
+    @Suppress("DEPRECATION")
+    @Test
+    fun `deprecated getContent returns templates for a valid proposition`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val result = contentCardUIProvider.getContent().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+        assertEquals("testId", result.getOrNull()?.first()?.id)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `deprecated getContent returns failure when the API fails`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.fail(AdobeError.UNEXPECTED_ERROR)
+        }
+
+        val result = contentCardUIProvider.getContent().first()
+
+        assertTrue(result.isFailure)
+    }
+
     @Test
     fun `getContentCardUIFlow handles proposition with no items`() = runTest {
         whenever(proposition.items).thenReturn(emptyList())
