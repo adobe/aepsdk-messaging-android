@@ -797,4 +797,14 @@ class InternalMessagingUtils {
     static void resetPushTokenSyncTimestamp() {
         lastPushTokenSyncTimestamp = 0;
     }
+
+    /**
+     * Records the timestamp of a push token sync that was confirmed outside of the normal {@link
+     * #shouldSyncPushToken} flow (e.g. a consent-independent sync confirmed by Edge Identity).
+     *
+     * @param eventTimestamp A {@code long} containing the timestamp of the confirming event
+     */
+    static void setLastPushTokenSyncTimestamp(final long eventTimestamp) {
+        lastPushTokenSyncTimestamp = eventTimestamp;
+    }
 }

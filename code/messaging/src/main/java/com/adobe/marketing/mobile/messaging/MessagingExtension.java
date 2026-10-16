@@ -186,6 +186,13 @@ public final class MessagingExtension extends Extension {
                         EventSource.RESPONSE_CONTENT,
                         this::handleEdgeConsentResponse);
 
+        // Edge Identity dispatches a "Device attributes confirmed" event once Edge confirms a
+        // consent-independent device attributes sync, carrying the confirmed tokens.
+        getApi().registerEventListener(
+                        EventType.MESSAGING,
+                        EventSource.RESPONSE_CONTENT,
+                        this::handleDeviceAttributesConfirmed);
+
         // Handler function called for each queued event. If the queued event is a get propositions
         // event, process it
         // otherwise if it is an Edge event to update propositions, process it only if it is
@@ -615,6 +622,68 @@ public final class MessagingExtension extends Extension {
             return;
         }
         dispatchPersistedTokenResync(event);
+    }
+
+    /**
+     * Handles the {@code Device attributes confirmed} event dispatched by Edge Identity after Edge
+     * confirms a consent-independent device attributes sync.
+     *
+     * <p>The confirmed push token ({@code tokens.pushNotification}) is persisted, recorded as the
+     * last synced token, and published in the Messaging shared state, so a subsequent {@code
+     * setPushIdentifier} call with the same token is not re-sent to Edge. An empty confirmed token
+     * clears the stored token. No Edge event is dispatched by this handler.
+     *
+     * @param event the {@link Event} of type MESSAGING / source RESPONSE_CONTENT
+     */
+    void handleDeviceAttributesConfirmed(final Event event) {
+        if (!MessagingConstants.EventName.DEVICE_ATTRIBUTES_CONFIRMED.equals(event.getName())) {
+            return;
+        }
+
+        final Map<String, Object> tokens =
+                DataReader.optTypedMap(
+                        Object.class,
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.DeviceAttributes.TOKENS,
+                        null);
+        if (tokens == null) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Confirmed device attributes contain no valid tokens map.");
+            return;
+        }
+
+        if (!tokens.containsKey(
+                MessagingConstants.EventDataKeys.DeviceAttributes.PUSH_NOTIFICATION)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Confirmed device attributes contain no push token.");
+            return;
+        }
+
+        final Object confirmedPushToken =
+                tokens.get(MessagingConstants.EventDataKeys.DeviceAttributes.PUSH_NOTIFICATION);
+        if (!(confirmedPushToken instanceof String)) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Ignoring confirmed push token: expected a string.");
+            return;
+        }
+
+        final String pushToken =
+                StringUtils.isNullOrEmpty((String) confirmedPushToken)
+                        ? null
+                        : (String) confirmedPushToken;
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Updating the push token from confirmed device attributes.");
+        InternalMessagingUtils.persistPushToken(pushToken);
+        InternalMessagingUtils.setLastPushTokenSyncTimestamp(event.getTimestamp());
+        createMessagingSharedState(pushToken, event);
     }
 
     /**

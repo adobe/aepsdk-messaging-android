@@ -204,6 +204,13 @@ public final class MessagingConstants {
             private Consent() {}
         }
 
+        final class DeviceAttributes {
+            static final String TOKENS = "tokens";
+            static final String PUSH_NOTIFICATION = "pushNotification";
+
+            private DeviceAttributes() {}
+        }
+
         final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
@@ -383,6 +390,9 @@ public final class MessagingConstants {
         static final String TRACK_PROPOSITIONS = "Track propositions";
         static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
         static final String CLEAR_PERSISTED_PROPOSITIONS = "Clear cached propositions";
+        // dispatched by Edge Identity after Edge confirms a consent-independent device
+        // attributes sync
+        static final String DEVICE_ATTRIBUTES_CONFIRMED = "Device attributes confirmed";
 
         private EventName() {}
     }
