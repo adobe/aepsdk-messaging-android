@@ -30,6 +30,13 @@ Installation via [Maven](https://maven.apache.org/) & [Gradle](https://gradle.or
 
 ## Import and register the Messaging extension
 
+Messaging adopts committed, nonempty `tokens.pushNotification` values from Edge
+Identity's **standard** shared state (`profileAttributes`) at startup and on
+`hub/sharedState` notifications for `com.adobe.edge.identity`. Adoption updates
+Messaging persistence and shared state without sending another profile event.
+Missing, empty, and null values do not clear Messaging's token. Existing identity
+reset and consent-grant resynchronization behavior is unchanged.
+
 Import the Messaging extension and its dependencies, then register the Messaging extension and dependencies in the `onCreate` method in the `Application` class:
 
 ```java

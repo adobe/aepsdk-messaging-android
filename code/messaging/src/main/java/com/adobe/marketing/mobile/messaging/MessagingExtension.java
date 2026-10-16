@@ -23,6 +23,7 @@ import com.adobe.marketing.mobile.ExtensionEventListener;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
+import com.adobe.marketing.mobile.SharedStateStatus;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
@@ -185,6 +186,8 @@ public final class MessagingExtension extends Extension {
                         EventType.CONSENT,
                         EventSource.RESPONSE_CONTENT,
                         this::handleEdgeConsentResponse);
+        getApi().registerEventListener(
+                        EventType.HUB, EventSource.SHARED_STATE, this::handleIdentitySharedState);
 
         // Handler function called for each queued event. If the queued event is a get propositions
         // event, process it
@@ -215,6 +218,7 @@ public final class MessagingExtension extends Extension {
         // (and the shared state updated) on an app launch.
         final String existingPushToken = InternalMessagingUtils.getPushTokenFromPersistence();
         createMessagingSharedState(existingPushToken, null);
+        reconcileIdentityProfileAttributes(null);
     }
 
     @Override
@@ -222,6 +226,10 @@ public final class MessagingExtension extends Extension {
 
     @Override
     public boolean readyForEvent(@NonNull final Event event) {
+        if (EventType.HUB.equals(event.getType())
+                && EventSource.SHARED_STATE.equals(event.getSource())) {
+            return true;
+        }
         if (!hasValidSharedState(
                 MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event)) {
             Log.trace(
@@ -559,6 +567,37 @@ public final class MessagingExtension extends Extension {
         sendPropositionInteraction(
                 edgePersonalizationResponseHandler.enrichWithContentCardOrigin(
                         propositionInteractionXdm));
+    }
+
+    void handleIdentitySharedState(final Event event) {
+        if (MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME.equals(
+                DataReader.optString(event.getEventData(), "stateowner", null))) {
+            reconcileIdentityProfileAttributes(event);
+        }
+    }
+
+    void reconcileIdentityProfileAttributes(final Event event) {
+        final SharedStateResult result =
+                getApi().getSharedState(
+                                MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME,
+                                event,
+                                false,
+                                SharedStateResolution.LAST_SET);
+        if (result == null || result.getStatus() != SharedStateStatus.SET) {
+            return;
+        }
+        final Map<String, Object> identityState = result.getValue();
+        final Map<String, Object> profileAttributes =
+                DataReader.optTypedMap(Object.class, identityState, "profileAttributes", null);
+        final Map<String, Object> tokens =
+                DataReader.optTypedMap(Object.class, profileAttributes, "tokens", null);
+        final String token = DataReader.optString(tokens, "pushNotification", null);
+        if (StringUtils.isNullOrEmpty(token)
+                || token.equals(InternalMessagingUtils.getPushTokenFromPersistence())) {
+            return;
+        }
+        InternalMessagingUtils.persistPushToken(token);
+        createMessagingSharedState(token, event);
     }
 
     void handlePushToken(final Event event) {

@@ -59,6 +59,7 @@ import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +197,78 @@ public class MessagingExtensionTests {
     // ========================================================================================
     // constructor
     // ========================================================================================
+    @Test
+    public void test_identitySharedState_adoptsTokenWithoutSending() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockEdgeIdentityData.getStatus()).thenReturn(SharedStateStatus.SET);
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("old");
+                    when(mockEdgeIdentityData.getValue())
+                            .thenReturn(
+                                    Collections.singletonMap(
+                                            "profileAttributes",
+                                            Collections.singletonMap(
+                                                    "tokens",
+                                                    Collections.singletonMap(
+                                                            "pushNotification", "new"))));
+                    Event event =
+                            new Event.Builder(
+                                            "Identity state",
+                                            EventType.HUB,
+                                            EventSource.SHARED_STATE)
+                                    .setEventData(
+                                            Collections.singletonMap(
+                                                    "stateowner", "com.adobe.edge.identity"))
+                                    .build();
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.edge.identity"),
+                                    eq(event),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(mockEdgeIdentityData);
+                    assertTrue(messagingExtension.readyForEvent(event));
+                    messagingExtension.handleIdentitySharedState(event);
+                    verify(mockNamedCollection).setString(anyString(), eq("new"));
+                    verify(mockExtensionApi)
+                            .createSharedState(
+                                    eq(Collections.singletonMap("pushidentifier", "new")),
+                                    eq(event));
+                    verify(mockExtensionApi, never()).dispatch(any());
+                });
+    }
+
+    @Test
+    public void test_identityReconciliation_ignoresAbsentNullEmptyAndUnchangedTokens() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockEdgeIdentityData.getStatus()).thenReturn(SharedStateStatus.SET);
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("existing");
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.edge.identity"),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(mockEdgeIdentityData);
+                    for (Object token :
+                            new Object[] {null, "", "existing", Collections.emptyList()}) {
+                        Map<String, Object> tokens = new HashMap<>();
+                        tokens.put("pushNotification", token);
+                        when(mockEdgeIdentityData.getValue())
+                                .thenReturn(
+                                        Collections.singletonMap(
+                                                "profileAttributes",
+                                                Collections.singletonMap("tokens", tokens)));
+                        messagingExtension.reconcileIdentityProfileAttributes(null);
+                    }
+                    when(mockEdgeIdentityData.getValue()).thenReturn(Collections.emptyMap());
+                    messagingExtension.reconcileIdentityProfileAttributes(null);
+                    verify(mockNamedCollection, never()).setString(anyString(), any());
+                    verify(mockNamedCollection, never()).remove(anyString());
+                    verify(mockExtensionApi, never()).createSharedState(any(), any());
+                    verify(mockExtensionApi, never()).dispatch(any());
+                });
+    }
+
     @Test
     public void test_TestableConstructor() {
         runUsingMockedServiceProvider(
