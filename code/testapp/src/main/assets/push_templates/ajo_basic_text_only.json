@@ -1,0 +1,8 @@
+{
+  "adb_a_type": "OPENAPP",
+  "adb_n_priority": "PRIORITY_DEFAULT",
+  "adb_title": "PT-Val-Basic-OpenApp",
+  "adb_body": "Standard, \"show entire image\" on",
+  "adb_template_type": "ajo_basic",
+  "_xdm": "{\"mixins\":{\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"local-test-execution\",\"messageID\":\"local-test-message\",\"messageType\":\"transactional\",\"campaignID\":\"local-test-campaign\",\"campaignVersionID\":\"local-test-version\",\"campaignActionID\":\"local-test-action\"}}}}}"
+}
