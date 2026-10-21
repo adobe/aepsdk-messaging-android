@@ -3405,22 +3405,86 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_handleDeviceAttributesConfirmed_unrelatedEventName_isIgnored() {
+    public void test_handleDeviceAttributesConfirmed_anyEventName_updatesPushToken() {
         runUsingMockedServiceProvider(
                 () -> {
                     final Map<String, Object> tokens = new HashMap<>();
-                    tokens.put("pushNotification", "token");
+                    tokens.put("pushNotification", "confirmedToken");
                     final Map<String, Object> eventData = new HashMap<>();
                     eventData.put("tokens", tokens);
                     final Event event =
                             new Event.Builder(
-                                            "unrelated",
+                                            "Some other name",
                                             EventType.MESSAGING,
                                             EventSource.RESPONSE_CONTENT)
                                     .setEventData(eventData)
                                     .build();
 
                     messagingExtension.handleDeviceAttributesConfirmed(event);
+
+                    verify(mockNamedCollection, times(1))
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    eq("confirmedToken"));
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(
+                                    argThat(
+                                            map ->
+                                                    "confirmedToken"
+                                                            .equals(
+                                                                    map.get(
+                                                                            MessagingConstants
+                                                                                    .SharedState
+                                                                                    .Messaging
+                                                                                    .PUSH_IDENTIFIER))),
+                                    eq(event));
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_wrongTypeOrSource_isIgnored() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> tokens = new HashMap<>();
+                    tokens.put("pushNotification", "token");
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("tokens", tokens);
+
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            new Event.Builder(
+                                            "Device attributes confirmed",
+                                            EventType.GENERIC_IDENTITY,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            new Event.Builder(
+                                            "Device attributes confirmed",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
+
+                    verifyConfirmedTokenIgnored();
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_messagingResponseWithoutTokens_isIgnored() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("propositions", new ArrayList<>());
+
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            new Event.Builder(
+                                            "Message propositions response",
+                                            EventType.MESSAGING,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
 
                     verifyConfirmedTokenIgnored();
                 });

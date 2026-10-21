@@ -625,8 +625,9 @@ public final class MessagingExtension extends Extension {
     }
 
     /**
-     * Handles the {@code Device attributes confirmed} event dispatched by Edge Identity after Edge
-     * confirms a consent-independent device attributes sync.
+     * Handles the confirmed device attributes event dispatched by Edge Identity after Edge confirms
+     * a consent-independent device attributes sync. The event is identified by its type and source
+     * only; events without a {@code tokens} map are ignored.
      *
      * <p>The confirmed push token ({@code tokens.pushNotification}) is persisted, recorded as the
      * last synced token, and published in the Messaging shared state, so a subsequent {@code
@@ -636,14 +637,22 @@ public final class MessagingExtension extends Extension {
      * @param event the {@link Event} of type MESSAGING / source RESPONSE_CONTENT
      */
     void handleDeviceAttributesConfirmed(final Event event) {
-        if (!MessagingConstants.EventName.DEVICE_ATTRIBUTES_CONFIRMED.equals(event.getName())) {
+        if (!EventType.MESSAGING.equals(event.getType())
+                || !EventSource.RESPONSE_CONTENT.equals(event.getSource())) {
+            return;
+        }
+
+        final Map<String, Object> eventData = event.getEventData();
+        if (eventData == null
+                || !eventData.containsKey(
+                        MessagingConstants.EventDataKeys.DeviceAttributes.TOKENS)) {
             return;
         }
 
         final Map<String, Object> tokens =
                 DataReader.optTypedMap(
                         Object.class,
-                        event.getEventData(),
+                        eventData,
                         MessagingConstants.EventDataKeys.DeviceAttributes.TOKENS,
                         null);
         if (tokens == null) {
