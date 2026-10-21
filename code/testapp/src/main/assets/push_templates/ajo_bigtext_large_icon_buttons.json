@@ -1,0 +1,11 @@
+{
+  "adb_a_type": "WEBURL",
+  "adb_n_priority": "PRIORITY_DEFAULT",
+  "adb_title": "PT-Val-BigText-WebURL",
+  "adb_body": "Expanded, collapsed body and large icon",
+  "adb_act": "[{\"label\":\"Deeplink\",\"type\":\"DEEPLINK\",\"uri\":\"demoapp://secondpage\"},{\"label\":\"Open App\",\"type\":\"OPENAPP\"}]",
+  "adb_uri": "https://www.adobe.com",
+  "adb_template_type": "ajo_bigtext",
+  "adb_template_properties": "{\"adb_collapsed_text\":\"This is the short body.\",\"adb_large_icon\":\"https://picsum.photos/id/237/100/100\"}",
+  "_xdm": "{\"mixins\":{\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"local-test-execution\",\"messageID\":\"local-test-message\",\"messageType\":\"transactional\",\"campaignID\":\"local-test-campaign\",\"campaignVersionID\":\"local-test-version\",\"campaignActionID\":\"local-test-action\"}}}}}"
+}

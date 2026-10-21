@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,6 +29,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import androidx.core.content.FileProvider;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.AppContextService;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -46,6 +51,7 @@ import java.util.function.Supplier;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -419,6 +425,61 @@ public class MessagingPushUtilsTests {
 
             // verify
             assertNull(cachedAsset);
+        }
+    }
+
+    @Test
+    public void test_dispatchPluginErrorEvent_withXdm_dispatchesHubEventWithXdm() {
+        final Map<String, String> data = new HashMap<>();
+        data.put("_xdm", "{\"mixins\":{\"key\":\"value\"}}");
+
+        final Event event = dispatchAndCapture(data);
+
+        assertEquals("Push Template Render Error", event.getName());
+        assertEquals(EventType.MESSAGING, event.getType());
+        assertEquals(EventSource.ERROR_RESPONSE_CONTENT, event.getSource());
+        assertEquals("pushTracking.renderError", event.getEventData().get("category"));
+        assertEquals("no_plugin", event.getEventData().get("subcategory"));
+        final Map<String, Object> mixins = new HashMap<>();
+        mixins.put("key", "value");
+        final Map<String, Object> expectedXdm = new HashMap<>();
+        expectedXdm.put("mixins", mixins);
+        assertEquals(expectedXdm, event.getEventData().get("xdm"));
+    }
+
+    @Test
+    public void test_dispatchPluginErrorEvent_withoutXdm_dispatchesWithoutXdmKey() {
+        final Event event = dispatchAndCapture(new HashMap<>());
+
+        assertEquals("no_plugin", event.getEventData().get("subcategory"));
+        assertFalse(event.getEventData().containsKey("xdm"));
+    }
+
+    @Test
+    public void test_dispatchPluginErrorEvent_withMalformedXdm_dispatchesWithoutXdmKey() {
+        final Map<String, String> data = new HashMap<>();
+        data.put("_xdm", "not-json");
+
+        final Event event = dispatchAndCapture(data);
+
+        assertEquals("pushTracking.renderError", event.getEventData().get("category"));
+        assertFalse(event.getEventData().containsKey("xdm"));
+    }
+
+    @Test
+    public void test_dispatchPluginErrorEvent_withNullData_dispatchesWithoutXdmKey() {
+        final Event event = dispatchAndCapture(null);
+
+        assertFalse(event.getEventData().containsKey("xdm"));
+    }
+
+    private Event dispatchAndCapture(final Map<String, String> data) {
+        try (MockedStatic<MobileCore> mobileCore = Mockito.mockStatic(MobileCore.class)) {
+            MessagingPushUtils.dispatchPluginErrorEvent(
+                    "Push Template Render Error", "pushTracking.renderError", "no_plugin", data);
+            final ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+            mobileCore.verify(() -> MobileCore.dispatchEvent(captor.capture()));
+            return captor.getValue();
         }
     }
 }

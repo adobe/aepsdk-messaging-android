@@ -1,0 +1,10 @@
+{
+  "adb_a_type": "OPENAPP",
+  "adb_image": "https://picsum.photos/id/237/200/300",
+  "adb_n_priority": "PRIORITY_DEFAULT",
+  "adb_title": "PT-Local-Basic-center_crop",
+  "adb_body": "Portrait image with center_crop",
+  "adb_template_type": "ajo_basic",
+  "_xdm": "{\"mixins\":{\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"local-test-execution\",\"messageID\":\"local-test-message\",\"messageType\":\"transactional\",\"campaignID\":\"local-test-campaign\",\"campaignVersionID\":\"local-test-version\",\"campaignActionID\":\"local-test-action\"}}}}}",
+  "adb_template_properties": "{\"adb_image_scale_type\":\"center_crop\"}"
+}

@@ -1,0 +1,9 @@
+{
+  "adb_a_type": "OPENAPP",
+  "adb_n_priority": "PRIORITY_DEFAULT",
+  "adb_title": "PT-Val-Decisioned",
+  "adb_body": "This is a large text. This may appear as this  or as jibberish. Let's see.",
+  "adb_template_type": "ajo_bigtext",
+  "adb_template_properties": "{\"adb_collapsed_text\":\"Collapsed body here\",\"adb_large_icon\":\"https://picsum.photos/id/237/100/100\"}",
+  "_xdm": "{\"mixins\":{\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"local-test-execution\",\"messageID\":\"local-test-message\",\"messageType\":\"transactional\",\"campaignID\":\"local-test-campaign\",\"campaignVersionID\":\"local-test-version\",\"campaignActionID\":\"local-test-action\"}}}}}"
+}

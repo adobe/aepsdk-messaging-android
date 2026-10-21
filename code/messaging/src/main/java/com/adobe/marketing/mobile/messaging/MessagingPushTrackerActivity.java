@@ -92,7 +92,7 @@ public class MessagingPushTrackerActivity extends Activity {
             NotificationManager notificationManager =
                     (NotificationManager)
                             getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(messageId.hashCode());
+            notificationManager.cancel(MessagingPushUtils.getNotificationId(messageId));
         } else {
             Log.warning(
                     MessagingPushConstants.LOG_TAG,
