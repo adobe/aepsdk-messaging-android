@@ -27,7 +27,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 sealed class BaseAepUI<T : AepUITemplate, S : AepCardUIState>(
     private val template: T,
     state: S,
-    private val metadata: AepUIMetadata = AepUIMetadata()
+    private val metadata: AepUIMetadata
 ) : AepUI<T, S> {
     private val _state = mutableStateOf(state)
 

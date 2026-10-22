@@ -129,17 +129,10 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
 
         // Also update _aepUIFlow so getContentCardUIFlow collectors receive refresh updates
         _aepUIFlow.update {
-            if (itemsResult.isSuccess) {
-                val aepUIList = itemsResult.getOrDefault(emptyList())
-                    .mapNotNull { item ->
-                        ContentCardSchemaDataUtils.getAepUI(item.template, metadata = item.metadata)
-                    }
-                Result.success(aepUIList)
-            } else {
-                Result.failure(
-                    itemsResult.exceptionOrNull()
-                        ?: Throwable("Failed to process propositions for surface ${surface.uri}: Unknown Error")
-                )
+            itemsResult.map { items ->
+                items.mapNotNull { item ->
+                    ContentCardSchemaDataUtils.getAepUI(item.template, metadata = item.metadata)
+                }
             }
         }
     }

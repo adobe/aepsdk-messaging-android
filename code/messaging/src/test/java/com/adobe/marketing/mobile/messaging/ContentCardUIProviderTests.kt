@@ -283,6 +283,70 @@ class ContentCardUIProviderTests {
 
     @Suppress("DEPRECATION")
     @Test
+    fun `getContentCardUIFlow returns cards when the propositions callback fires asynchronously`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            Thread { callback.call(mapOf(surface to listOf(proposition))) }.start()
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `deprecated getContent returns templates when the propositions callback fires asynchronously`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            Thread { callback.call(mapOf(surface to listOf(proposition))) }.start()
+        }
+
+        val result = contentCardUIProvider.getContent().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+    }
+
+    @Test
+    fun `getContentCardUIFlow returns an empty list when the response has no entry for the surface`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(emptyMap())
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull()?.isEmpty() == true)
+    }
+
+    @Test
+    fun `getContentCardUIFlow skips a proposition that fails to build and keeps the others`() = runTest {
+        val brokenProposition = mock(Proposition::class.java)
+        whenever(brokenProposition.items).thenThrow(IllegalArgumentException("invalid proposition"))
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(brokenProposition, proposition)))
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+        assertEquals("testId", result.getOrNull()?.first()?.getTemplate()?.id)
+    }
+
+    @Test
     fun `deprecated getContentCardUI returns success with valid template`() = runTest {
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
