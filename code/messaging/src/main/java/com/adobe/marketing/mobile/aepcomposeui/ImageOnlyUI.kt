@@ -19,8 +19,10 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
  *
  * @param template The template associated with the image only UI.
  * @param state The current state of the image only UI.
+ * @param metadata The delivery metadata (priority, rank) of the proposition this UI was built from.
  */
-class ImageOnlyUI(
+class ImageOnlyUI @JvmOverloads constructor(
     private val template: ImageOnlyTemplate,
-    state: ImageOnlyCardUIState
-) : BaseAepUI<ImageOnlyTemplate, ImageOnlyCardUIState>(template, state)
+    state: ImageOnlyCardUIState,
+    metadata: AepUIMetadata = AepUIMetadata()
+) : BaseAepUI<ImageOnlyTemplate, ImageOnlyCardUIState>(template, state, metadata)

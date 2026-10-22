@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging
 
+import com.adobe.marketing.mobile.aepcomposeui.AepUIMetadata
 import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
@@ -512,6 +513,78 @@ class ContentCardSchemaDataUtilsTest {
         val template = mock(AepUITemplate::class.java)
         val result = ContentCardSchemaDataUtils.getAepUI(template)
         assertNull(result)
+    }
+
+    @Test
+    fun `test getAepUI uses default metadata when none is provided`() {
+        val template = SmallImageTemplate("testId", AepText("Messaging SDK Smoke Test"), null, null, null, emptyList(), null)
+        val result = ContentCardSchemaDataUtils.getAepUI(template)
+        assertEquals(AepUIMetadata(), result?.getMetadata())
+        assertEquals(0, result?.getMetadata()?.priority)
+        assertEquals(-1, result?.getMetadata()?.rank)
+    }
+
+    @Test
+    fun `test getAepUI carries metadata for every supported template type`() {
+        val metadata = AepUIMetadata(priority = 80, rank = 2)
+        val small = SmallImageTemplate("small", AepText("title"), null, null, null, emptyList(), null)
+        val large = LargeImageTemplate("large", AepText("title"), null, null, null, emptyList(), null)
+        val imageOnly = ImageOnlyTemplate("imageOnly", AepImage("https://example.com/image.png"), null, null)
+
+        assertEquals(metadata, ContentCardSchemaDataUtils.getAepUI(small, null, metadata)?.getMetadata())
+        assertEquals(metadata, ContentCardSchemaDataUtils.getAepUI(large, null, metadata)?.getMetadata())
+        assertEquals(metadata, ContentCardSchemaDataUtils.getAepUI(imageOnly, null, metadata)?.getMetadata())
+    }
+
+    @Test
+    fun `test copyAepUI preserves metadata`() {
+        val metadata = AepUIMetadata(priority = 50, rank = 3)
+        val template = SmallImageTemplate("testId", AepText("title"), null, null, null, emptyList(), null)
+        val original = ContentCardSchemaDataUtils.getAepUI(template, true, metadata)!!
+
+        val copy = ContentCardSchemaDataUtils.copyAepUI(original)
+
+        assertTrue(copy is SmallImageUI)
+        assertEquals(metadata, copy.getMetadata())
+    }
+
+    @Test
+    fun `test copyAepUI preserves metadata for LargeImageUI`() {
+        val metadata = AepUIMetadata(priority = 70, rank = 1)
+        val template = LargeImageTemplate("testId", AepText("title"), null, null, null, emptyList(), null)
+        val original = ContentCardSchemaDataUtils.getAepUI(template, false, metadata)!!
+
+        val copy = ContentCardSchemaDataUtils.copyAepUI(original)
+
+        assertTrue(copy is LargeImageUI)
+        assertEquals(metadata, copy.getMetadata())
+        assertEquals(template, copy.getTemplate())
+        assertEquals(false, copy.getState().read)
+    }
+
+    @Test
+    fun `test copyAepUI preserves metadata for ImageOnlyUI`() {
+        val metadata = AepUIMetadata(priority = 20, rank = 4)
+        val template = ImageOnlyTemplate("testId", AepImage("http://..."))
+        val original = ContentCardSchemaDataUtils.getAepUI(template, true, metadata)!!
+
+        val copy = ContentCardSchemaDataUtils.copyAepUI(original)
+
+        assertTrue(copy is ImageOnlyUI)
+        assertEquals(metadata, copy.getMetadata())
+        assertEquals(template, copy.getTemplate())
+        assertEquals(true, copy.getState().read)
+    }
+
+    @Test
+    fun `test buildMetadata reads priority and rank from the proposition`() {
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(proposition.priority).thenReturn(80)
+        Mockito.`when`(proposition.rank).thenReturn(2)
+
+        val metadata = ContentCardSchemaDataUtils.buildMetadata(proposition)
+
+        assertEquals(AepUIMetadata(priority = 80, rank = 2), metadata)
     }
 
     @Test

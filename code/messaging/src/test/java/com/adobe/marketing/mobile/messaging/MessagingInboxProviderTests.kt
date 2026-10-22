@@ -126,7 +126,7 @@ class MessagingInboxProviderTests {
         mockkObject(ContentCardSchemaDataUtils)
         every { ContentCardSchemaDataUtils.getReadStatus(any()) } returns null
         every { ContentCardSchemaDataUtils.buildTemplate(any()) } answers { callOriginal() }
-        every { ContentCardSchemaDataUtils.getAepUI(any(), any()) } answers { callOriginal() }
+        every { ContentCardSchemaDataUtils.getAepUI(any(), any(), any()) } answers { callOriginal() }
         every { ContentCardSchemaDataUtils.createInboxTemplate(any()) } returns mockInboxTemplate
     }
 
@@ -263,7 +263,7 @@ class MessagingInboxProviderTests {
     @Test
     fun `getInboxUI returns Success with empty items when getAepUI returns null`() = runTest {
         // Mock getAepUI to return null, simulating unsupported template type
-        every { ContentCardSchemaDataUtils.getAepUI(any(), any()) } returns null
+        every { ContentCardSchemaDataUtils.getAepUI(any(), any(), any()) } returns null
 
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())

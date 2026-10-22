@@ -148,14 +148,19 @@ public class Proposition implements Serializable {
     }
 
     /**
-     * Gets the ordinal rank for this {@link Proposition} as computed by IDS.
+     * Gets the ordinal rank for this {@link Proposition} as computed by IDS (Inbound Delivery
+     * Service).
+     *
+     * <p>Rank is the position of this proposition among the propositions of its surface: a lower
+     * rank is delivered first. It is derived from the activity priority and is not the same value
+     * as {@link #getPriority()}.
      *
      * <p>It is expected that IDS will always return a value for rank. A default value of -1 is used
      * in the absence of rank in the IDS response and should be considered an error state.
      *
      * @return {@code int} containing the ordinal rank for this Proposition.
      */
-    int getRank() {
+    public int getRank() {
         // return early if we have no "scopeDetails"
         if (MapUtils.isNullOrEmpty(scopeDetails)) {
             return -1;

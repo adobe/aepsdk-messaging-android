@@ -19,8 +19,10 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
  *
  * @param template The template associated with the large image UI.
  * @param state The current state of the large image UI.
+ * @param metadata The delivery metadata (priority, rank) of the proposition this UI was built from.
  */
-class LargeImageUI(
+class LargeImageUI @JvmOverloads constructor(
     private val template: LargeImageTemplate,
-    state: LargeImageCardUIState
-) : BaseAepUI<LargeImageTemplate, LargeImageCardUIState>(template, state)
+    state: LargeImageCardUIState,
+    metadata: AepUIMetadata = AepUIMetadata()
+) : BaseAepUI<LargeImageTemplate, LargeImageCardUIState>(template, state, metadata)

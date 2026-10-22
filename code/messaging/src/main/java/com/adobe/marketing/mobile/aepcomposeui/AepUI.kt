@@ -41,6 +41,13 @@ sealed interface AepUI<T : AepUITemplate, S : AepCardUIState> {
     fun getState(): S
 
     /**
+     * Retrieves the delivery metadata (such as priority and rank) of the proposition this UI was built from.
+     *
+     * @return The [AepUIMetadata] associated with the UI component.
+     */
+    fun getMetadata(): AepUIMetadata
+
+    /**
      * Updates the state of the UI component with a new state.
      * Updates to the state will trigger the UI to be recomposed, reflecting the changes in the rendered UI.
      *

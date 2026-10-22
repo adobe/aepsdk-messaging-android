@@ -21,6 +21,7 @@ import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCard
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
 import com.adobe.marketing.mobile.services.DeviceInforming
 import com.adobe.marketing.mobile.services.ServiceProvider
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -120,6 +121,24 @@ class ContentCardUIProviderTests {
     }
 
     @Test
+    fun `getContentCardUIFlow exposes priority and rank of the proposition as metadata`() = runTest {
+        whenever(proposition.priority).thenReturn(80)
+        whenever(proposition.rank).thenReturn(2)
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        val metadata = result.getOrNull()?.first()?.getMetadata()
+        assertEquals(80, metadata?.priority)
+        assertEquals(2, metadata?.rank)
+    }
+
+    @Test
     fun `getContentCardUIFlow handles null proposition map`() = runTest {
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
@@ -196,6 +215,38 @@ class ContentCardUIProviderTests {
         assertTrue(result.isFailure)
     }
 
+    @Suppress("DEPRECATION")
+    @Test
+    fun `deprecated getContent returns templates for a valid proposition`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(proposition)))
+        }
+
+        val result = contentCardUIProvider.getContent().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+        assertEquals("testId", result.getOrNull()?.first()?.id)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `deprecated getContent returns failure when the API fails`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.fail(AdobeError.UNEXPECTED_ERROR)
+        }
+
+        val result = contentCardUIProvider.getContent().first()
+
+        assertTrue(result.isFailure)
+    }
+
     @Test
     fun `getContentCardUIFlow handles proposition with no items`() = runTest {
         whenever(proposition.items).thenReturn(emptyList())
@@ -231,6 +282,70 @@ class ContentCardUIProviderTests {
     }
 
     @Suppress("DEPRECATION")
+    @Test
+    fun `getContentCardUIFlow returns cards when the propositions callback fires asynchronously`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            Thread { callback.call(mapOf(surface to listOf(proposition))) }.start()
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `deprecated getContent returns templates when the propositions callback fires asynchronously`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            Thread { callback.call(mapOf(surface to listOf(proposition))) }.start()
+        }
+
+        val result = contentCardUIProvider.getContent().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+    }
+
+    @Test
+    fun `getContentCardUIFlow returns an empty list when the response has no entry for the surface`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(emptyMap())
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull()?.isEmpty() == true)
+    }
+
+    @Test
+    fun `getContentCardUIFlow skips a proposition that fails to build and keeps the others`() = runTest {
+        val brokenProposition = mock(Proposition::class.java)
+        whenever(brokenProposition.items).thenThrow(IllegalArgumentException("invalid proposition"))
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(mapOf(surface to listOf(brokenProposition, proposition)))
+        }
+
+        val result = contentCardUIProvider.getContentCardUIFlow().first()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+        assertEquals("testId", result.getOrNull()?.first()?.getTemplate()?.id)
+    }
+
     @Test
     fun `deprecated getContentCardUI returns success with valid template`() = runTest {
         mockMessaging.`when`<Unit> {

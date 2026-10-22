@@ -19,8 +19,10 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
  *
  * @param template The template associated with the small image UI.
  * @param state The current state of the small image UI.
+ * @param metadata The delivery metadata (priority, rank) of the proposition this UI was built from.
  */
-class SmallImageUI(
+class SmallImageUI @JvmOverloads constructor(
     private val template: SmallImageTemplate,
-    state: SmallImageCardUIState
-) : BaseAepUI<SmallImageTemplate, SmallImageCardUIState>(template, state)
+    state: SmallImageCardUIState,
+    metadata: AepUIMetadata = AepUIMetadata()
+) : BaseAepUI<SmallImageTemplate, SmallImageCardUIState>(template, state, metadata)
