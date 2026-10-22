@@ -194,9 +194,9 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * @param propositionsResult The result containing a map of the requested surface and its propositions.
      * @return A [Result] containing a list of [CardItem] or an error if fetching or building fails.
      */
-    private fun getCardItemList(propositionsResult: Result<Map<Surface, List<Proposition>>>): Result<List<CardItem>> {
-        return if (propositionsResult.isSuccess) {
-            val cardItems = propositionsResult.getOrNull()?.get(surface)?.mapNotNull { proposition ->
+    private fun getCardItemList(propositionsResult: Result<Map<Surface, List<Proposition>>>): Result<List<CardItem>> =
+        propositionsResult.map { propositionMap ->
+            propositionMap[surface]?.mapNotNull { proposition ->
                 try {
                     buildTemplate(proposition)?.let { template ->
                         CardItem(template, ContentCardSchemaDataUtils.buildMetadata(proposition))
@@ -210,14 +210,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                     null
                 }
             } ?: emptyList()
-            Result.success(cardItems)
-        } else {
-            Result.failure(
-                propositionsResult.exceptionOrNull()
-                    ?: Throwable("Failed to retrieve propositions for surface ${surface.uri}: Unknown Error")
-            )
         }
-    }
 
     /**
      * Fetches propositions for the current surface by converting the [Messaging.getPropositionsForSurfaces]
