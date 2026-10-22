@@ -204,6 +204,13 @@ public final class MessagingConstants {
             private Consent() {}
         }
 
+        final class DeviceAttributes {
+            static final String TOKENS = "tokens";
+            static final String PUSH_NOTIFICATION = "pushNotification";
+
+            private DeviceAttributes() {}
+        }
+
         final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
