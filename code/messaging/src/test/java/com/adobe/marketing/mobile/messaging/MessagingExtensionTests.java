@@ -266,6 +266,11 @@ public class MessagingExtensionTests {
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.CONSENT), eq(EventSource.RESPONSE_CONTENT), any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.MESSAGING),
+                                    eq(EventSource.RESPONSE_CONTENT),
+                                    any());
 
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
@@ -339,6 +344,11 @@ public class MessagingExtensionTests {
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.CONSENT), eq(EventSource.RESPONSE_CONTENT), any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.MESSAGING),
+                                    eq(EventSource.RESPONSE_CONTENT),
+                                    any());
 
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
@@ -3291,6 +3301,277 @@ public class MessagingExtensionTests {
 
                     verify(mockExtensionApi, never()).dispatch(any(Event.class));
                 });
+    }
+
+    // ========================================================================================
+    // handleDeviceAttributesConfirmed
+    // ========================================================================================
+
+    @Test
+    public void
+            test_handleDeviceAttributesConfirmed_validPushToken_updatesPersistenceAndSharedState() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Event event = deviceAttributesConfirmedEvent("confirmedToken");
+
+                    messagingExtension.handleDeviceAttributesConfirmed(event);
+
+                    verify(mockNamedCollection, times(1))
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    eq("confirmedToken"));
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(
+                                    argThat(
+                                            map ->
+                                                    "confirmedToken"
+                                                            .equals(
+                                                                    map.get(
+                                                                            MessagingConstants
+                                                                                    .SharedState
+                                                                                    .Messaging
+                                                                                    .PUSH_IDENTIFIER))),
+                                    eq(event));
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_thenSamePushToken_doesNotSyncToEdge() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, String> store = new HashMap<>();
+                    Mockito.doAnswer(
+                                    invocation -> {
+                                        store.put(
+                                                invocation.getArgument(0),
+                                                invocation.getArgument(1));
+                                        return null;
+                                    })
+                            .when(mockNamedCollection)
+                            .setString(anyString(), any());
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenAnswer(
+                                    invocation ->
+                                            store.getOrDefault(
+                                                    invocation.getArgument(0),
+                                                    invocation.getArgument(1)));
+                    when(mockExtensionApi.getSharedState(
+                                    eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME),
+                                    any(),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(mockConfigData);
+
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            deviceAttributesConfirmedEvent("confirmedToken"));
+
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER,
+                            "confirmedToken");
+                    messagingExtension.handlePushToken(
+                            new Event.Builder(
+                                            "Set Push Identifier",
+                                            EventType.GENERIC_IDENTITY,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    @Test
+    public void
+            test_handleDeviceAttributesConfirmed_emptyPushToken_clearsPersistenceAndSharedState() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Event event = deviceAttributesConfirmedEvent("");
+
+                    messagingExtension.handleDeviceAttributesConfirmed(event);
+
+                    verify(mockNamedCollection, times(1))
+                            .remove(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER));
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(argThat(Map::isEmpty), eq(event));
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_anyEventName_updatesPushToken() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> tokens = new HashMap<>();
+                    tokens.put("pushNotification", "confirmedToken");
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("tokens", tokens);
+                    final Event event =
+                            new Event.Builder(
+                                            "Some other name",
+                                            EventType.MESSAGING,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleDeviceAttributesConfirmed(event);
+
+                    verify(mockNamedCollection, times(1))
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    eq("confirmedToken"));
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(
+                                    argThat(
+                                            map ->
+                                                    "confirmedToken"
+                                                            .equals(
+                                                                    map.get(
+                                                                            MessagingConstants
+                                                                                    .SharedState
+                                                                                    .Messaging
+                                                                                    .PUSH_IDENTIFIER))),
+                                    eq(event));
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_wrongTypeOrSource_isIgnored() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> tokens = new HashMap<>();
+                    tokens.put("pushNotification", "token");
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("tokens", tokens);
+
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            new Event.Builder(
+                                            "Device attributes confirmed",
+                                            EventType.GENERIC_IDENTITY,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            new Event.Builder(
+                                            "Device attributes confirmed",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
+
+                    verifyConfirmedTokenIgnored();
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_messagingResponseWithoutTokens_isIgnored() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("propositions", new ArrayList<>());
+
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            new Event.Builder(
+                                            "Message propositions response",
+                                            EventType.MESSAGING,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
+
+                    verifyConfirmedTokenIgnored();
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_missingTokens_isIgnored() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Event nullData =
+                            new Event.Builder(
+                                            "Device attributes confirmed",
+                                            EventType.MESSAGING,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .build();
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("tokens", "notAMap");
+                    final Event invalidTokens =
+                            new Event.Builder(
+                                            "Device attributes confirmed",
+                                            EventType.MESSAGING,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handleDeviceAttributesConfirmed(nullData);
+                    messagingExtension.handleDeviceAttributesConfirmed(invalidTokens);
+
+                    verifyConfirmedTokenIgnored();
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_noPushToken_isIgnored() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> tokens = new HashMap<>();
+                    tokens.put("otherToken", "value");
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("tokens", tokens);
+
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            new Event.Builder(
+                                            "Device attributes confirmed",
+                                            EventType.MESSAGING,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build());
+
+                    verifyConfirmedTokenIgnored();
+                });
+    }
+
+    @Test
+    public void test_handleDeviceAttributesConfirmed_nonStringPushToken_isIgnored() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> pushToken = new HashMap<>();
+                    pushToken.put("token", "value");
+
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            deviceAttributesConfirmedEvent(pushToken));
+                    messagingExtension.handleDeviceAttributesConfirmed(
+                            deviceAttributesConfirmedEvent(null));
+
+                    verifyConfirmedTokenIgnored();
+                });
+    }
+
+    private Event deviceAttributesConfirmedEvent(final Object pushToken) {
+        final Map<String, Object> tokens = new HashMap<>();
+        tokens.put("pushNotification", pushToken);
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put("tokens", tokens);
+        return new Event.Builder(
+                        "Device attributes confirmed",
+                        EventType.MESSAGING,
+                        EventSource.RESPONSE_CONTENT)
+                .setEventData(eventData)
+                .build();
+    }
+
+    private void verifyConfirmedTokenIgnored() {
+        verify(mockNamedCollection, never()).setString(anyString(), any());
+        verify(mockNamedCollection, never()).remove(anyString());
+        verify(mockExtensionApi, never()).createSharedState(any(), any());
+        verify(mockExtensionApi, never()).dispatch(any(Event.class));
     }
 
     // ========================================================================================
