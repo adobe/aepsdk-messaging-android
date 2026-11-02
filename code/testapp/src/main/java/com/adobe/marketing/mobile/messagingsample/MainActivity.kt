@@ -62,6 +62,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val LOG_TAG = "MainActivity"
         const val FROM = "from"
+        const val SDK_TELEMETRY_TEST = "sdkTelemetryTest"
+        private const val SDK_TELEMETRY_TEST_PUSH_TOKEN = "sdk-telemetry-test-push-token"
         private const val PUSH_TEMPLATE_ASSETS = "push_templates"
     }
 
@@ -270,12 +272,19 @@ class MainActivity : ComponentActivity() {
         // setupSpinnerItemSelectedListener()
         setupSwitchListeners()
 
-        // handle push notification interactions
-        intent?.extras?.apply {
-            if (getString(FROM) == "action") {
-                Messaging.handleNotificationResponse(intent, true, "button")
-            } else {
-                Messaging.handleNotificationResponse(intent, true, null)
+        // SDK telemetry test hook, for example:
+        // adb shell am start -n <package>/.MainActivity --es sdkTelemetryTest setPushIdentifier
+        val telemetryTestAction = intent?.getStringExtra(SDK_TELEMETRY_TEST)
+        if (telemetryTestAction != null) {
+            runSdkTelemetryTest(telemetryTestAction, intent)
+        } else {
+            // handle push notification interactions
+            intent?.extras?.apply {
+                if (getString(FROM) == "action") {
+                    Messaging.handleNotificationResponse(intent, true, "button")
+                } else {
+                    Messaging.handleNotificationResponse(intent, true, null)
+                }
             }
         }
 
@@ -289,6 +298,48 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.data?.let { Assurance.startSession(it.toString()) }
+        intent?.let { newIntent ->
+            newIntent.getStringExtra(SDK_TELEMETRY_TEST)?.let { runSdkTelemetryTest(it, newIntent) }
+        }
+    }
+
+    /**
+     * Runs one SDK telemetry test action through the same code path a user would trigger.
+     *
+     * @param action `refreshInAppMessages`, `trackAction`, `codeBased`, `setPushIdentifier`, `edgeFailure` or `simulateUpgrade`
+     * @param testIntent the intent that carries the action and its extras
+     */
+    private fun runSdkTelemetryTest(action: String, testIntent: Intent) {
+        Log.d("SdkTelemetry", "Running test action: $action")
+        when (action) {
+            "refreshInAppMessages" -> binding.btnRefreshInAppMessages.performClick()
+            "trackAction" -> binding.btnTriggerFullscreenIAM.performClick()
+            "codeBased" -> binding.btnCheckCodeBased.performClick()
+            // Same path as MessagingSettingsActivity: the FCM button needs a valid Firebase app id.
+            "setPushIdentifier" -> {
+                MobileCore.setPushIdentifier(SDK_TELEMETRY_TEST_PUSH_TOKEN)
+                SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.CORE, "setPushIdentifier")
+            }
+            "edgeFailure" -> SdkTelemetry.sendEdgeFailureTestEvent()
+            "edgeFailureFetch" -> SdkTelemetry.sendEdgeFailureTestEvent("decisioning.propositionFetch")
+            "edgeFailureTrack" -> SdkTelemetry.sendEdgeFailureTestEvent("decisioning.propositionInteract")
+            "resetIdentities" -> binding.btnResetIdentities.performClick()
+            // Simulates an app and SDK upgrade, for example:
+            // --es sdkTelemetryTest simulateUpgrade --es appVersion 1.1 --es coreVersion 3.12.0 --es edgeVersion 3.3.0 --es messagingVersion 3.15.0
+            "simulateUpgrade" -> {
+                SdkTelemetry.setSimulatedVersions(
+                    this,
+                    testIntent.getStringExtra("appVersion"),
+                    testIntent.getStringExtra("coreVersion"),
+                    testIntent.getStringExtra("edgeVersion"),
+                    testIntent.getStringExtra("messagingVersion"),
+                    testIntent.getStringExtra("orgId")
+                )
+                SdkTelemetry.sendAdoptionIfNeeded(this)
+                SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.TIMELINE, SdkTelemetry.Extensions.CORE, "adoptionUpgrade")
+            }
+            else -> Log.w("SdkTelemetry", "Unknown test action: $action")
+        }
     }
 
     private fun setupButtonClickListeners() {
@@ -309,6 +360,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 MobileCore.trackAction(trigger, null)
             }
+            SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.CORE, "trackAction")
         }
         binding.btnCheckFeedMessages.setOnClickListener {
             startActivity(Intent(this, ScrollingFeedActivity::class.java))
@@ -332,6 +384,7 @@ class MainActivity : ComponentActivity() {
 
         binding.btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
+            SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.MESSAGING, "refreshInAppMessages")
         }
 
         binding.btnSetPushIdentifier.setOnClickListener {
@@ -342,11 +395,18 @@ class MainActivity : ComponentActivity() {
                 Log.d("btnSetPushIdentifier", token)
                 Toast.makeText(baseContext, "calling setPushIdentifier with $token", Toast.LENGTH_SHORT).show()
                 MobileCore.setPushIdentifier(token)
+                SdkTelemetry.trackUsage(
+                    this@MainActivity,
+                    SdkTelemetry.ApiEventType.API_CALL,
+                    SdkTelemetry.Extensions.CORE,
+                    "setPushIdentifier"
+                )
             }
         }
 
         binding.btnResetIdentities.setOnClickListener {
             MobileCore.resetIdentities()
+            SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.CORE, "resetIdentities")
         }
     }
 
@@ -506,6 +566,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         MobileCore.lifecycleStart(null)
+        SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.CORE, "lifecycleStart")
     }
 
     override fun onPause() {

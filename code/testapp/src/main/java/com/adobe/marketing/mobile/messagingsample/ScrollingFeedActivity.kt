@@ -85,6 +85,12 @@ class ScrollingFeedActivity : AppCompatActivity() {
         val refreshButton: ImageButton = findViewById(R.id.refreshButton)
         refreshButton.setOnClickListener {
             Messaging.updatePropositionsForSurfaces(surfaces)
+            SdkTelemetry.trackUsage(
+                this,
+                SdkTelemetry.ApiEventType.API_CALL,
+                SdkTelemetry.Extensions.MESSAGING,
+                "updatePropositionsForSurfaces"
+            )
             viewModel.refresh()
         }
 

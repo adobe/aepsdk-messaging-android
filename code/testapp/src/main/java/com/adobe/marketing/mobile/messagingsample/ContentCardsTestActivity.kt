@@ -249,6 +249,7 @@ private fun ContentCardsTestScreen(viewModel: ContentCardsTestViewModel = viewMo
                     return@Button
                 }
                 MobileCore.trackAction(action, null)
+                SdkTelemetry.trackUsage(context, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.CORE, "trackAction")
                 viewModel.setLoadStatus("trackAction(\"$action\") sent. Tap Get to refresh cards.")
             },
             modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
@@ -296,7 +297,23 @@ private fun updateSurface(
         return
     }
     viewModel.setLoadStatus("Updating $label…")
+    SdkTelemetry.trackUsage(
+        context,
+        SdkTelemetry.ApiEventType.API_CALL,
+        SdkTelemetry.Extensions.MESSAGING,
+        "updatePropositionsForSurfaces"
+    )
     Messaging.updatePropositionsForSurfaces(listOf(Surface(path))) { success ->
+        if (success != true) {
+            SdkTelemetry.trackUsage(
+                context,
+                SdkTelemetry.ApiEventType.API_FAIL,
+                SdkTelemetry.Extensions.MESSAGING,
+                "updatePropositionsForSurfaces",
+                "updateFailed",
+                "Update failed or timed out"
+            )
+        }
         viewModel.setLoadStatus(
             if (success == true) "$label update completed." else "$label update failed or timed out."
         )
@@ -317,6 +334,12 @@ private fun getSurface(
     }
     val surface = Surface(path)
     viewModel.setLoadStatus("Loading $label…")
+    SdkTelemetry.trackUsage(
+        context,
+        SdkTelemetry.ApiEventType.API_CALL,
+        SdkTelemetry.Extensions.MESSAGING,
+        "getPropositionsForSurfaces"
+    )
     Messaging.getPropositionsForSurfaces(
         listOf(surface),
         object : AdobeCallbackWithError<Map<Surface, List<Proposition>>> {
@@ -331,6 +354,14 @@ private fun getSurface(
             }
 
             override fun fail(error: AdobeError?) {
+                SdkTelemetry.trackUsage(
+                    context,
+                    SdkTelemetry.ApiEventType.API_FAIL,
+                    SdkTelemetry.Extensions.MESSAGING,
+                    "getPropositionsForSurfaces",
+                    error?.errorCode?.toString(),
+                    error?.errorName
+                )
                 viewModel.setLoadStatus("$label get failed: ${error?.errorName ?: "unknown"}")
                 viewModel.removeSurfaceEntry(path)
             }

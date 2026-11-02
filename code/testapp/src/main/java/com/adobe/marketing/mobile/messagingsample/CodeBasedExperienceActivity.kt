@@ -37,7 +37,19 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
 
         // fetch code based experiences
         Messaging.updatePropositionsForSurfaces(surfaces)
+        SdkTelemetry.trackUsage(
+            this,
+            SdkTelemetry.ApiEventType.API_CALL,
+            SdkTelemetry.Extensions.MESSAGING,
+            "updatePropositionsForSurfaces"
+        )
         // retrieve any cached code based experiences
+        SdkTelemetry.trackUsage(
+            this,
+            SdkTelemetry.ApiEventType.API_CALL,
+            SdkTelemetry.Extensions.MESSAGING,
+            "getPropositionsForSurfaces"
+        )
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries")
             for (entry in it.entries) {

@@ -34,3 +34,18 @@ include(
     ":messaging",
     ":messagingtestutils",
 )
+
+// Builds the Edge extension from a local aepsdk-edge-android checkout instead of Maven.
+// Every "com.adobe.marketing.mobile:edge" dependency in this build resolves to its ":edge" project.
+// Enabled only when the checkout exists. Override the path with -PlocalEdgePath=<path to edge "code" dir>,
+// or turn it off with -PuseLocalEdge=false.
+val useLocalEdge = (providers.gradleProperty("useLocalEdge").orNull ?: "true").toBoolean()
+val localEdgeDir = file(providers.gradleProperty("localEdgePath").orNull ?: "../../aepsdk-edge-android/code")
+if (useLocalEdge && localEdgeDir.resolve("edge").isDirectory) {
+    includeBuild(localEdgeDir) {
+        name = "aepsdk-edge-android"
+        dependencySubstitution {
+            substitute(module("com.adobe.marketing.mobile:edge")).using(project(":edge"))
+        }
+    }
+}

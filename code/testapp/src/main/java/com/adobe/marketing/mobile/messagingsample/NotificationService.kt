@@ -33,6 +33,7 @@ class NotificationService : FirebaseMessagingService() {
         super.onNewToken(token)
         print("MessagingApplication Firebase token :: $token")
         MobileCore.setPushIdentifier(token)
+        SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.CORE, "setPushIdentifier")
     }
 
     override fun onMessageReceived(message: RemoteMessage) {

@@ -28,7 +28,7 @@ import com.adobe.marketing.mobile.notificationbuilder.NotificationBuilderPlugin
 class MessagingApplication : Application() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
     private val ASSURANCE_SESSION_ID = ""
-    private val STAGING_APP_ID = "staging/1b50a869c4a2/bcd1a623883f/launch-e44d085fc760-development"
+    private val STAGING_APP_ID = "staging/1b50a869c4a2/bfcaae461edd/launch-e9937845c996"
     private val STAGING = true
 
     override fun onCreate() {
@@ -63,9 +63,19 @@ class MessagingApplication : Application() {
             Lifecycle.EXTENSION,
             Edge.EXTENSION,
             Assurance.EXTENSION,
-            Consent.EXTENSION
+            Consent.EXTENSION,
+            // Logs every event and shared state change as complete JSON (logcat tag "AEPCapture").
+            DebugCaptureExtension::class.java,
+            // Keeps the Event Hub versions that SdkTelemetry reports as sdkVersions[].
+            SdkVersionsExtension::class.java
         )
         MobileCore.registerExtensions(extensions) {
+            // SDK telemetry POC: sends adoption (once per app, Core and Edge version combination)
+            // and a TIMELINE usage event once the final Edge configuration is applied.
+            SdkTelemetry.startWhenConfigured(this) { configuration ->
+                !STAGING || configuration["edge.environment"] == "int"
+            }
+
             // Necessary property id which has the edge configuration id needed by aep sdk
             if (STAGING) {
                 MobileCore.configureWithAppID(STAGING_APP_ID)

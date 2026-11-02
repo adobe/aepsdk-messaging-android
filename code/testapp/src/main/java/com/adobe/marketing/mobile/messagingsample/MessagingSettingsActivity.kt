@@ -104,6 +104,7 @@ class MessagingSettingsActivity : ComponentActivity() {
 
     private fun setPushIdentifier(token: String) {
         MobileCore.setPushIdentifier(token)
+        SdkTelemetry.trackUsage(this, SdkTelemetry.ApiEventType.API_CALL, SdkTelemetry.Extensions.CORE, "setPushIdentifier")
         showStatus("MobileCore.setPushIdentifier(\"$token\")")
     }
 
