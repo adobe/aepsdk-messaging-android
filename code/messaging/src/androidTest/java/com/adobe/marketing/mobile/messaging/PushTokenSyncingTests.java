@@ -180,4 +180,92 @@ public class PushTokenSyncingTests {
                 sharedStateMap.get(MessagingTestConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }
+
+    // --------------------------------------------------------------------------------------------
+    // Clearing a previously registered push token
+    // --------------------------------------------------------------------------------------------
+    private static final String EXPECTED_CLEAR_EDGE_EVENT =
+            "{data={pushNotificationDetails=[{denylisted=true,"
+                    + " identity={namespace={code=ECID}, id=mockECID},"
+                    + " appID=com.adobe.marketing.mobile.messaging.test, platform=fcm,"
+                    + " token=}]}}";
+
+    private void assertPushIdentifierRemovedFromSharedState() throws InterruptedException {
+        final Map<String, String> sharedStateMap =
+                MessagingTestUtils.flattenMap(
+                        getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
+        assertNull(
+                sharedStateMap.get(MessagingTestConstants.SharedState.Messaging.PUSH_IDENTIFIER));
+    }
+
+    private void assertClearsPreviouslyRegisteredToken(final String clearingToken)
+            throws InterruptedException {
+        // register a token, then clear it
+        MobileCore.setPushIdentifier("mockPushToken");
+        assertEquals(
+                1,
+                getDispatchedEventsWith(
+                                MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT)
+                        .size());
+
+        MobileCore.setPushIdentifier(clearingToken);
+
+        // the clear is synced to Edge as an empty denylisted token
+        final List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        assertEquals(2, edgeRequestEvents.size());
+        assertEquals(
+                EXPECTED_CLEAR_EDGE_EVENT, edgeRequestEvents.get(1).getEventData().toString());
+        assertPushIdentifierRemovedFromSharedState();
+    }
+
+    @Test
+    public void testPushTokenSync_pushTokenIsNull_afterTokenWasRegistered_clearsToken()
+            throws InterruptedException {
+        assertClearsPreviouslyRegisteredToken(null);
+    }
+
+    @Test
+    public void testPushTokenSync_pushTokenIsEmpty_afterTokenWasRegistered_clearsToken()
+            throws InterruptedException {
+        assertClearsPreviouslyRegisteredToken("");
+    }
+
+    @Test
+    public void testPushTokenSync_repeatedClearIsNotSynced_andNewTokenRegistersAfterClear()
+            throws InterruptedException {
+        MobileCore.setPushIdentifier("mockPushToken");
+        getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        MobileCore.setPushIdentifier(null);
+        getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+
+        // repeated clears must not submit the clear again
+        MobileCore.setPushIdentifier(null);
+        MobileCore.setPushIdentifier("");
+        assertEquals(
+                2,
+                getDispatchedEventsWith(
+                                MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT)
+                        .size());
+
+        // a later non-empty token registers normally
+        MobileCore.setPushIdentifier("mockPushToken");
+        final List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+        assertEquals(3, edgeRequestEvents.size());
+        assertEquals(
+                "{data={pushNotificationDetails=[{denylisted=false,"
+                        + " identity={namespace={code=ECID}, id=mockECID},"
+                        + " appID=com.adobe.marketing.mobile.messaging.test, platform=fcm,"
+                        + " token=mockPushToken}]}}",
+                edgeRequestEvents.get(2).getEventData().toString());
+        final Map<String, String> sharedStateMap =
+                MessagingTestUtils.flattenMap(
+                        getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
+        assertEquals(
+                "mockPushToken",
+                sharedStateMap.get(MessagingTestConstants.SharedState.Messaging.PUSH_IDENTIFIER));
+    }
 }
