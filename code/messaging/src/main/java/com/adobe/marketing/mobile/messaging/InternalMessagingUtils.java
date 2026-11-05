@@ -643,13 +643,9 @@ class InternalMessagingUtils {
             @Nullable final Map<String, Object> configSharedState,
             @Nullable final String newPushToken,
             final long eventTimestamp) {
-        if (StringUtils.isNullOrEmpty(newPushToken)) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "shouldSyncPushToken",
-                    "New push token is null or empty, push token will not be synced.");
-            return false;
-        }
+        // null and empty both mean "no token", so an empty token is only synced when it clears a
+        // previously registered token. Repeated clears and clears with no prior token are skipped.
+        final String incomingPushToken = newPushToken == null ? "" : newPushToken;
 
         // check if the push token sync optimization will be used.
         // if true, the push token will be synced only if it has changed.
@@ -662,8 +658,7 @@ class InternalMessagingUtils {
 
         final String existingPushToken = getPushTokenFromPersistence();
         final boolean pushTokensMatch =
-                !StringUtils.isNullOrEmpty(existingPushToken)
-                        && existingPushToken.equals(newPushToken);
+                (existingPushToken == null ? "" : existingPushToken).equals(incomingPushToken);
         boolean shouldSync;
         if (!pushTokensMatch) {
             Log.debug(
@@ -672,7 +667,9 @@ class InternalMessagingUtils {
                     "Push token is new or changed. The push token will be synced.");
 
             shouldSync = true;
-        } else if (!optimizePushSync && isPushTokenSyncTimeoutExpired(eventTimestamp)) {
+        } else if (!optimizePushSync
+                && !incomingPushToken.isEmpty()
+                && isPushTokenSyncTimeoutExpired(eventTimestamp)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
@@ -695,8 +692,8 @@ class InternalMessagingUtils {
         }
 
         if (shouldSync) {
-            // persist the push token in the messaging named collection
-            persistPushToken(newPushToken);
+            // persist the push token in the messaging named collection, removing it on a clear
+            persistPushToken(incomingPushToken.isEmpty() ? null : incomingPushToken);
             // store the event timestamp of the last push token sync in-memory
             lastPushTokenSyncTimestamp = eventTimestamp;
         }
