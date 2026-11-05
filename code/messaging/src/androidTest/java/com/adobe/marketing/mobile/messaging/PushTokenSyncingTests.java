@@ -215,8 +215,7 @@ public class PushTokenSyncingTests {
                 getDispatchedEventsWith(
                         MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
         assertEquals(2, edgeRequestEvents.size());
-        assertEquals(
-                EXPECTED_CLEAR_EDGE_EVENT, edgeRequestEvents.get(1).getEventData().toString());
+        assertEquals(EXPECTED_CLEAR_EDGE_EVENT, edgeRequestEvents.get(1).getEventData().toString());
         assertPushIdentifierRemovedFromSharedState();
     }
 
