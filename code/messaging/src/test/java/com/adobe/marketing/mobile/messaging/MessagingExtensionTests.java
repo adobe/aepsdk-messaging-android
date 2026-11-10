@@ -2907,6 +2907,204 @@ public class MessagingExtensionTests {
                 });
     }
 
+    // ----------------------------------------------------------------------------------------
+    // push token clearing (null or empty identifier after a token was registered)
+    // ----------------------------------------------------------------------------------------
+    private Event createPushTokenEvent(final String token) {
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put("pushidentifier", token);
+        return new Event.Builder("event", "type", "source").setEventData(eventData).build();
+    }
+
+    private void stubEcid() {
+        final Map<String, Object> edgeIdentitySharedState = new HashMap<>();
+        final Map<String, Object> ecidMap = new HashMap<>();
+        final Map<String, Object> identityMap = new HashMap<>();
+        final List<Map<String, Object>> ecids = new ArrayList<>();
+        ecidMap.put("id", "mock_ecid");
+        ecids.add(ecidMap);
+        identityMap.put("ECID", ecids);
+        edgeIdentitySharedState.put("identityMap", identityMap);
+        when(mockExtensionApi.getXDMSharedState(
+                        eq("com.adobe.edge.identity"),
+                        any(Event.class),
+                        eq(false),
+                        eq(SharedStateResolution.LAST_SET)))
+                .thenReturn(new SharedStateResult(SharedStateStatus.SET, edgeIdentitySharedState));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getPushNotificationDetails(final Event edgeEvent) {
+        final Map<String, Object> data = (Map<String, Object>) edgeEvent.getEventData().get("data");
+        final List<Map<String, Object>> details =
+                (List<Map<String, Object>>) data.get("pushNotificationDetails");
+        return details.get(0);
+    }
+
+    private void assertTokenIsCleared(final String clearingToken) {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+                    final ArgumentCaptor<Map<String, Object>> stateCaptor =
+                            ArgumentCaptor.forClass(Map.class);
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+                    stubEcid();
+
+                    messagingExtension.handlePushToken(createPushTokenEvent(clearingToken));
+
+                    // an empty token is synced to Edge and marked denylisted
+                    verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+                    final Map<String, Object> details =
+                            getPushNotificationDetails(eventCaptor.getValue());
+                    assertEquals("", details.get("token"));
+                    assertEquals(true, details.get("denylisted"));
+                    assertEquals("mockPackageName", details.get("appID"));
+                    assertEquals(MessagingConstants.JsonValues.FCM, details.get("platform"));
+
+                    // the persisted token is removed rather than overwritten
+                    verify(mockNamedCollection, times(1))
+                            .remove(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER));
+                    verify(mockNamedCollection, never())
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    anyString());
+
+                    // the push identifier is removed from the Messaging shared state
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(stateCaptor.capture(), any(Event.class));
+                    assertFalse(
+                            stateCaptor
+                                    .getValue()
+                                    .containsKey(
+                                            MessagingConstants.SharedState.Messaging
+                                                    .PUSH_IDENTIFIER));
+                });
+    }
+
+    @Test
+    public void test_handlePushToken_whenPushTokenIsNull_afterTokenWasRegistered_clearsToken() {
+        assertTokenIsCleared(null);
+    }
+
+    @Test
+    public void test_handlePushToken_whenPushTokenIsEmpty_afterTokenWasRegistered_clearsToken() {
+        assertTokenIsCleared("");
+    }
+
+    @Test
+    public void test_handlePushToken_whenClearingWithNoPriorToken_doesNotSync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    stubEcid();
+
+                    messagingExtension.handlePushToken(createPushTokenEvent(null));
+                    messagingExtension.handlePushToken(createPushTokenEvent(""));
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                    verify(mockExtensionApi, never())
+                            .createSharedState(any(Map.class), any(Event.class));
+                    verify(mockNamedCollection, never()).remove(anyString());
+                });
+    }
+
+    @Test
+    public void test_handlePushToken_whenTokenIsClearedTwice_onlyFirstClearIsSynced() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // the second clear sees that the token was already removed
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken")
+                            .thenReturn(null);
+                    stubEcid();
+
+                    messagingExtension.handlePushToken(createPushTokenEvent(null));
+                    messagingExtension.handlePushToken(createPushTokenEvent(null));
+
+                    verify(mockExtensionApi, times(1)).dispatch(any(Event.class));
+                    verify(mockNamedCollection, times(1)).remove(anyString());
+                });
+    }
+
+    @Test
+    public void test_handlePushToken_whenClearingWithOptimizePushSyncFalse_doesNotResync() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, false);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(Event.class),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(
+                                    new SharedStateResult(
+                                            SharedStateStatus.SET, configSharedState));
+                    stubEcid();
+
+                    messagingExtension.handlePushToken(createPushTokenEvent(""));
+                    messagingExtension.handlePushToken(createPushTokenEvent(""));
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                });
+    }
+
+    @Test
+    public void test_handlePushToken_whenNewTokenArrivesAfterClear_registersNormally() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("tokenA")
+                            .thenReturn(null);
+                    stubEcid();
+
+                    messagingExtension.handlePushToken(createPushTokenEvent(null));
+                    messagingExtension.handlePushToken(createPushTokenEvent("tokenA"));
+
+                    verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+                    final Map<String, Object> reRegistration =
+                            getPushNotificationDetails(eventCaptor.getAllValues().get(1));
+                    assertEquals("tokenA", reRegistration.get("token"));
+                    assertEquals(false, reRegistration.get("denylisted"));
+                    verify(mockNamedCollection, times(1))
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    eq("tokenA"));
+                });
+    }
+
+    @Test
+    public void test_handlePushToken_whenEventHasNoPushIdentifierKey_doesNotClearStoredToken() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
+                    stubEcid();
+                    final Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("advertisingidentifier", "adid");
+                    final Event event =
+                            new Event.Builder("event", "type", "source")
+                                    .setEventData(eventData)
+                                    .build();
+
+                    messagingExtension.handlePushToken(event);
+
+                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                    verify(mockExtensionApi, never())
+                            .createSharedState(any(Map.class), any(Event.class));
+                    verify(mockNamedCollection, never()).remove(anyString());
+                });
+    }
+
     @Test
     public void test_handlePushToken_whenPushTokenIsTheSame_optimizePushSyncIsTrue() {
         runUsingMockedServiceProvider(

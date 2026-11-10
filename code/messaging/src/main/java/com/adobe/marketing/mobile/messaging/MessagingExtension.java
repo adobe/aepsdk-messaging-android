@@ -569,19 +569,23 @@ public final class MessagingExtension extends Extension {
     }
 
     void handlePushToken(final Event event) {
-        final String pushToken =
-                DataReader.optString(
-                        event.getEventData(),
-                        MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER,
-                        null);
-
-        if (StringUtils.isNullOrEmpty(pushToken)) {
+        // Other GENERIC_IDENTITY request events (e.g. advertising identifier) share this type and
+        // source, so only an event that carries the push identifier key is a push token event.
+        final Map<String, Object> eventData = event.getEventData();
+        if (eventData == null
+                || !eventData.containsKey(
+                        MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "Failed to sync push token, token is null or empty.");
+                    "Ignoring the event, it does not contain a push identifier.");
             return;
         }
+
+        // A null or empty token is a deliberate request to clear a previously registered token.
+        final String pushToken =
+                DataReader.optString(
+                        eventData, MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER, "");
 
         // if the push token hasn't changed or the push registration sync optimization flag is true
         // then there is no need to sync it via an edge network request
@@ -779,11 +783,8 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Update the push token to the shared state
-        final HashMap<String, Object> messagingSharedState = new HashMap<>();
-        messagingSharedState.put(
-                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        getApi().createSharedState(messagingSharedState, event);
+        // Update the push token in the shared state, removing it when the token is being cleared
+        createMessagingSharedState(pushToken, event);
 
         String eventName =
                 isResync
@@ -999,10 +1000,11 @@ public final class MessagingExtension extends Extension {
         pushNotificationDetailsData.put(
                 MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM,
                 MessagingConstants.JsonValues.FCM);
+        // an empty token means the push token is being cleared, so mark it denylisted
         pushNotificationDetailsData.put(
                 MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys
                         .DENY_LISTED,
-                false);
+                token.isEmpty());
 
         pushNotificationDetailsArray.add(pushNotificationDetailsData);
 
