@@ -35,10 +35,11 @@ import java.util.concurrent.atomic.AtomicBoolean
  * these two XDM event types and sends them with an empty `identityMap` and without stored state.
  *
  * Uses only Android APIs and public Core and Edge APIs, so it can later move into Core unchanged.
- * Every event carries the install UUID, the organization id and `sdkVersions[]`, which lists Core and
- * every registered extension with its version. Adoption is sent once per combination of app version
- * and SDK versions, and is marked as sent only when Edge reports no errors for it. Usage is sent as
- * one request per call, without batching.
+ * Adoption carries the install details: `metadata` (UUID, platform, OS, app, device, permissions),
+ * `sdkVersions[]` and the organization id. It is sent once per combination of app version and SDK
+ * versions, and is marked as sent only when Edge reports no errors for it. Usage carries only the
+ * install UUID, the organization id and `telemetry.events[]`, and is sent as one request per call,
+ * without batching. The install details of a usage event come from the adoption event with the same UUID.
  */
 object SdkTelemetry {
 
@@ -118,7 +119,7 @@ object SdkTelemetry {
                 orgId = configuration["experienceCloud.org"] as? String
                 sendAdoptionIfNeeded(appContext)
                 trackUsage(appContext, ApiEventType.TIMELINE, Extensions.CORE, "appStart")
-                flushPendingUsage()
+                flushPendingUsage(appContext)
             }
         }
     }
@@ -240,11 +241,7 @@ object SdkTelemetry {
         telemetryEvent.putIfNotEmpty("apiName", apiName)
         telemetryEvent.putIfNotEmpty("errorCode", errorCode)
         telemetryEvent.putIfNotEmpty("errorName", errorName)
-        val tenantData = baseTenantData(
-            appContext,
-            metadata(appContext, getPackageInfo(appContext)),
-            sdkVersions(appContext)
-        )
+        val tenantData = baseTenantData(appContext, mutableMapOf<String, Any>("uuid" to installId(appContext)))
         tenantData["telemetry"] = mapOf("events" to listOf(telemetryEvent))
 
         synchronized(pendingUsage) {
@@ -260,7 +257,7 @@ object SdkTelemetry {
     private fun baseTenantData(
         context: Context,
         metadata: Map<String, Any>,
-        sdkVersions: List<Map<String, String>>
+        sdkVersions: List<Map<String, String>> = emptyList()
     ): MutableMap<String, Any> {
         val tenantData = mutableMapOf<String, Any>("metadata" to metadata)
         tenantData.putIfNotEmpty("sdkVersions", sdkVersions)
@@ -269,11 +266,18 @@ object SdkTelemetry {
         return tenantData
     }
 
-    private fun flushPendingUsage() {
+    // Events queued before the configuration arrived have no organization id yet, so it is added here.
+    private fun flushPendingUsage(context: Context) {
         val pending = synchronized(pendingUsage) {
             pendingUsage.toList().also { pendingUsage.clear() }
         }
-        pending.forEach { send(USAGE_EVENT_TYPE, it) }
+        val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+        val currentOrgId = preferences.getString(KEY_SIMULATED_ORG_ID, null) ?: orgId
+        pending.forEach {
+            val tenantData = it.toMutableMap()
+            if (!tenantData.containsKey("orgId")) tenantData.putIfNotEmpty("orgId", currentOrgId)
+            send(USAGE_EVENT_TYPE, tenantData)
+        }
     }
 
     private fun send(
